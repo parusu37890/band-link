@@ -23,6 +23,7 @@ public class PostService {
     private final PrefectureRepository prefectureRepository;
     private final Clock clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public PostService(PostRepository posts, UserRepository users, PartRepository parts, GenreRepository genres,
                        StanceRepository stances, PrefectureRepository prefectures) {
         this(posts, users, parts, genres, stances, prefectures, Clock.systemDefaultZone());

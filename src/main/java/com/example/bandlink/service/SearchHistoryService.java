@@ -16,7 +16,7 @@ import java.util.*;
 @Service
 public class SearchHistoryService {
     private final SearchHistoryRepository histories; private final UserRepository users; private final Clock clock;
-    public SearchHistoryService(SearchHistoryRepository histories, UserRepository users) { this(histories, users, Clock.systemDefaultZone()); }
+    @org.springframework.beans.factory.annotation.Autowired public SearchHistoryService(SearchHistoryRepository histories, UserRepository users) { this(histories, users, Clock.systemDefaultZone()); }
     SearchHistoryService(SearchHistoryRepository histories, UserRepository users, Clock clock) { this.histories = histories; this.users = users; this.clock = clock == null ? Clock.systemDefaultZone() : clock; }
 
     @Transactional

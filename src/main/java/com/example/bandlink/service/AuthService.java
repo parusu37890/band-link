@@ -23,6 +23,7 @@ public class AuthService {
     private final PasswordResetTokenRepository resetTokens;
     private final Clock clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        EmailVerificationTokenRepository verificationTokens,
                        PasswordResetTokenRepository resetTokens) {
