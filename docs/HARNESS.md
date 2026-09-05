@@ -24,12 +24,17 @@ PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。Mave
 
 ## テストデータ準備
 
-未検証・未実装。エンティティ実装後、`data.sql`または`CommandLineRunner`によるマスタデータ（パート・ジャンル・活動スタンス・都道府県）投入方法をここに追記する。
+デモ表示用のユーザー4名・募集40件を追加するSQLを `scripts/dev/seed-demo-posts.sql` に置いている。これはローカルDB専用で、`demo01@bandlink.local`〜`demo04@bandlink.local` を識別子にしている。パスワードは4ユーザー共通で `password`。実行手順はDB接続情報を設定したPowerShellから次の通り（2026-09-06実行確認済み）。
+
+```
+$env:PGPASSWORD = "<postgresのパスワード>"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/seed-demo-posts.sql
+```
 
 ## Playwright MCPによるST
 
 `.mcp.json`に`@playwright/mcp`を追加し、Claude Code再起動後に接続確認済み（2026-09-05、`mcp__playwright__*`のツール群が利用可能になった）。
-まだ画面が無いため実際のST実行は**未検証**。募集一覧・登録・ログイン等の画面ができ次第、実際にブラウザ操作させて手順・期待結果・実結果をここに追記する。
+画面は実装済みだが、Playwright MCPによるSTは**未実行**。デモデータ投入後に募集一覧・検索・詳細・登録・ログイン等をブラウザ操作し、手順・期待結果・実結果をここに追記する。
 
 ## ログ確認（Elasticsearch/Kibana）
 
