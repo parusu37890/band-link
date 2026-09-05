@@ -16,7 +16,7 @@ spring:
 logging:
   structured:
     format:
-      console: json
+      console: ecs
   level:
     org.hibernate.SQL: WARN
 
