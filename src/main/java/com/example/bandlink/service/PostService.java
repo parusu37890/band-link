@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PostService {
@@ -64,6 +66,24 @@ public class PostService {
         LocalDateTime now = now(); post.reopen(now);
         if (user.getLastRankBoostedAt() == null || !user.getLastRankBoostedAt().isAfter(now.minusHours(EDIT_LOCK_HOURS))) { post.boostRank(now); user.setLastRankBoostedAt(now); }
         return post;
+    }
+
+    @Transactional
+    public List<Post> listOpen() {
+        LocalDateTime now = now();
+        return postRepository.findByStatusOrderByRankUpdatedAtDesc(PostStatus.OPEN).stream()
+                .peek(post -> expireIfNeeded(post, now)).filter(post -> post.getStatus() == PostStatus.OPEN).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Post getPublic(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuleViolationException("投稿が見つかりません"));
+        expireIfNeeded(post, now());
+        return post;
+    }
+
+    private void expireIfNeeded(Post post, LocalDateTime now) {
+        if (post.getStatus() == PostStatus.OPEN && !post.getExpiresAt().isAfter(now)) post.close(ClosedReason.EXPIRED, now);
     }
 
     private User activeVerifiedUser(Long id) { User user = activeUser(id); if (!user.isEmailVerified()) throw new RuleViolationException("メールアドレスの確認が必要です"); return user; }
