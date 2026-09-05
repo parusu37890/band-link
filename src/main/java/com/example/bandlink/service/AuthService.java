@@ -74,6 +74,13 @@ public class AuthService {
         stored.setUsedAt(now());
     }
 
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidTokenException());
+        if (user.getStatus() == com.example.bandlink.entity.UserStatus.WITHDRAWN) return;
+        user.setStatus(com.example.bandlink.entity.UserStatus.WITHDRAWN);
+    }
+
     private LocalDateTime now() { return LocalDateTime.now(clock); }
 
     public static class InvalidTokenException extends RuntimeException {

@@ -78,6 +78,14 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/withdraw")
+    public ResponseEntity<Void> withdraw(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
+        authService.withdraw(user.getId());
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.noContent().build();
+    }
+
     private UserResponse currentUser(Authentication authentication) {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
