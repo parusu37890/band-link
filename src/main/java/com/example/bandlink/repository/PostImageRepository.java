@@ -1,0 +1,1 @@
+package com.example.bandlink.repository; import com.example.bandlink.entity.PostImage; import org.springframework.data.jpa.repository.JpaRepository; import java.util.List; public interface PostImageRepository extends JpaRepository<PostImage,Long>{List<PostImage> findByPostIdOrderBySortOrderAsc(Long id);long countByPostId(Long id);}
