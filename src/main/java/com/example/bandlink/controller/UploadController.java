@@ -1,0 +1,2 @@
+package com.example.bandlink.controller; import com.example.bandlink.service.ImageStorageService; import org.springframework.http.*; import org.springframework.web.bind.annotation.*; import org.springframework.web.multipart.MultipartFile;
+@RestController @RequestMapping("/api/uploads") public class UploadController{private final ImageStorageService storage;public UploadController(ImageStorageService s){storage=s;}@PostMapping public ResponseEntity<String> upload(@RequestParam MultipartFile file){return ResponseEntity.status(HttpStatus.CREATED).body(storage.store(file));}}
