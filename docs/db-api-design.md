@@ -206,7 +206,7 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 | メソッド | パス | 認証 | 備考 |
 |---|---|---|---|
 | GET | /api/users/me | 要 | |
-| PUT | /api/users/me | 要（メール確認要） | |
+| PUT | /api/users/me | 要 | 自分のプロフィール情報を更新。メール未確認でもプロフィール編集は可能。投稿・メッセージ送信だけがメール確認必須 |
 | POST | /api/users/me/profile-image | 要 | 5MB上限、jpg/png/webpのみ（11章対応、§5参照） |
 | GET | /api/users/{id} | 不要 | 公開プロフィール。対象がSUSPENDED/WITHDRAWNなら404相当の非公開表示 |
 
@@ -215,7 +215,7 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 | メソッド | パス | 認証 | 備考 |
 |---|---|---|---|
 | GET | /api/posts | 不要 | クエリ: type, prefectures[], parts[], genres[], stances[], ageRanges[], activityFrequency, keyword, cursor, limit。DB側でページング（無限スクロール用にカーソル方式を提案） |
-| GET | /api/posts/{id} | 不要 | CLOSEDでも本文は返す（8章「詳細URLでは表示」）。ブロック関係でも到達可（[[0004]]） |
+| GET | /api/posts/{id} | 不要 | 通常終了（MANUAL/EXPIRED）は本文・画像と「募集終了」を返す。退会・利用停止・管理者削除による非公開は本文・画像を返さず非公開表示とする。ブロック関係でも到達可（[[0004]]） |
 | POST | /api/posts | 要（メール確認要） | 業務ルールは§1.4参照 |
 | PUT | /api/posts/{id} | 要、本人のみ | |
 | DELETE | /api/posts/{id} | 要、本人のみ | |
@@ -231,7 +231,7 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 |---|---|---|
 | GET | /api/search-history | 要 |
 
-`GET /api/posts`実行時、ログイン中かつ何らかの検索条件（keyword/prefectures/parts/genres/stances/ageRanges/activityFrequency のいずれか）が指定されていた場合のみ記録する。ページング目的の`cursor`のみ指定（＝条件なしの続き読み込み）は記録しない。
+`GET /api/posts`実行時、ログイン中かつ何らかの検索条件（type/keyword/prefectures/parts/genres/stances/ageRanges/activityFrequency のいずれか）が指定されていた場合のみ記録する。ページング目的の`cursor`と`limit`だけが指定された場合は記録しない。同じ正規化済み条件（typeを含む）は重複させず最新へ移動する。
 
 ### 4.5 メッセージ・会話（`/api/conversations/**`, `/api/messages`）
 
@@ -287,7 +287,7 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 ## 6. 未解決事項（本書でも解消しなかったもの）
 
 - 公開環境・ドメイン・実メール配信サービスの選定（requirements.md 11章に記載の通り、ローカル確認後に判断）
-- Elasticsearch/Kibanaの収集方式・バージョン・保持期間・Docker構成（別途インフラ設計として着手予定、本書はDB/API/権限が対象のため範囲外とした）
+- Elasticsearch/Kibanaの収集方式・バージョン・保持期間・Docker構成（別途インフラ設計で確定する。本書はDB/API/権限が対象のため詳細を扱わない）
 - CSRF保護の有効化方式（Thymeleaf側フォームへのトークン組み込み、`/api/**`側の扱い）は実装時に具体化
 - 利用停止・退会・通報に関する運営向け問い合わせ先の実際の連絡先（内容/文言の話であり設計事項ではないため、確定した連絡先が決まり次第、画面文言に反映）
 
