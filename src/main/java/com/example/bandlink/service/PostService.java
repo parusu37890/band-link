@@ -110,6 +110,12 @@ public class PostService {
         return post;
     }
 
+    @Transactional
+    public void adminDelete(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuleViolationException("投稿が見つかりません"));
+        post.close(ClosedReason.DELETED_BY_ADMIN, now());
+    }
+
     private void expireIfNeeded(Post post, LocalDateTime now) {
         if (post.getStatus() == PostStatus.OPEN && !post.getExpiresAt().isAfter(now)) post.close(ClosedReason.EXPIRED, now);
     }

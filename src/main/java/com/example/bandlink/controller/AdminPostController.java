@@ -1,0 +1,2 @@
+package com.example.bandlink.controller; import com.example.bandlink.service.PostService; import org.springframework.http.ResponseEntity; import org.springframework.web.bind.annotation.*;
+@RestController @RequestMapping("/api/admin/posts") public class AdminPostController{private final PostService posts;public AdminPostController(PostService p){posts=p;}@DeleteMapping("/{id}") public ResponseEntity<Void> delete(@PathVariable Long id){posts.adminDelete(id);return ResponseEntity.noContent().build();}}
