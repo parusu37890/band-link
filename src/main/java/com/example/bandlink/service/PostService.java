@@ -1,10 +1,12 @@
 package com.example.bandlink.service;
 
 import com.example.bandlink.dto.PostRequests;
+import com.example.bandlink.dto.PostSearchCriteria;
 import com.example.bandlink.entity.*;
 import com.example.bandlink.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.domain.Specification;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -73,6 +75,20 @@ public class PostService {
         LocalDateTime now = now();
         return postRepository.findByStatusOrderByRankUpdatedAtDesc(PostStatus.OPEN).stream()
                 .peek(post -> expireIfNeeded(post, now)).filter(post -> post.getStatus() == PostStatus.OPEN).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<Post> search(PostSearchCriteria criteria) {
+        LocalDateTime now = now();
+        Specification<Post> spec = (root, query, cb) -> cb.equal(root.get("status"), PostStatus.OPEN);
+        if (criteria != null && criteria.keyword() != null && !criteria.keyword().isBlank()) {
+            String keyword = "%" + criteria.keyword().trim().toLowerCase(java.util.Locale.ROOT) + "%";
+            spec = spec.and((root, query, cb) -> cb.or(cb.like(cb.lower(root.get("title")), keyword), cb.like(cb.lower(root.get("content")), keyword)));
+        }
+        if (criteria != null && criteria.activityFrequencies() != null && !criteria.activityFrequencies().isEmpty())
+            spec = spec.and((root, query, cb) -> root.get("activityFrequency").in(criteria.activityFrequencies()));
+        return postRepository.findAll(spec, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "rankUpdatedAt")).stream()
+                .peek(post -> expireIfNeeded(post, now)).filter(post -> post.getStatus() == PostStatus.OPEN).toList();
     }
 
     @Transactional
