@@ -62,6 +62,9 @@ public class Post {
     public Set<Stance> getStances() { return stances; }
     public Set<Prefecture> getPrefectures() { return prefectures; }
     public Set<AgeRange> getAgeRanges() { return ageRanges; }
+    public void update(String title, String content, String areaSub, ActivityFrequency frequency, LocalDateTime now) {
+        this.title = title; this.content = content; this.areaSub = areaSub; this.activityFrequency = frequency; this.updatedAt = now;
+    }
     public void close(ClosedReason reason, LocalDateTime now) { this.status = PostStatus.CLOSED; this.closedReason = reason; this.closedAt = now; }
     public void reopen(LocalDateTime now) { this.status = PostStatus.OPEN; this.closedReason = null; this.closedAt = null; this.expiresAt = now.plusDays(30); }
     public void boostRank(LocalDateTime now) { this.rankUpdatedAt = now; }
