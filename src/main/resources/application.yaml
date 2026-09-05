@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: band-link
+  datasource:
+    url: jdbc:postgresql://localhost:5432/band_link
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+app:
+  upload-dir: uploads/profile-images
+  post-upload-dir: uploads/post-images
+  message-upload-dir: uploads/message-images
