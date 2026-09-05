@@ -36,6 +36,6 @@
 
 ## 文書の責任範囲
 
-`requirements.md`は何を作るか、`DESIGN.md`は見た目の統合方針、本書は作業の進め方を扱う。設計判断は今後 `docs/decisions/` に、テスト証跡は今後 `docs/test-results/` に蓄積する案。
+`requirements.md`は何を作るか、`DESIGN.md`は見た目の統合方針、本書は作業の進め方を扱う。DB/APIは`docs/db-api-design.md`、ログ基盤は`docs/infra-design.md`で扱う。設計判断は今後 `docs/decisions/` に、テスト証跡は今後 `docs/test-results/` に蓄積する案。
 
 AIへの引き継ぎには、決定事項、対象リビジョン、完了した検証、未決事項、直近の失敗と次の行動を残す。ツールが利用可能なことと、そのツールを使って検証済みであることを区別する。

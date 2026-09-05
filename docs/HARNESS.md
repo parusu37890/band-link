@@ -11,14 +11,14 @@ requirements.md 13.4「ハーネスエンジニアリング」に対応。ここ
 
 ## ローカル起動・テスト
 
-**動作確認済み（2026-09-05、cmd.exe、`BUILD SUCCESS`確認）:**
+**実行方法確認済み（2026-09-05、cmd.exe）。テスト成功にはDBパスワードが必要:**
 
 ```
 set DB_PASSWORD=<postgresのパスワード>
 mvnw.cmd test
 ```
 
-PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。
+PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。Maven Wrapper自体は`cmd.exe /d /c "mvnw.cmd -version"`で起動確認済み。DBパスワード未設定の環境ではPostgreSQL認証エラーになり、テストは失敗する。
 
 アプリ起動（`mvnw.cmd spring-boot:run`）は本書作成時点では**未検証**。エンティティ・コントローラ実装後、実際に起動確認してから追記する。
 

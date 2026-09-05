@@ -19,10 +19,11 @@ UI作業をする場合は`DESIGN.md`と`docs/design-references/`の3原文（so
 
 1. `requirements.md` — 確定要件・保留事項
 2. `docs/db-api-design.md` — DB・API・権限・状態遷移の設計案
-3. `docs/decisions/0001〜0004` — 個別の設計判断（利用停止時の表示、検索対象、投稿タグ上限、ブロック範囲）
-4. `docs/development-workflow.md` — 役割分担・PRの流れ・テスト方針
-5. `docs/HARNESS.md` — 動作確認済みコマンド（起動・テスト実行）
-6. UI作業時のみ: `DESIGN.md` + `docs/design-references/`
+3. `docs/infra-design.md` — Elasticsearch・Kibana・JSONログの設計案
+4. `docs/decisions/0001〜0004` — 個別の設計判断（利用停止時の表示、検索対象、投稿タグ上限、ブロック範囲）
+5. `docs/development-workflow.md` — 役割分担・PRの流れ・テスト方針
+6. `docs/HARNESS.md` — 動作確認済みコマンド（起動・テスト実行）
+7. UI作業時のみ: `DESIGN.md` + `docs/design-references/`
 
 `AGENTS.md`はリポジトリ上で作業するAIへの案内として維持しています。
 
