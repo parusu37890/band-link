@@ -12,4 +12,5 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     Optional<Post> findByIdAndUserId(Long id, Long userId);
     List<Post> findByStatusOrderByRankUpdatedAtDesc(PostStatus status);
     List<Post> findByUserIdAndStatus(Long userId, PostStatus status);
+    List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

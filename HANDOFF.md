@@ -1,6 +1,6 @@
 # Band Link — Codexへの引き継ぎ
 
-状態: 2026-09-05更新。ここまでClaudeが要件レビュー・DB/API設計・開発基盤構築を担当。ここからの実装をCodexに引き継ぐ。
+状態: 2026-09-06更新。要件レビュー・DB/API設計・開発基盤に加え、Codexが `feature/frontend` で画面実装を進めている。テストは実装後の工程として未実行。
 会話履歴を前提にせず、本書と参照ファイルだけで状況を再現できるようにする。
 
 ## そのまま使える依頼文
@@ -41,11 +41,12 @@ UI作業をする場合は`DESIGN.md`と`docs/design-references/`の3原文（so
 - JUnit: User/AuthServiceの6テストが成功（2026-09-05、MockitoのJava 26警告あり）
 - Playwright MCP: `.mcp.json`で接続済み。ただし画面がまだ無いためST実行自体は未検証
 - Elasticsearch/Kibana: Docker未インストールのため未着手（保留中）
+- フロントエンド共通シェル（Thymeleaf）、ダークテーマCSS、URLルーティング、募集一覧・検索・詳細・作成／編集、プロフィール、認証、会話・通知・ブロック・運営画面のUI。API未提供の機能は画面上で成功したように扱わない。
 
 ## 未着手部分
 
 - 募集・メッセージ・検索など残りのエンティティ・Repository・Service・Controller
-- 画面（Thymeleaf）の実装
+- UIのJUnit／Playwright MCPによる検証（実装後に実行する）
 - CI（GitHub Actions等）
 - ブランチ保護・PRの必須チェック設定
 - Elasticsearch/Kibanaの構築（Docker導入待ち）

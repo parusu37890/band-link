@@ -53,4 +53,22 @@ class PostServiceTest {
         return new PostRequests.Create(PostType.MEMBER_WANTED, "Title", "Content", "Shibuya",
                 Set.of(), Set.of(), Set.of(), Set.of(), Set.of(AgeRange.ANY), ActivityFrequency.WEEKLY_1);
     }
+
+    @Test void publicDetailKeepsExpiredContentButHidesModerationAndInactiveAuthors() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneOffset.UTC);
+        PostService service = new PostService(posts, users, parts, genres, stances, prefectures, clock);
+        User author = new User("Author", "private@example.com", "hash");
+        Post post = new Post(author, PostType.MEMBER_WANTED, "Title", "Content", null,
+                ActivityFrequency.WEEKLY_1, LocalDateTime.now(clock).minusDays(31));
+        when(posts.findById(1L)).thenReturn(Optional.of(post));
+        assertSame(post, service.getPublic(1L));
+        assertEquals(ClosedReason.EXPIRED, post.getClosedReason());
+        post.close(ClosedReason.DELETED_BY_ADMIN, LocalDateTime.now(clock));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.getPublic(1L));
+        post.close(ClosedReason.MANUAL, LocalDateTime.now(clock));
+        author.setStatus(UserStatus.WITHDRAWN);
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.getPublic(1L));
+        author.setStatus(UserStatus.SUSPENDED);
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.getPublic(1L));
+    }
 }

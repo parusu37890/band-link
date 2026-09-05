@@ -81,7 +81,7 @@ public class PostService {
     @Transactional
     public List<Post> search(PostSearchCriteria criteria) {
         LocalDateTime now = now();
-        Specification<Post> spec = (root, query, cb) -> cb.equal(root.get("status"), PostStatus.OPEN);
+        Specification<Post> spec = (root, query, cb) -> cb.and(cb.equal(root.get("status"), PostStatus.OPEN), cb.equal(root.get("user").get("status"), UserStatus.ACTIVE));
         if (criteria != null && criteria.keyword() != null && !criteria.keyword().isBlank()) {
             String keyword = "%" + criteria.keyword().trim().toLowerCase(java.util.Locale.ROOT) + "%";
             spec = spec.and((root, query, cb) -> cb.or(cb.like(cb.lower(root.get("title")), keyword), cb.like(cb.lower(root.get("content")), keyword)));
@@ -108,7 +108,18 @@ public class PostService {
     public Post getPublic(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuleViolationException("投稿が見つかりません"));
         expireIfNeeded(post, now());
+        if (!post.getUser().isActive() || (post.getStatus() == PostStatus.CLOSED
+                && post.getClosedReason() != ClosedReason.MANUAL && post.getClosedReason() != ClosedReason.EXPIRED))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "投稿が見つかりません");
         return post;
+    }
+
+    @Transactional
+    public List<Post> mine(Long userId) {
+        activeUser(userId);
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        posts.forEach(post -> expireIfNeeded(post, now()));
+        return posts;
     }
 
     @Transactional

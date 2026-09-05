@@ -59,6 +59,11 @@ public class PostController {
     }
 
 
+    @GetMapping("/mine")
+    public List<PostResponse> mine(Authentication authentication) {
+        return postService.mine(userId(authentication)).stream().map(PostResponse::from).toList();
+    }
+
     @GetMapping("/{id}")
     public PostResponse detail(@PathVariable Long id) {
         return PostResponse.from(postService.getPublic(id));

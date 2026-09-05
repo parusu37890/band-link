@@ -1,1 +1,22 @@
-<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Band Link</title><style>body{font-family:system-ui;margin:0;background:#f6f7fb;color:#20232a}header{padding:24px 8%;background:#161a24;color:#fff}main{max-width:960px;margin:40px auto;padding:0 20px}.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 18px #0001;margin:16px 0}input{padding:11px;border:1px solid #ddd;border-radius:8px;width:70%}button{background:#5567e8;color:#fff;border:0;padding:10px 18px;border-radius:8px}#results{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}</style></head><body><header><strong>Band Link</strong><span style="float:right">バンド仲間を見つけよう</span></header><main><div class="card"><h1>募集を探す</h1><p>音楽ジャンルや活動エリアから、あなたに合う仲間を探せます。</p><input id="keyword" placeholder="キーワード"><button onclick="loadPosts()">検索</button></div><section id="results"></section></main><script>async function loadPosts(){const q=document.getElementById('keyword').value;const r=await fetch('/api/posts?keyword='+encodeURIComponent(q));const posts=await r.json();document.getElementById('results').innerHTML=posts.map(p=>`<article class="card"><h2>${p.title}</h2><p>${p.content}</p><small>${p.username} ・ ${p.status}</small></article>`).join('')||'<p>募集はありません。</p>';}loadPosts();</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121212">
+  <meta name="description" content="音楽でつながる、バンド仲間を探す。Band Linkで活動エリアや音楽の好みから、あなたに合うメンバーと出会いましょう。">
+  <title>Band Link — 音楽で、つながる。</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/mark.svg">
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ移動</a>
+  <header id="header" class="site-header"></header>
+  <main id="main" tabindex="-1"><div class="page loading" role="status">Band Link を読み込んでいます…</div></main>
+  <footer class="site-footer"><a class="wordmark" href="/">Band Link<span aria-hidden="true">↗</span></a><p>音楽で、つながる。</p><a href="/support">ヘルプ・お問い合わせ</a><span class="copyright">© Band Link</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+  <noscript><p class="notice">Band Linkを利用するには、ブラウザのJavaScriptを有効にしてください。</p></noscript>
+</body>
+</html>

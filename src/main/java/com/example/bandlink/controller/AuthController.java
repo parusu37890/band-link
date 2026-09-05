@@ -39,9 +39,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public UserResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    public UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
+        if (httpRequest.getSession(false) != null) httpRequest.changeSessionId();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
@@ -79,14 +80,18 @@ public class AuthController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Void> withdraw(Authentication authentication) {
+    public ResponseEntity<Void> withdraw(Authentication authentication, HttpServletRequest request) {
         User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
         authService.withdraw(user.getId());
         SecurityContextHolder.clearContext();
+        if (request.getSession(false) != null) request.getSession(false).invalidate();
         return ResponseEntity.noContent().build();
     }
 
     private UserResponse currentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "ログインが必要です");
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
         return UserResponse.from(user);
