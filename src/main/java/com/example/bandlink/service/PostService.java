@@ -87,8 +87,20 @@ public class PostService {
         }
         if (criteria != null && criteria.activityFrequencies() != null && !criteria.activityFrequencies().isEmpty())
             spec = spec.and((root, query, cb) -> root.get("activityFrequency").in(criteria.activityFrequencies()));
+        if (criteria != null && criteria.ageRanges() != null && !criteria.ageRanges().isEmpty())
+            spec = spec.and((root, query, cb) -> root.join("ageRanges").in(criteria.ageRanges()));
+        spec = relationFilter(spec, "prefectures", criteria == null ? null : criteria.prefectureIds());
+        spec = relationFilter(spec, "parts", criteria == null ? null : criteria.partIds());
+        spec = relationFilter(spec, "genres", criteria == null ? null : criteria.genreIds());
+        spec = relationFilter(spec, "stances", criteria == null ? null : criteria.stanceIds());
+        spec = spec.and((root, query, cb) -> { query.distinct(true); return cb.conjunction(); });
         return postRepository.findAll(spec, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "rankUpdatedAt")).stream()
                 .peek(post -> expireIfNeeded(post, now)).filter(post -> post.getStatus() == PostStatus.OPEN).toList();
+    }
+
+    private Specification<Post> relationFilter(Specification<Post> base, String relation, java.util.Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) return base;
+        return base.and((root, query, cb) -> root.join(relation).get("id").in(ids));
     }
 
     @Transactional
