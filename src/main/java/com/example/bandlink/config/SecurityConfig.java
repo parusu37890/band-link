@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/me", "/api/auth/logout", "/api/auth/withdraw", "/api/users/me", "/api/posts/mine").authenticated()
                 .requestMatchers("/api/admin/**", "/admin").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**", "/api/csrf", "/api/masters", "/login", "/register",
-                    "/verify-email", "/password-reset", "/password-reset/confirm", "/css/**", "/js/**", "/assets/**",
+                    "/verify-email", "/password-reset", "/password-reset/confirm", "/css/**", "/js/**", "/assets/**", "/uploads/**",
                     "/", "/posts", "/support", "/error").permitAll()
                 .requestMatchers("/posts/new", "/posts/*/edit").authenticated()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/posts/*", "/users/*").permitAll()

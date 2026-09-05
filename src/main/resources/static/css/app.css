@@ -6,3 +6,5 @@
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 .text-button{border:0;background:none;color:var(--muted);font-size:11px;padding:0;text-decoration:underline;text-underline-offset:3px}.mobile-back{display:none}@media(max-width:640px){.chat-shell.has-conversation .conversation-list{display:none}.chat-shell.has-conversation .chat-pane{display:flex}.mobile-back{display:inline-flex}}
 
+.post-image-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.post-image-grid img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--line)}@media(max-width:640px){.post-image-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.message-image{display:block;max-width:280px;max-height:280px;border-radius:6px;border:1px solid var(--line);margin-top:8px;object-fit:cover}

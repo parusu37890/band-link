@@ -1,2 +1,21 @@
-package com.example.bandlink.entity; import jakarta.persistence.*; import java.time.LocalDateTime;
-@Entity @Table(name="post_images") public class PostImage{@Id @GeneratedValue(strategy=GenerationType.IDENTITY) Long id;@ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="post_id") Post post;@Column(nullable=false,length=1000) String imageUrl;@Column(nullable=false) int sortOrder;@Column(nullable=false) LocalDateTime createdAt;protected PostImage(){}public PostImage(Post p,String url,int order,LocalDateTime now){post=p;imageUrl=url;sortOrder=order;createdAt=now;}public Long getId(){return id;}public String getImageUrl(){return imageUrl;}public int getSortOrder(){return sortOrder;}}
+package com.example.bandlink.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name="post_images")
+public class PostImage {
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY) Long id;
+    @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="post_id") Post post;
+    @Column(nullable=false,length=1000) String imageUrl;
+    @Column(nullable=false) int sortOrder;
+    @Column(nullable=false) LocalDateTime createdAt;
+    protected PostImage(){}
+    public PostImage(Post p,String url,int order,LocalDateTime now){post=p;imageUrl=url;sortOrder=order;createdAt=now;}
+    public Long getId(){return id;}
+    public Long getPostId(){return post==null?null:post.getId();}
+    public String getImageUrl(){return imageUrl;}
+    public int getSortOrder(){return sortOrder;}
+    public void setSortOrder(int order){sortOrder=order;}
+}

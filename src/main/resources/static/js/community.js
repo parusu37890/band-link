@@ -78,18 +78,21 @@ async function messagesPage(path) {
       composer.innerHTML = `<div class="panel">${notice('メッセージを送るにはメールアドレスの確認が必要です。')}${button('メール確認へ', '/verify-email', 'secondary')}</div>`;
       return;
     }
-    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="2000" required placeholder="好きな音楽や、一緒にやってみたいことから。" aria-describedby="message-help"></textarea></label><div class="row"><p class="muted" id="message-help">Enterで改行 · 2,000文字まで</p><button class="button primary" type="submit">${icon('send')}送信する</button></div><div data-form-error role="alert"></div></form>`;
+    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="2000" placeholder="好きな音楽や、一緒にやってみたいことから。" aria-describedby="message-help"></textarea></label><label class="button secondary small" for="message-image">画像を添付<input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><div class="row"><p class="muted" id="message-help">Enterで改行 · 2,000文字まで</p><button class="button primary" type="submit">${icon('send')}送信する</button></div><div data-form-error role="alert"></div></form>`;
     const form = composer.querySelector('form');
     bindForm(form, async () => {
       if (sending) return;
       const input = form.elements.content;
       const content = input.value.trim();
-      if (!content) throw new Error('メッセージを入力してください。');
+      const image = form.elements.image.files?.[0];
+      if (!content && !image) throw new Error('メッセージ本文か画像を選択してください。');
       sending = true;
       try {
-        const result = await api(`/api/messages?recipientId=${positiveId(peer.id)}`, { method: 'POST', body: { content, imageUrl: null } });
+        let imageUrl = null;
+        if (image) { const upload = new FormData(); upload.append('file', image); imageUrl = await api('/api/messages/images', { method: 'POST', body: upload }); }
+        const result = await api(`/api/messages?recipientId=${positiveId(peer.id)}`, { method: 'POST', body: { content: content || null, imageUrl } });
         // Only clear the submitted draft after the server confirms receipt.
-        input.value = '';
+        input.value = ''; form.elements.image.value = '';
         if (!conversationId) {
           conversationId = positiveId(result.conversationId);
           recipientId = null;
@@ -113,7 +116,7 @@ async function messagesPage(path) {
     messages.innerHTML = items.length ? items.map(message => {
       const mine = String(message.senderId) === String(state.user.id);
       const id = positiveId(message.id);
-      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${message.imageUrl ? '<p class="muted">画像付きメッセージ（画像は現在表示できません）</p>' : ''}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
+      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl) ? `<img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy">` : ''}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
     }).join('') : empty('会話をはじめよう。', 'まずは自己紹介と、気になった募集について送ってみましょう。');
     messages.querySelectorAll('[data-report-message]').forEach(element => element.addEventListener('click', () => report('MESSAGE', element.dataset.reportMessage)));
     messages.scrollTop = initial || nearBottom || scrollToLatest ? messages.scrollHeight : oldScroll;
@@ -149,6 +152,7 @@ async function messagesPage(path) {
           await api(`/api/messages/conversation/${conversationId}/read`, { method: 'PATCH' });
         }
       } else if (!recipientId) renderPeer();
+      container.querySelectorAll('[data-read-notification]').forEach(element => element.addEventListener('click', async () => { element.disabled = true; try { await api(`/api/notifications/${element.dataset.readNotification}/read`, {method:'PATCH'}); await refresh(); } catch (error) { element.disabled = false; status.textContent = errorText(error); } }));
       status.textContent = '15秒ごとに自動更新しています。';
       status.classList.remove('error');
     } catch (error) {
@@ -185,7 +189,7 @@ async function messagesPage(path) {
 }
 
 async function notificationsPage() {
-  showPage(`<div class="page">${heading('STAY IN THE LOOP', '通知', '新しいつながりからのお知らせ。')}<section class="panel" aria-label="通知一覧"><div data-notifications aria-busy="true"><p role="status">通知を読み込んでいます…</p></div><p class="muted" data-notification-status role="status"></p></section></div>`, '通知');
+  showPage(`<div class="page">${heading('STAY IN THE LOOP', '通知', '新しいつながりからのお知らせ。')}<div class="row" style="justify-content:flex-end;margin-bottom:16px"><button type="button" class="button secondary small" data-read-all>すべて既読にする</button></div><section class="panel" aria-label="通知一覧"><div data-notifications aria-busy="true"><p role="status">通知を読み込んでいます…</p></div><p class="muted" data-notification-status role="status"></p></section></div>`, '通知');
   const container = main.querySelector('[data-notifications]');
   const status = main.querySelector('[data-notification-status]');
   let last = '';
@@ -198,9 +202,10 @@ async function notificationsPage() {
       if (!Array.isArray(items)) throw new Error('通知を読み込めませんでした。');
       const fingerprint = JSON.stringify(items);
       if (fingerprint !== last) {
-        container.innerHTML = items.length ? items.map(item => `<article class="notification-item"><div>${icon(item.type === 'NEW_MESSAGE' ? 'message' : 'bell')}</div><div class="stack"><div class="row"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : ''}</div><p>${h(item.content)}</p><span class="muted">${h(time(item.createdAt))}</span>${item.type === 'NEW_MESSAGE' ? '<a href="/messages">メッセージを確認する</a>' : ''}</div></article>`).join('') : empty('今は新しいお知らせがありません。', '仲間からのメッセージなどが、ここに届きます。', button('募集を探す', '/posts', 'secondary'));
+        container.innerHTML = items.length ? items.map(item => `<article class="notification-item"><div>${icon(item.type === 'NEW_MESSAGE' ? 'message' : 'bell')}</div><div class="stack"><div class="row"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : ''}</div><p>${h(item.content)}</p><span class="muted">${h(time(item.createdAt))}</span>${item.type === 'NEW_MESSAGE' ? '<a href="/messages">メッセージを確認する</a>' : ''}${!item.readAt ? `<button type="button" class="button quiet small" data-read-notification="${item.id}">既読にする</button>` : ''}</div></article>`).join('') : empty('今は新しいお知らせがありません。', '仲間からのメッセージなどが、ここに届きます。', button('募集を探す', '/posts', 'secondary'));
         last = fingerprint;
       }
+      container.querySelectorAll('[data-read-notification]').forEach(element => element.addEventListener('click', async () => { element.disabled = true; try { await api(`/api/notifications/${element.dataset.readNotification}/read`, {method:'PATCH'}); await refresh(); } catch (error) { element.disabled = false; status.textContent = errorText(error); } }));
       status.textContent = '15秒ごとに自動更新しています。';
     } catch (error) {
       status.textContent = errorText(error);
@@ -210,6 +215,7 @@ async function notificationsPage() {
       }
     } finally { busy = false; container.setAttribute('aria-busy', 'false'); }
   }
+  main.querySelector('[data-read-all]').addEventListener('click', async () => { try { await api('/api/notifications/read-all',{method:'PATCH'}); await refresh(); toast('すべての通知を既読にしました。'); } catch(error) { toast(errorText(error)); } });
   await refresh();
   poll(refresh);
 }
@@ -295,3 +301,6 @@ async function adminPage() {
   });
   await load();
 }
+
+
+

@@ -3,6 +3,7 @@ package com.example.bandlink.controller;
 import com.example.bandlink.dto.PostRequests;
 import com.example.bandlink.dto.PostResponse;
 import com.example.bandlink.dto.PostSearchCriteria;
+import com.example.bandlink.dto.PostPageResponse;
 import com.example.bandlink.entity.ActivityFrequency;
 import com.example.bandlink.entity.AgeRange;
 import com.example.bandlink.repository.UserRepository;
@@ -62,6 +63,27 @@ public class PostController {
     @GetMapping("/mine")
     public List<PostResponse> mine(Authentication authentication) {
         return postService.mine(userId(authentication)).stream().map(PostResponse::from).toList();
+    }
+
+    @GetMapping("/page")
+    public PostPageResponse page(@RequestParam(required=false) String keyword,
+                                 @RequestParam(required=false) java.util.Set<Long> prefectureIds,
+                                 @RequestParam(required=false) java.util.Set<Long> partIds,
+                                 @RequestParam(required=false) java.util.Set<Long> genreIds,
+                                 @RequestParam(required=false) java.util.Set<Long> stanceIds,
+                                 @RequestParam(required=false) java.util.Set<AgeRange> ageRanges,
+                                 @RequestParam(required=false) java.util.Set<ActivityFrequency> activityFrequency,
+                                 @RequestParam(required=false) com.example.bandlink.entity.PostType type,
+                                 @RequestParam(required=false) String cursor,
+                                 @RequestParam(defaultValue="12") int limit) {
+        if (limit < 1 || limit > 50) limit = 12;
+        PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
+        List<PostResponse> all = postService.search(criteria).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
+        int offset = 0;
+        if (cursor != null && cursor.matches("[0-9]+")) offset = Math.min(Integer.parseInt(cursor), all.size());
+        int end = Math.min(offset + limit, all.size());
+        boolean hasNext = end < all.size();
+        return new PostPageResponse(all.subList(offset,end), hasNext ? String.valueOf(end) : null, hasNext);
     }
 
     @GetMapping("/{id}")
