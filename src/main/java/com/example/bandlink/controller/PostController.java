@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -37,6 +38,16 @@ public class PostController {
     @PatchMapping("/{id}/reopen")
     public PostResponse reopen(Authentication authentication, @PathVariable Long id) {
         return PostResponse.from(postService.reopen(userId(authentication), id));
+    }
+
+    @GetMapping
+    public List<PostResponse> list() {
+        return postService.listOpen().stream().map(PostResponse::from).toList();
+    }
+
+    @GetMapping("/{id}")
+    public PostResponse detail(@PathVariable Long id) {
+        return PostResponse.from(postService.getPublic(id));
     }
 
     private Long userId(Authentication authentication) {

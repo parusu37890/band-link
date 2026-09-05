@@ -37,6 +37,18 @@ class PostServiceTest {
         assertThrows(PostService.RuleViolationException.class, () -> service.create(1L, request));
     }
 
+    @Test
+    void listClosesExpiredOpenPostsLazily() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
+        PostService service = new PostService(posts, users, parts, genres, stances, prefectures, clock);
+        LocalDateTime created = LocalDateTime.now(clock).minusDays(31);
+        Post expired = new Post(new User("u", "u@example.com", "hash"), PostType.MEMBER_WANTED, "T", "C", null, ActivityFrequency.WEEKLY_1, created);
+        when(posts.findByStatusOrderByRankUpdatedAtDesc(PostStatus.OPEN)).thenReturn(List.of(expired));
+
+        assertTrue(service.listOpen().isEmpty());
+        assertEquals(ClosedReason.EXPIRED, expired.getClosedReason());
+    }
+
     private PostRequests.Create request() {
         return new PostRequests.Create(PostType.MEMBER_WANTED, "Title", "Content", "Shibuya",
                 Set.of(), Set.of(), Set.of(), Set.of(), Set.of(AgeRange.ANY), ActivityFrequency.WEEKLY_1);
