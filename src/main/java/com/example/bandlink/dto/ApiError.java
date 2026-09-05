@@ -1,0 +1,1 @@
+package com.example.bandlink.dto; import java.time.Instant; public record ApiError(String code,String message,Instant timestamp){public static ApiError of(String c,String m){return new ApiError(c,m,Instant.now());}}
