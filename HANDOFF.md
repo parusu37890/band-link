@@ -22,8 +22,9 @@ UI作業をする場合は`DESIGN.md`と`docs/design-references/`の3原文（so
 3. `docs/infra-design.md` — Elasticsearch・Kibana・JSONログの設計案
 4. `docs/decisions/0001〜0004` — 個別の設計判断（利用停止時の表示、検索対象、投稿タグ上限、ブロック範囲）
 5. `docs/development-workflow.md` — 役割分担・PRの流れ・テスト方針
-6. `docs/HARNESS.md` — 動作確認済みコマンド（起動・テスト実行）
-7. UI作業時のみ: `DESIGN.md` + `docs/design-references/`
+6. `docs/engineering-method.md` — プロンプト・コンテキスト・ハーネス・ループ方式
+7. `docs/HARNESS.md` — 動作確認済みコマンド（起動・テスト実行）
+8. UI作業時のみ: `DESIGN.md` + `docs/design-references/`
 
 `AGENTS.md`はリポジトリ上で作業するAIへの案内として維持しています。
 

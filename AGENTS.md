@@ -1,6 +1,6 @@
 # Band Link 作業ガイド
 
-作業開始時に `requirements.md` と `docs/development-workflow.md` を読み、確定事項と設計案を区別する。現状は文書整備の段階で、アプリやCIの完成を前提にしない。外部AIへの引き継ぎは `HANDOFF.md` を参照する。
+作業開始時に `requirements.md`、`docs/development-workflow.md`、`docs/engineering-method.md` を読み、確定事項と設計案を区別する。実装やCIの状態は文書に記録された検証結果で判断し、完成を前提にしない。外部AIへの引き継ぎは `HANDOFF.md` を参照する。
 
 ## UI作業前の参照
 
