@@ -28,7 +28,8 @@ PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。
 
 ## Playwright MCPによるST
 
-このセッションにはPlaywright MCPが接続されていない（2026-09-05確認、`ToolSearch`で該当ツールなし）。接続確認・実行手順は未検証。接続後にここへ追記する。
+`.mcp.json`に`@playwright/mcp`を追加し、Claude Code再起動後に接続確認済み（2026-09-05、`mcp__playwright__*`のツール群が利用可能になった）。
+まだ画面が無いため実際のST実行は**未検証**。募集一覧・登録・ログイン等の画面ができ次第、実際にブラウザ操作させて手順・期待結果・実結果をここに追記する。
 
 ## ログ確認（Elasticsearch/Kibana）
 
