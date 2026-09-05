@@ -1,0 +1,3 @@
+package com.example.bandlink.config;
+import jakarta.servlet.*; import jakarta.servlet.http.*; import org.slf4j.MDC; import org.springframework.stereotype.Component; import java.io.IOException; import java.util.UUID;
+@Component public class RequestIdFilter implements Filter { public void doFilter(ServletRequest req,ServletResponse res,FilterChain chain)throws IOException,ServletException{HttpServletRequest r=(HttpServletRequest)req;HttpServletResponse s=(HttpServletResponse)res;String id=r.getHeader("X-Request-Id");if(id==null||id.isBlank())id=UUID.randomUUID().toString();try{MDC.put("request_id",id);s.setHeader("X-Request-Id",id);chain.doFilter(req,res);}finally{MDC.remove("request_id");}}}
