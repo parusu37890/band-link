@@ -18,9 +18,10 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
     private final UserRepository userRepository;
+    private final com.example.bandlink.service.SearchHistoryService searchHistoryService;
 
-    public PostController(PostService postService, UserRepository userRepository) {
-        this.postService = postService; this.userRepository = userRepository;
+    public PostController(PostService postService, UserRepository userRepository, com.example.bandlink.service.SearchHistoryService searchHistoryService) {
+        this.postService = postService; this.userRepository = userRepository; this.searchHistoryService = searchHistoryService;
     }
 
     @PostMapping
@@ -50,9 +51,13 @@ public class PostController {
                                    @RequestParam(required = false) java.util.Set<Long> genreIds,
                                    @RequestParam(required = false) java.util.Set<Long> stanceIds,
                                    @RequestParam(required = false) java.util.Set<AgeRange> ageRanges,
-                                   @RequestParam(required = false) java.util.Set<ActivityFrequency> activityFrequency) {
-        return postService.search(new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency)).stream().map(PostResponse::from).toList();
+                                   @RequestParam(required = false) java.util.Set<ActivityFrequency> activityFrequency,
+                                   Authentication authentication) {
+        PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
+        if (authentication != null && authentication.isAuthenticated()) userRepository.findByEmail(authentication.getName()).ifPresent(u -> searchHistoryService.record(u.getId(), criteria));
+        return postService.search(criteria).stream().map(PostResponse::from).toList();
     }
+
 
     @GetMapping("/{id}")
     public PostResponse detail(@PathVariable Long id) {
