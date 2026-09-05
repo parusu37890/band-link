@@ -4,6 +4,7 @@ import com.example.bandlink.dto.PostRequests;
 import com.example.bandlink.dto.PostResponse;
 import com.example.bandlink.dto.PostSearchCriteria;
 import com.example.bandlink.entity.ActivityFrequency;
+import com.example.bandlink.entity.AgeRange;
 import com.example.bandlink.repository.UserRepository;
 import com.example.bandlink.service.PostService;
 import jakarta.validation.Valid;
@@ -44,8 +45,13 @@ public class PostController {
 
     @GetMapping
     public List<PostResponse> list(@RequestParam(required = false) String keyword,
+                                   @RequestParam(required = false) java.util.Set<Long> prefectureIds,
+                                   @RequestParam(required = false) java.util.Set<Long> partIds,
+                                   @RequestParam(required = false) java.util.Set<Long> genreIds,
+                                   @RequestParam(required = false) java.util.Set<Long> stanceIds,
+                                   @RequestParam(required = false) java.util.Set<AgeRange> ageRanges,
                                    @RequestParam(required = false) java.util.Set<ActivityFrequency> activityFrequency) {
-        return postService.search(new PostSearchCriteria(keyword, activityFrequency)).stream().map(PostResponse::from).toList();
+        return postService.search(new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency)).stream().map(PostResponse::from).toList();
     }
 
     @GetMapping("/{id}")
