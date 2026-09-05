@@ -2,6 +2,10 @@ package com.example.bandlink.service;
 
 import com.example.bandlink.dto.RegisterRequest;
 import com.example.bandlink.entity.User;
+import com.example.bandlink.entity.EmailVerificationToken;
+import com.example.bandlink.entity.PasswordResetToken;
+import com.example.bandlink.repository.EmailVerificationTokenRepository;
+import com.example.bandlink.repository.PasswordResetTokenRepository;
 import com.example.bandlink.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -18,6 +24,8 @@ import static org.mockito.Mockito.*;
 class AuthServiceTest {
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
+    @Mock EmailVerificationTokenRepository verificationTokens;
+    @Mock PasswordResetTokenRepository resetTokens;
     @InjectMocks AuthService authService;
 
     @Test
@@ -42,5 +50,28 @@ class AuthServiceTest {
                 () -> authService.register(new RegisterRequest("Haruki", "a@example.com", "password123")));
         verifyNoInteractions(passwordEncoder);
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void verifyEmailMarksUserAndConsumesToken() {
+        User user = new User("Haruki", "a@example.com", "hash");
+        EmailVerificationToken token = new EmailVerificationToken(user, "verify-token", LocalDateTime.now().plusHours(1));
+        when(verificationTokens.findByToken("verify-token")).thenReturn(Optional.of(token));
+
+        authService.verifyEmail(" verify-token ");
+
+        assertTrue(user.isEmailVerified());
+        assertNotNull(token.getUsedAt());
+    }
+
+    @Test
+    void expiredPasswordResetTokenIsRejected() {
+        User user = new User("Haruki", "a@example.com", "old-hash");
+        PasswordResetToken token = new PasswordResetToken(user, "reset-token", LocalDateTime.now().minusMinutes(1));
+        when(resetTokens.findByToken("reset-token")).thenReturn(Optional.of(token));
+
+        assertThrows(AuthService.InvalidTokenException.class,
+                () -> authService.confirmPasswordReset("reset-token", "new-password"));
+        verifyNoInteractions(passwordEncoder);
     }
 }

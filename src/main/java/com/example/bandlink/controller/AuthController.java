@@ -2,6 +2,7 @@ package com.example.bandlink.controller;
 
 import com.example.bandlink.dto.RegisterRequest;
 import com.example.bandlink.dto.UserResponse;
+import com.example.bandlink.dto.TokenRequests.*;
 import com.example.bandlink.entity.User;
 import com.example.bandlink.repository.UserRepository;
 import com.example.bandlink.service.AuthService;
@@ -58,6 +59,24 @@ public class AuthController {
 
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) { return currentUser(authentication); }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request.token());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        authService.requestPasswordReset(request.email());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        authService.confirmPasswordReset(request.token(), request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
 
     private UserResponse currentUser(Authentication authentication) {
         User user = userRepository.findByEmail(authentication.getName())
