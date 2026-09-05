@@ -1,0 +1,1 @@
+package com.example.bandlink.dto; import com.example.bandlink.entity.ReportTargetType; import jakarta.validation.constraints.*; public record ReportRequest(@NotNull ReportTargetType targetType,@NotNull Long targetId,@NotBlank @Size(max=1000) String reason){}
