@@ -7,7 +7,7 @@
 
 Band Linkというバンドメンバー募集Webアプリを実装します。`requirements.md`が確定要件、`docs/db-api-design.md`がDB・API・権限・状態遷移の設計、`docs/decisions/`が個別の設計判断です。開発基盤（git・GitHub・Spring Bootの骨組み・JUnit・Playwright MCP）は構築済みで、`docs/HARNESS.md`に動作確認済みのコマンドを記録しています。
 
-現在はSpring Bootの空プロジェクト（`BandLinkApplication`と`contextLoads`テスト1本のみ）が`band_link`データベースに接続できる状態で、エンティティ・Repository・Service・Controllerの実装はまだゼロです。実装済みと解釈しないでください。
+現在はSpring Bootを基盤に、Userエンティティ・マスタRepositoryと、登録・ログイン・ログアウト・メール確認・パスワード再設定の認証機能を実装中です。募集・メッセージ・検索・画面は未実装です。認証のメール送信基盤は未接続で、現段階ではトークン発行・検証のドメイン処理までを実装しています。
 
 まず`docs/db-api-design.md`のUserエンティティから着手し、`feature/<name>`ブランチで作業し、mainへ直接コミットしないでください。実装したらJUnitを実行し、結果を報告してください（実行していないテストは実行済みと報告しないでください）。
 
@@ -36,14 +36,15 @@ UI作業をする場合は`DESIGN.md`と`docs/design-references/`の3原文（so
 - デザイン統合方針（`DESIGN.md`）と参照3原文の保存（`docs/design-references/`）
 - 画面モック（`band-link-preview.html`、募集一覧・プロフィール・メッセージの3画面、確認用でありアプリ本体ではない）
 - Git/GitHub: `https://github.com/parusu37890/band-link`（公開リポジトリ）、`main`ブランチにpush済み
-- Spring Bootの骨組み（`pom.xml`、`BandLinkApplication`、`application.yaml`）。`band_link`データベースへの接続を`mvnw.cmd test`で確認済み（`BUILD SUCCESS`、詳細は`docs/HARNESS.md`）
-- JUnit実行環境: 動作確認済み（`contextLoads`テスト1本のみ、業務ロジックのテストはまだ無い）
+- Spring Bootの骨組み（`pom.xml`、`BandLinkApplication`、`application.yaml`）。`band_link`データベースへの接続を確認済み（詳細は`docs/HARNESS.md`）
+- Userドメイン、マスタRepository、認証API（登録・ログイン・ログアウト・自分の情報・メール確認・パスワード再設定）
+- JUnit: User/AuthServiceの6テストが成功（2026-09-05、MockitoのJava 26警告あり）
 - Playwright MCP: `.mcp.json`で接続済み。ただし画面がまだ無いためST実行自体は未検証
 - Elasticsearch/Kibana: Docker未インストールのため未着手（保留中）
 
 ## 未着手部分
 
-- エンティティ・Repository・Service・Controllerの実装（すべてゼロから）
+- 募集・メッセージ・検索など残りのエンティティ・Repository・Service・Controller
 - 画面（Thymeleaf）の実装
 - CI（GitHub Actions等）
 - ブランチ保護・PRの必須チェック設定
