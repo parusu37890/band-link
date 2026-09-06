@@ -125,16 +125,25 @@ requirements 7章「認証・復旧用メールは提供する」に対応。登
 パスワード再設定時は再設定コードをSMTPで送る。確認リンクは24時間だけ有効で、
 `/verify-email?token=...` を開くと既存の確認APIへ自動送信される。
 
+### LINE Login（任意）
+
+LINE Developers ConsoleでLINE Loginチャネルを作成し、コールバックURLを登録する。ローカルでは次をPowerShellで設定してからアプリを起動する。
+
+```powershell
+$env:LINE_CHANNEL_ID = "チャネルID"
+$env:LINE_CHANNEL_SECRET = "チャネルシークレット"
+$env:LINE_REDIRECT_URI = "http://localhost:8080/api/auth/line/callback"
+```
+
+`LINE_REDIRECT_URI` を省略すると `APP_BASE_URL` に `/api/auth/line/callback` を付けたURLになる。3つの環境変数がそろったときだけログイン画面に「LINEでログイン」が表示される。LINE側の設定がない環境では既存のメールログインだけを表示する。
+
 **設定しないあいだは送信しない。** `MAIL_HOST` か `MAIL_FROM` が空なら、
 `MailService` が警告を1行残すだけで登録・再設定そのものは通す。
 相手のメールサーバの都合でアカウントが作れなくなるほうが困るため、送信失敗も同じ扱い。
 requirements 13.3 に従い、**トークンはログや警告文へ書かない**。確認メール本文には、
 利用者が本登録を完了するためのリンクとしてのみ含める。
 
-```
-$env:PGPASSWORD = "<postgresのパスワード>"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -t -c "select t.token from email_verification_tokens t join users u on u.id=t.user_id where u.email='<メールアドレス>';"
-```
+確認リンクの動作確認でトークンをDBから直接取り出す必要はない。上のメール本文のリンクを開く。DBクエリでトークンを取り出す手順が残っている場合は、APIの障害調査など手入力が必要な開発時だけに使い、利用者向け導線には戻さない。
 
 ### 送信を有効にする
 

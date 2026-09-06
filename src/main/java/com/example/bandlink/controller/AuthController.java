@@ -6,6 +6,7 @@ import com.example.bandlink.dto.TokenRequests.*;
 import com.example.bandlink.entity.User;
 import com.example.bandlink.repository.UserRepository;
 import com.example.bandlink.service.AuthService;
+import com.example.bandlink.service.LineLoginService;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,12 +32,15 @@ public class AuthController {
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final LineLoginService lineLogin;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
-    public AuthController(AuthService authService, AuthenticationManager authenticationManager, UserRepository userRepository) {
+    public AuthController(AuthService authService, AuthenticationManager authenticationManager, UserRepository userRepository,
+                          LineLoginService lineLogin) {
         this.authService = authService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.lineLogin = lineLogin;
     }
 
     /**
@@ -69,6 +79,19 @@ public class AuthController {
         return authentication;
     }
 
+    private void startLineSession(User user, HttpServletRequest request, HttpServletResponse response) {
+        if (request.getSession(false) != null) request.changeSessionId();
+        Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
+                user.getEmail(), null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, request, response);
+        user.touchLogin(java.time.LocalDateTime.now());
+        userRepository.save(user);
+    }
+
     private void touchLogin(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
             user.touchLogin(java.time.LocalDateTime.now());
@@ -86,6 +109,44 @@ public class AuthController {
 
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) { return currentUser(authentication); }
+
+    @GetMapping("/line/enabled")
+    public Map<String, Boolean> lineEnabled() { return Map.of("enabled", lineLogin.enabled()); }
+
+    @GetMapping("/line/start")
+    public void startLineLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (!lineLogin.enabled()) {
+            response.sendRedirect("/login?lineError=unavailable");
+            return;
+        }
+        String state = UUID.randomUUID().toString();
+        request.getSession(true).setAttribute("BANDLINK_LINE_STATE", state);
+        response.sendRedirect(lineLogin.authorizationUrl(state));
+    }
+
+    @GetMapping("/line/callback")
+    public void lineCallback(@RequestParam(required = false) String code,
+                             @RequestParam(required = false) String state,
+                             @RequestParam(required = false) String error,
+                             HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var session = request.getSession(false);
+        Object expectedValue = session == null ? null : session.getAttribute("BANDLINK_LINE_STATE");
+        if (session != null) session.removeAttribute("BANDLINK_LINE_STATE");
+        if (error != null || code == null || expectedValue == null || state == null
+                || !MessageDigest.isEqual(String.valueOf(expectedValue).getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                                           state.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+            response.sendRedirect("/login?lineError=cancelled");
+            return;
+        }
+        try {
+            User user = lineLogin.login(code);
+            startLineSession(user, request, response);
+            response.sendRedirect(user.getStatus() == com.example.bandlink.entity.UserStatus.SUSPENDED
+                    ? "/support" : user.isEmailVerified() ? "/posts" : "/verify-email");
+        } catch (LineLoginService.LineLoginException e) {
+            response.sendRedirect("/login?lineError=failed");
+        }
+    }
 
     @PostMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {

@@ -48,3 +48,8 @@ app:
   upload-dir: uploads/profile-images
   post-upload-dir: uploads/post-images
   message-upload-dir: uploads/message-images
+  line:
+    # LINE Login credentials and callback URL are supplied only through environment variables.
+    channel-id: ${LINE_CHANNEL_ID:}
+    channel-secret: ${LINE_CHANNEL_SECRET:}
+    redirect-uri: ${LINE_REDIRECT_URI:}

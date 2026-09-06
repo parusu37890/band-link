@@ -52,6 +52,7 @@ public class AccountDeletionService {
         jdbc.update("delete from search_histories where user_id = ?", userId);
         jdbc.update("delete from email_verification_tokens where user_id = ?", userId);
         jdbc.update("delete from password_reset_tokens where user_id = ?", userId);
+        jdbc.update("delete from line_accounts where user_id = ?", userId);
 
         jdbc.update("delete from post_images where post_id in (select id from posts where user_id = ?)", userId);
         jdbc.update("delete from post_age_ranges where post_id in (select id from posts where user_id = ?)", userId);

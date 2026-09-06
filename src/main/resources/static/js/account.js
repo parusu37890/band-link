@@ -41,8 +41,10 @@ async function authPage(path){
   }[path];
   const register=path==='/register', verify=path==='/verify-email', reset=path==='/password-reset', confirm=path==='/password-reset/confirm';
   const verificationToken=verify?new URLSearchParams(location.search).get('token'):'';
+  const lineError=new URLSearchParams(location.search).get('lineError');
+  const lineEnabled=path==='/login' ? await api('/api/auth/line/enabled').then(value=>Boolean(value?.enabled)).catch(()=>false) : false;
   let form='';
-  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" minlength="8" required></div><button class="button primary full" type="submit">ログイン</button></form>`;
+  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" minlength="8" required></div><button class="button primary full" type="submit">ログイン</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでログイン</a>`:''}`;
   if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required><span class="hint">8文字以上で設定してください。</span></div><button class="button primary full" type="submit">アカウントを作成</button></form>`;
   if(verify) form=verificationToken
     ? `<div class="verify-link-state"><p class="muted">メール内のリンクを確認しています…</p></div>`
@@ -55,7 +57,8 @@ async function authPage(path){
     : verify ? ''
     : `<a href="/login">ログインへ戻る</a>`;
   const back=verify?'':`<a class="back-link" href="/posts">${icon('back')}募集を探す</a>`;
-  showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside">${back}<p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite"></div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
+  const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。':'';
+  showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside">${back}<p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
     let response;
