@@ -9,7 +9,7 @@
 
 ## 確認結果
 
-- `./mvnw.cmd -B "-Dtest=AuthServiceTest,MailServiceTest,LineLoginServiceTest" test`：**8件成功、失敗・エラー・スキップ0件**。
+- `./mvnw.cmd -B "-Dtest=AuthServiceTest,MailServiceTest,LineLoginServiceTest,EmailVerificationGateFilterTest" test`：**11件成功、失敗・エラー・スキップ0件**。
 - Javaソース97件のコンパイル：成功。
 - `node --check src/main/resources/static/js/account.js`：成功。
 - `git diff --check`：空白エラーなし。
