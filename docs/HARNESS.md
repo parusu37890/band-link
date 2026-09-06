@@ -49,3 +49,25 @@ $env:PGPASSWORD = "<postgresのパスワード>"
 
 GitHub Actions（`.github/workflows/ci.yml`）で `main` と `feature/**`・`fix/**` へのpush、および `main` 宛のPRごとに `./mvnw -B clean test` を実行する。
 PostgreSQLのサービスコンテナを同時に起動しており、DBに接続するテストもRunner上で通る。2026-09-06時点で成功。
+
+## 増分ビルドで合成クラスが欠ける（2026-09-06、実際に発生）
+
+`mvnw.cmd spring-boot:run` の増分コンパイルは、enumの`switch`式が生む合成クラス
+（`PeerResponse$1` のような`$SwitchMap`保持クラス）を書き出さないことがある。
+`PeerResponse.class` は更新されるのに `PeerResponse$1.class` が `target/classes` に無い状態になり、
+実行時に `NoClassDefFoundError` → HTTP 500 になる。ソースは正しいのでCIは成功し、ローカルだけで再現する。
+
+症状の確認:
+
+```
+ls target/classes/com/example/bandlink/dto/PeerResponse*
+```
+
+`PeerResponse$1.class` が無ければこれ。復旧は`clean`を付けた再ビルドのみ。
+
+```
+set DB_PASSWORD=<postgresのパスワード>
+mvnw.cmd -B clean test
+```
+
+**enumの`switch`を含むクラスを編集したら`clean`を付ける。** 増分ビルドのまま起動しない。

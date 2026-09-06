@@ -95,3 +95,46 @@ DESIGN.mdが「キーボードフォーカスは明示し、選択状態やエ�
 ## 補足
 
 Playwright MCPの`browser_click`がフォーム送信を発火しない件は前回記録のとおり。今回の検証も`browser_evaluate`から実APIを叩く形で行い、クリック結果のみを根拠にしていない。
+
+## 追記：メッセージ画面が空表示になる不具合（2026-09-06）
+
+### 1. `/api/messages/conversations` が500（ローカルのみ・アプリの不具合ではない）
+
+メッセージ画面が0件になったため調査。`logs/band-link.ecs.json` に例外が残っていた。
+
+```
+java.lang.ClassNotFoundException: com.example.bandlink.dto.PeerResponse$1
+	at com.example.bandlink.dto.PeerResponse.from(PeerResponse.java:13)
+	at com.example.bandlink.dto.ConversationResponse.from(ConversationResponse.java:9)
+	at com.example.bandlink.controller.MessageController.conversations(MessageController.java:26)
+```
+
+`PeerResponse$1` は enum の`switch`式に対してjavacが生成する合成クラス。増分ビルドが
+`PeerResponse.class` だけを更新し、合成クラスを`target/classes`へ書き出さなかった。
+ソースは正しく、同じコミットのCIは成功している（run 34016118457）。`clean`付きの再ビルドで解消。
+手順は [docs/HARNESS.md](../HARNESS.md) に記録した。
+
+再ビルド後の確認：`GET /api/messages/conversations` → 200。退会済みの相手（id 25）は
+`username: "退会済みユーザー"` / `profileImageUrl: null` を返し、docs/decisions/0001 の状態ラベル規則どおり。
+`GET /api/messages/conversation/1` → 200、`/conversation/2` → 200。
+
+### 2. 非表示タブで開くと「まだ会話がありません」と表示される（実装の不具合・修正済み）
+
+500を直した後も画面は0件のままだった。原因は`community.js`の`refresh()`冒頭にあった
+`document.hidden`ガードで、**初回ロードごと**スキップしていた。データを一度も取りに行かないまま、
+「まだ会話がありません」「募集から相手を探す」という*事実と異なる*空状態を描画していた。
+
+ポーリングの抑制は`ui.js`の`poll()`が既に`document.hidden`で行っており、
+`refresh()`側の同じ判定は重複していた。重複分を削除し、初回ロードとユーザー操作
+（送信後の再取得・「最新のメッセージ」・再試行ボタン）は可視状態に関わらず走るようにした。
+未読を自動で既読にする判定（`!document.hidden`）は意図どおりなので残している。
+
+修正後、`document.hidden === true` のまま検証：
+
+| 画面 | 結果 |
+|---|---|
+| `/messages/1` | 会話2件、メッセージ30件、ヘッダ「ミッドナイト・コード」、空状態なし |
+| `/notifications` | 通知15件、「15 / 41件を表示」、段階表示は従来どおり |
+
+バックグラウンドで復元されたタブや、リンクを新規タブで開いた場合に該当する。
+`poll()`の`visibilitychange`で最終的には回復していたが、それまで誤った空状態を見せていた。

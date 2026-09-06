@@ -260,7 +260,9 @@ async function messagesPage(path) {
   });
 
   async function refresh(scrollToLatest = false) {
-    if (busy || disposed || document.hidden) return;
+    // Only poll() should stand down for a hidden tab. Skipping here too meant a tab restored in
+    // the background rendered "no conversations yet" without ever having asked.
+    if (busy || disposed) return;
     busy = true;
     try {
       conversations = await api('/api/messages/conversations');
@@ -379,7 +381,7 @@ async function notificationsPage() {
     container.children[previous]?.focus({ preventScroll: true });
   });
   async function refresh() {
-    if (document.hidden) return;
+    // poll() already skips a hidden tab, so guarding again here only stopped the first load.
     if (busy) { refreshAgain = true; return; }
     busy = true;
     const currentRevision = revision;
