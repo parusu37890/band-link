@@ -96,13 +96,14 @@ async function profileEdit(){
   try { [p,m]=await Promise.all([api('/api/users/me'),api('/api/masters')]); }
   catch(e){showPage(`<div class="page">${empty('設定を読み込めませんでした',e.message,button('再読み込み','/settings/profile','secondary'))}</div>`,'プロフィール編集');return;}
   // 47 prefectures do not fit the chip row the other three fields use, and the multiple-select
-  // they replaced hid the choice behind Ctrl-click — the same control the search rail dropped.
-  // Reuses the rail's checkbox list so a selection is visible in both places.
+  // they replaced hid the choice behind Ctrl-click — the control DESIGN.md lists for removal.
+  // Same disclosure the post editor already uses for this field, so picking an area looks and
+  // behaves the same in both places and a long form is not made longer by 47 open checkboxes.
   const section=(key,label,source)=>{
     const selected=(p[source]||[]).map(x=>x.id);
     const field=body=>`<div class="form-field"><span class="form-label">${label} <span class="optional">任意</span></span>${body}</div>`;
     if(source!=='prefectures')return field(choices(key,m[source],selected));
-    return field(`<div class="filter-options prefecture-options area-options" role="group" aria-label="${label}" aria-describedby="${key}-status">${m[source].map(x=>`<label class="filter-option"><input type="checkbox" name="${key}" value="${x.id}" ${selected.includes(x.id)?'checked':''}><span>${h(x.name)}</span></label>`).join('')}</div><p class="hint" id="${key}-status" role="status"></p>`);
+    return field(`<p class="editor-selection-status" id="${key}-status" aria-live="polite"></p><details class="editor-area-options"><summary>都道府県を選ぶ・変更する</summary><div class="editor-choices">${m[source].map(x=>`<label class="editor-choice"><input type="checkbox" name="${key}" value="${x.id}" ${selected.includes(x.id)?'checked':''}><span>${h(x.name)}</span></label>`).join('')}</div></details>`);
   };
   showPage(`<div class="page settings-page">
     <a class="back-link" href="/users/${p.id}">${icon('back')}公開プロフィールへ</a>

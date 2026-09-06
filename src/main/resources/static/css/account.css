@@ -70,9 +70,6 @@
   .help-item { padding: 24px 0; } .help-item h3 { font-size: 16px; }
 }
 
-/* The area picker is a scrolling control inside a form, so it takes the same visible boundary as
-   the inputs beside it (WCAG 1.4.11) instead of floating on the page like the search rail does. */
-.area-options { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 0 16px; max-height: 260px; border: 1px solid var(--control-line); padding: 8px 14px; }
-.area-options .filter-option { font-size: 14px; }
-@media (max-width: 1000px) { .area-options { grid-template-columns: repeat(3, minmax(0,1fr)); } }
-@media (max-width: 640px) { .area-options { grid-template-columns: 1fr 1fr; max-height: 240px; } }
+/* The area field borrows the post editor's disclosure so choosing an area is the same act in both
+   places. Only the over-limit colour is added here; the editor never needed one. */
+.editor-selection-status.error { color: var(--danger); }
