@@ -71,3 +71,30 @@ mvnw.cmd -B clean test
 ```
 
 **enumの`switch`を含むクラスを編集したら`clean`を付ける。** 増分ビルドのまま起動しない。
+
+## マスタ（パート・ジャンル）を入れ替えるとき
+
+`MasterDataInitializer` は不足分を足すだけで、消しも直しもしない。利用者が追加した選択肢を
+勝手に消さないための設計で、`MasterDataInitializerTest` がその挙動を固定している。
+そのため一覧から何かを外す・名前を変える場合、既存DBには次の手順が要る（新規DBには不要）。
+
+1. `MasterDataInitializer` の `add(...)` の文字列を新しい一覧にする
+2. `MasterDataInitializerTest` の件数（`p.size()` / `g.size()` と `times(n)`）を合わせる
+3. `scripts/dev/seed-demo-posts.sql` のデモ投稿を、残る選択肢へ振り直す
+   （選択肢の名前が本文に出ている投稿は文面ごと直す）
+4. アプリを起動して新しい選択肢を作らせる
+5. デモ投入 → 廃止スクリプトの順に流す（2026-09-06実行確認済み）
+
+```
+$env:PGPASSWORD = "<postgresのパスワード>"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/seed-demo-posts.sql
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/retire-master-options.sql
+```
+
+`retire-master-options.sql` は統合（ロック→邦ロックなど。参照を付け替えてから古い行を削除）と
+削除（統合先が無いもの）を行い、最後に並び順を `MasterDataInitializer` と同じにする。
+**廃止する選択肢への参照が1件でも残っていれば、何も消さずに中止する。**
+募集はパート・ジャンルを1つ以上持つ必要があるため（requirements 5章）、
+消すと項目が空になる募集の件数も併せて報告する。
+
+psqlのNOTICEはPowerShellでは標準エラーに出るため赤字で表示されるが、`COMMIT` が出ていれば成功。

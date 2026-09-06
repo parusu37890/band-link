@@ -20,8 +20,8 @@ public class MasterDataInitializer implements ApplicationRunner {
         parts = p; genres = g; stances = s; prefectures = pr;
     }
     @Override @Transactional public void run(ApplicationArguments args) {
-        add("ボーカル,ギター,ベース,ドラム,キーボード,DJ,管楽器,弦楽器,パーカッション,その他", parts.findAll(), Part::getName, Part::new, parts::save);
-        add("ポップス,ロック,ハードロック／メタル,パンク,ジャズ,ブルース,ファンク／ソウル,R&B,ヒップホップ,電子音楽,フォーク／カントリー,クラシック,アニソン／ゲーム音楽,その他", genres.findAll(), Genre::getName, Genre::new, genres::save);
+        add("ボーカル,ギター,ベース,ドラム,キーボード,作詞作曲", parts.findAll(), Part::getName, Part::new, parts::save);
+        add("ポップス,邦ロック,洋ロック,アニソン,ボカロ,ハードロック／メタル,パンク／メロコア,ジャズ,ブルース,ファンク／ソウル,R&B,フォーク／カントリー,クラシック", genres.findAll(), Genre::getName, Genre::new, genres::save);
         add("趣味で楽しみたい,趣味でも本格的に取り組みたい,プロを目指したい,プロとして活動中", stances.findAll(), Stance::getName, Stance::new, stances::save);
         add("北海道,青森県,岩手県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県", prefectures.findAll(), Prefecture::getName, Prefecture::new, prefectures::save);
     }
