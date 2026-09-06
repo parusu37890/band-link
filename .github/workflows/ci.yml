@@ -1,12 +1,29 @@
 name: CI
 on:
   push:
-    branches: [main, feature/**]
+    branches: [main, feature/**, fix/**]
   pull_request:
     branches: [main]
 jobs:
   test:
     runs-on: ubuntu-latest
+    # BandLinkApplicationTests loads the full application context, which opens a real
+    # datasource. Without a database the context fails before any assertion runs, so CI
+    # gets the same PostgreSQL the application expects rather than a stubbed one.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: band_link
+          POSTGRES_USER: postgres
+          # Throwaway credentials for an ephemeral CI container, not a deployment secret.
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -15,4 +32,7 @@ jobs:
           java-version: '26'
           cache: maven
       - name: Run unit tests
+        env:
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
         run: ./mvnw -B clean test
