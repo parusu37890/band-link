@@ -68,11 +68,10 @@ async function profilePage(id){
       <div class="profile-layout">
         <aside class="profile-identity">
           ${avatar(p,true)}
-          <p class="eyebrow">公開プロフィール</p>
           <h1>${h(p.username)}</h1>
           <p class="profile-part">${h(names(p.parts)||'パート未設定')}</p>
           <p class="muted">${h(names(p.prefectures)||'活動エリア未設定')}</p>
-          <div class="profile-contact">${contact}${!own?'<p class="hint">募集が出ていなくても、連絡できます。</p>':''}</div>
+          <div class="profile-contact">${contact}</div>
           ${!own&&state.user?'<div class="profile-guard"><button class="button quiet small" id="block-user">この人をブロック</button><button class="button quiet small" id="report-user">プロフィールを通報</button></div>':''}
         </aside>
         <article class="profile-story">

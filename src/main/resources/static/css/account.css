@@ -1,7 +1,6 @@
 /* Person first: identity column and open, readable profile content. */
 .profile-layout { display: grid; grid-template-columns: 290px minmax(0,1fr); gap: 80px; }
 .profile-identity { align-self: start; border-top: 3px solid var(--rule); padding-top: 28px; }
-.profile-identity > .eyebrow { margin-top: 20px; margin-bottom: 0; }
 .profile-identity h1 { font-size: 30px; margin: 24px 0 12px; overflow-wrap: anywhere; }
 .profile-part { font-size: 16px; margin-bottom: 12px; }
 .profile-contact { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
