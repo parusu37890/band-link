@@ -1,5 +1,5 @@
 import {postEditor} from './post-editor.js';
-import {api,h,icon,partIcon,avatar,state,main,showPage,notice,empty,button,toast,report,confirmAction,time,relativeTime,ages,frequencyLabel,chips,requireUser,verificationNotice} from './ui.js';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,report,confirmAction,time,relativeTime,ages,frequencyLabel,chips,requireUser,verificationNotice} from './ui.js';
 import {listing,readListing,writeListing} from './recruitment-search.js';
 const labelNames = values => (values||[]).map(x=>x.name).join('・');
 export function postCard(post) {
@@ -7,8 +7,8 @@ export function postCard(post) {
  const contact=own?button('募集を管理','/my/posts','quiet small'):button('メッセージ',state.user?'/messages?to='+Number(post.userId):'/login?next='+encodeURIComponent('/messages?to='+Number(post.userId)),'secondary small');
  return `<article class="post-card" data-post-id="${Number(post.id)}">
   <div class="post-classification"><span class="post-type ${joining?'join':''}">${joining?'参加希望':'メンバー募集'}</span><time class="post-age" datetime="${h(post.createdAt)}" title="${h(time(post.createdAt))}">投稿 ${h(relativeTime(post.createdAt))}</time></div>
-  <div class="post-content"><p class="post-roles"><span>${joining?'担当':'募集'}</span>${partIcon(post.parts?.[0]?.name)}${h(labelNames(post.parts))}</p><h2><a href="/posts/${Number(post.id)}">${h(post.title)}</a></h2><p class="post-location">${h(labelNames(post.prefectures))}${post.areaSub?' / '+h(post.areaSub):''}<span>${h(frequencyLabel(post.activityFrequency))}</span></p><p class="excerpt">${h(post.content)}</p>${chips(post.genres)}</div>
-  <div class="post-person"><a href="/users/${Number(post.userId)}" class="person">${avatar({username:post.username})}<span><span class="person-name">${h(post.username)}</span>${post.authorActivity?`<span class="person-sub">${h(post.authorActivity)}</span>`:''}</span></a><div class="post-contact">${contact}<a class="read-post" href="/posts/${Number(post.id)}">詳細を読む ${icon('arrow')}</a></div></div>
+  <div class="post-content"><p class="post-roles"><span>${joining?'担当':'募集'}</span>${h(labelNames(post.parts))}</p><h2><a href="/posts/${Number(post.id)}">${h(post.title)}</a></h2><p class="post-location">${h(labelNames(post.prefectures))}${post.areaSub?' / '+h(post.areaSub):''}<span>${h(frequencyLabel(post.activityFrequency))}</span></p><p class="excerpt">${h(post.content)}</p>${chips(post.genres)}</div>
+  <div class="post-person"><a href="/users/${Number(post.userId)}" class="person">${avatar({username:post.username,profileImageUrl:post.authorImageUrl})}<span><span class="person-name">${h(post.username)}</span>${post.authorActivity?`<span class="person-sub">${h(post.authorActivity)}</span>`:''}</span></a><div class="post-contact">${contact}<a class="read-post" href="/posts/${Number(post.id)}">詳細を読む ${icon('arrow')}</a></div></div>
  </article>`;
 }
 export async function discoveryPage(path) {
@@ -29,7 +29,7 @@ async function detail(id){
   <div class="detail-topline"><span class="post-type ${joining?'join':''}">${joining?'参加希望':'メンバー募集'}</span><span>投稿 ${h(relativeTime(p.createdAt))}</span>${p.status==='CLOSED'?'<strong>募集終了</strong>':''}</div>
   <h1 class="detail-title">${h(p.title)}</h1>
   ${p.status==='CLOSED'?notice('この募集は終了しました。投稿者のプロフィールから引き続き連絡できます。'):''}
-  <section class="fit-summary" aria-label="主な募集条件"><div class="fit-part"><h2>${joining?'担当したいパート':'募集しているパート'}</h2><p>${partIcon(p.parts?.[0]?.name)}${h(labelNames(p.parts))}</p></div><div class="fit-practical"><div><h2>活動場所</h2><p>${h(area)}</p>${p.areaSub?`<span>${h(p.areaSub)}</span>`:''}</div><div><h2>活動頻度</h2><p>${h(frequencyLabel(p.activityFrequency))}</p></div></div></section>
+  <section class="fit-summary" aria-label="主な募集条件"><div class="fit-part"><h2>${joining?'担当したいパート':'募集しているパート'}</h2><p>${h(labelNames(p.parts))}</p></div><div class="fit-practical"><div><h2>活動場所</h2><p>${h(area)}</p>${p.areaSub?`<span>${h(p.areaSub)}</span>`:''}</div><div><h2>活動頻度</h2><p>${h(frequencyLabel(p.activityFrequency))}</p></div></div></section>
   <section class="detail-section recruitment-story"><h2>募集について</h2><div class="body-text">${h(p.content)}</div></section>
   <section class="detail-section musical-conditions"><h2>音楽と活動の方向性</h2><div class="condition-columns"><div><h3>ジャンル</h3>${chips(p.genres)}</div><div><h3>活動スタンス</h3><p>${h(labelNames(p.stances))}</p></div>${ageText?`<div><h3>希望する年代</h3><p>${h(ageText)}</p></div>`:''}</div></section>${gallery}
   <footer class="detail-record"><p>投稿日 ${h(time(p.createdAt))}${p.expiresAt?' / 掲載期限 '+h(time(p.expiresAt)):''}</p>${state.user&&!own?'<button class="button quiet small" id="report-post">この募集を通報</button>':''}</footer>

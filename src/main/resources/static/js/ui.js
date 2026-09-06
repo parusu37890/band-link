@@ -2,25 +2,6 @@ export const main = document.querySelector('#main');
 export const state = { user: null, masters: null, csrf: null };
 export const h = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths = {search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>','arrow-left':'<path d="M19 12H5m6-6-6 6 6 6"/>',back:'<path d="M19 12H5m6-6-6 6 6 6"/>',filter:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="16" cy="17" r="2" fill="currentColor"/>',plus:'<path d="M12 5v14M5 12h14"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',message:'<path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 20l1.5-3.7A7.5 7.5 0 1 1 20 11.5Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 8 3 8 3 10H3c0-2 3-2 3-10m4 13h4"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',pin:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',music:'<path d="M9 18V5l11-2v13M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>',close:'<path d="m6 6 12 12M6 18 18 6"/>',check:'<path d="m5 12 4 4L19 6"/>',external:'<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',shield:'<path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6Z"/>'};
-// Parts get a mark so a row can be skimmed by instrument instead of read word by word.
-// The word stays next to the icon: at 18px a guitar and a bass are close, and the label is what
-// carries the precise meaning — the icon is the anchor the eye lands on first.
-const partPaths = {
-  'ボーカル':'<rect x="9.5" y="2.5" width="5" height="10" rx="2.5"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4.5M9 21.5h6"/>',
-  'ギター':'<circle cx="8" cy="16" r="5.5"/><circle cx="8" cy="16" r="1.6"/><path d="M12 12.2 18.5 5.7M16.8 4 20 7.2"/>',
-  'ベース':'<ellipse cx="8" cy="16.2" rx="5" ry="5.3"/><path d="M5.6 15h4.8M5.6 17.6h4.8"/><path d="M11.8 12.6 19.4 5M18 3.6 21.2 6.8"/>',
-  'ドラム':'<ellipse cx="12" cy="8" rx="7.5" ry="3"/><path d="M4.5 8v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V8"/><path d="m5.5 21 4-5.5M18.5 21l-4-5.5"/>',
-  'キーボード':'<rect x="2.5" y="7.5" width="19" height="9" rx="1.5"/><path d="M7.5 7.5v5.5M12 7.5v5.5M16.5 7.5v5.5"/>',
-  'DJ':'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4"/><path d="m17.8 6.6-4 4"/>',
-  '管楽器':'<path d="M21 4.5v15l-7-3.5v-8Z"/><path d="M14 12H6a2.5 2.5 0 0 1 0-5h1.5"/><path d="M15.8 8.3V5.5M18.4 7v-2.8"/>',
-  '弦楽器':'<path d="M12 3.5v8"/><circle cx="12" cy="2.6" r="1.1"/><path d="M12 11.2c3 0 5.2 2.3 5.2 5.2s-2.3 5.1-5.2 5.1-5.2-2.2-5.2-5.1 2.2-5.2 5.2-5.2Z"/><path d="M9.7 14.6v3.4M14.3 14.6v3.4"/>',
-  'パーカッション':'<ellipse cx="6.5" cy="7.5" rx="3.5" ry="1.6"/><path d="M3 7.5 4.3 20h4.4L10 7.5"/><ellipse cx="16.5" cy="5.5" rx="4" ry="1.8"/><path d="M12.5 5.5 14 20h5l1.5-14.5"/>',
-  'その他':'<path d="M9 18V5l11-2v13M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>',
-};
-export const partIcon = name => partPaths[name]
-  ? `<svg class="icon part-icon" viewBox="0 0 24 24" aria-hidden="true">${partPaths[name]}</svg>`
-  : '';
-
 export const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.arrow}</svg>`;
 export const button = (label, href, kind='primary') => `<a class="button ${h(kind)}" href="${h(href)}">${h(label)}</a>`;
 export function safeUrl(value) { try { const u = new URL(value, location.origin); return ['http:','https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } }

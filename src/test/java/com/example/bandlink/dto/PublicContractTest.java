@@ -51,6 +51,24 @@ class PublicContractTest {
                 () -> ConversationResponse.from(conversation, 3L));
     }
 
+    @Test void listingCarriesThePostersPictureButHidesItWhileTheAccountIsNot() {
+        User poster = user(2L, "Haruki");
+        poster.setProfileImageUrl("/uploads/haruki.jpg");
+        Post post = new Post(poster, PostType.MEMBER_WANTED, "ギター募集", "本文", "中野",
+                ActivityFrequency.WEEKLY_1, LocalDateTime.now());
+
+        assertEquals("/uploads/haruki.jpg", PostResponse.from(post).authorImageUrl(),
+                "the listing renders initials unless it is given the picture");
+
+        poster.setStatus(UserStatus.SUSPENDED);
+        assertNull(PostResponse.from(post).authorImageUrl(), "a suspended account's photo stays hidden");
+        poster.setStatus(UserStatus.WITHDRAWN);
+        assertNull(PostResponse.from(post).authorImageUrl());
+        // Suspension is reversible, so the picture returns with the account (docs/decisions/0001).
+        poster.setStatus(UserStatus.ACTIVE);
+        assertEquals("/uploads/haruki.jpg", PostResponse.from(post).authorImageUrl());
+    }
+
     private User user(Long id, String name) {
         User user = new User(name, "private@example.com", "secret-hash");
         ReflectionTestUtils.setField(user, "id", id);
