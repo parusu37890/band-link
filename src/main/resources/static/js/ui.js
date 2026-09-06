@@ -27,7 +27,8 @@ export function relativeTime(value) {
 export const notice = (message,type='info') => `<div class="notice ${h(type)}"${type==='error'?' role="alert"':''}>${h(message)}</div>`;
 export const empty = (title,body,actionHtml='') => `<div class="empty-state">${icon('music')}<h2>${h(title)}</h2><p>${h(body)}</p>${actionHtml}</div>`;
 export function showPage(html,title) { main.innerHTML=html; document.title=`${title} — Band Link`; }
-export const navigate = url => location.assign(url);
+// Search and filter submits go through the router too rather than reloading the shell.
+export const navigate = url => { history.pushState(null, '', url); dispatchEvent(new PopStateEvent('popstate')); scrollTo(0, 0); };
 export function toast(message) { const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,4500); }
 export async function api(path,options={}) {
   const method=options.method || 'GET';
