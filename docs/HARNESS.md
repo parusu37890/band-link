@@ -118,3 +118,51 @@ $env:PGPASSWORD = "<postgresのパスワード>"
 
 なお `seed-demo-posts.sql` の募集INSERTは `WHERE NOT EXISTS` で、既存のデモ投稿には効かない。
 一覧から選ぶ列（activity_frequency）は後段のUPDATEでも上書きするようにしてある。
+
+## 認証・復旧メール
+
+requirements 7章「認証・復旧用メールは提供する」に対応。登録時の確認コードと、
+パスワード再設定コードをSMTPで送る。
+
+**設定しないあいだは送信しない。** `MAIL_HOST` か `MAIL_FROM` が空なら、
+`MailService` が警告を1行残すだけで登録・再設定そのものは通す。
+相手のメールサーバの都合でアカウントが作れなくなるほうが困るため、送信失敗も同じ扱い。
+requirements 13.3 に従い、**本文にもログにもトークンは書かない**（警告文にも含めない）。
+ローカルでトークンが要るときはDBから読む。
+
+```
+$env:PGPASSWORD = "<postgresのパスワード>"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -t -c "select t.token from email_verification_tokens t join users u on u.id=t.user_id where u.email='<メールアドレス>';"
+```
+
+### 送信を有効にする
+
+資格情報は環境変数から渡す。リポジトリには置かない。
+
+```
+$env:MAIL_HOST = "<SMTPホスト>"
+$env:MAIL_PORT = "587"
+$env:MAIL_USERNAME = "<ユーザー>"
+$env:MAIL_PASSWORD = "<パスワード>"
+$env:MAIL_FROM = "<差出人アドレス>"
+$env:APP_BASE_URL = "https://<公開URL>"
+```
+
+`APP_BASE_URL` は本文に載せる画面のURLで、未設定なら `http://localhost:8080`。
+実際の配信サービスは requirements 11章のとおり未決。
+
+### 送信の確認方法（2026-09-07実施）
+
+SMTPサーバを用意しなくても、受信するだけの簡易サーバで経路を確認できる。
+`scripts/dev/smtp-stub.js` を起動し、アプリを次の環境変数で起動して登録・再設定を行う。
+
+```
+node scripts/dev/smtp-stub.js received.eml
+$env:MAIL_HOST = "127.0.0.1"; $env:MAIL_PORT = "2525"; $env:MAIL_FROM = "no-reply@bandlink.local"
+$env:SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH = "false"
+$env:SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE = "false"
+mvnw.cmd spring-boot:run
+```
+
+本文はbase64なので、デコードしてDBのトークンと突き合わせる。確認済み：確認メール・
+再設定メールとも、本文のコードがDBのトークンと一致した。

@@ -1,6 +1,16 @@
 spring:
   application:
     name: band-link
+  # SMTPの接続先は環境変数から受け取り、資格情報はリポジトリに置かない。
+  # MAIL_HOST が未設定のあいだは送信を行わず、警告だけ残す（MailService）。
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   datasource:
     url: jdbc:postgresql://localhost:5432/band_link
     username: ${DB_USERNAME:postgres}
@@ -31,6 +41,10 @@ logging:
     org.hibernate.SQL: WARN
 
 app:
+  # 認証・復旧メールの差出人と、本文に載せる画面のURL（requirements 7章）。
+  # mail-from が空、または spring.mail.host が空のあいだは送信しない。
+  mail-from: ${MAIL_FROM:}
+  base-url: ${APP_BASE_URL:http://localhost:8080}
   upload-dir: uploads/profile-images
   post-upload-dir: uploads/post-images
   message-upload-dir: uploads/message-images

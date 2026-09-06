@@ -21,19 +21,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationTokenRepository verificationTokens;
     private final PasswordResetTokenRepository resetTokens;
+    private final MailService mail;
     private final Clock clock;
 
     @org.springframework.beans.factory.annotation.Autowired
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        EmailVerificationTokenRepository verificationTokens,
-                       PasswordResetTokenRepository resetTokens) {
-        this(userRepository, passwordEncoder, verificationTokens, resetTokens, Clock.systemDefaultZone());
+                       PasswordResetTokenRepository resetTokens, MailService mail) {
+        this(userRepository, passwordEncoder, verificationTokens, resetTokens, mail, Clock.systemDefaultZone());
     }
     AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                 EmailVerificationTokenRepository verificationTokens,
-                PasswordResetTokenRepository resetTokens, Clock clock) {
+                PasswordResetTokenRepository resetTokens, MailService mail, Clock clock) {
         this.userRepository = userRepository; this.passwordEncoder = passwordEncoder;
-        this.verificationTokens = verificationTokens; this.resetTokens = resetTokens;
+        this.verificationTokens = verificationTokens; this.resetTokens = resetTokens; this.mail = mail;
         this.clock = clock == null ? Clock.systemDefaultZone() : clock;
     }
 
@@ -44,7 +45,10 @@ public class AuthService {
             throw new EmailAlreadyUsedException();
         }
         User user = userRepository.save(new User(request.username().trim(), email, passwordEncoder.encode(request.password())));
-        verificationTokens.save(new EmailVerificationToken(user, UUID.randomUUID().toString(), now().plusHours(24)));
+        // The token used to be created and then told to nobody (requirements 7章).
+        String token = UUID.randomUUID().toString();
+        verificationTokens.save(new EmailVerificationToken(user, token, now().plusHours(24)));
+        mail.sendVerification(email, token);
         return UserResponse.from(user);
     }
 
@@ -61,7 +65,9 @@ public class AuthService {
     public void requestPasswordReset(String email) {
         userRepository.findByEmail(email.trim().toLowerCase(java.util.Locale.ROOT)).ifPresent(user -> {
             if (user.getStatus() != com.example.bandlink.entity.UserStatus.WITHDRAWN) {
-                resetTokens.save(new PasswordResetToken(user, UUID.randomUUID().toString(), now().plusHours(24)));
+                String token = UUID.randomUUID().toString();
+                resetTokens.save(new PasswordResetToken(user, token, now().plusHours(24)));
+                mail.sendPasswordReset(user.getEmail(), token);
             }
         });
     }
