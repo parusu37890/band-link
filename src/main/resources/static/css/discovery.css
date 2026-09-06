@@ -25,7 +25,7 @@
 .filter-actions p { font-size:12px; color:var(--muted); } .filter-toggle { display:none; }
 /* Phone-only affordances: the desktop rail shows the keyword field outright, and the desktop row
    already carries the poster beside it, so neither the toggle nor the gutter picture belongs here. */
-.search-toggle, .post-thumb { display:none; }
+.search-toggle { display:none; }
 .board-results { min-width:0; }
 .discover-tabs { border-bottom:1px solid var(--line); }
 .tabs { display:flex; gap:28px; } .tab { min-height:48px; padding:0 0 12px; border:0; border-bottom:2px solid transparent; background:none; color:var(--muted); font-size:14px; }
@@ -39,31 +39,49 @@
 .results-heading { display:flex; justify-content:space-between; align-items:baseline; gap:16px; font-size:12px; color:var(--muted); margin:24px 0 12px; }
 .results-heading strong { color:var(--ink); font-weight:500; font-size:14px; }
 .post-grid { display:grid; grid-template-columns:minmax(0,1fr); }
-/* 154px left Japanese names and the activity label breaking mid-word (ミッドナイト・/コード,
-   1週間以内にログイ/ン). 188px clears both on one line after the 28px avatar and its gap. */
-.post-card { display:grid; grid-template-columns:88px minmax(0,1fr) 188px; gap:20px; padding:28px 0; border-top:1px solid var(--line); min-width:0; }
-.post-classification { display:flex; flex-direction:column; gap:12px; padding-top:6px; }
+/* One row shape at every width, taken from the OURSOUNDS listing: a picture in a left gutter,
+   then the type badge riding the title, the conditions, and the poster with the timestamp at the
+   end of the line. Measured there at 1280px — 104px a row, a 55x55 picture, 14px/22.4 title and
+   12px/19.2 meta — and at 375px, where the same four lines sit in 92-111px.
+
+   The desktop row used to be three columns 266px tall carrying a body excerpt and a contact
+   button. Both are on the detail page, which is one click away, and the listing is for deciding
+   which post to open. */
+.post-card {
+  position:relative; display:grid;
+  grid-template-columns:76px minmax(0,1fr) auto;
+  grid-template-areas:"thumb body body" "thumb who when";
+  gap:2px 0; padding:18px 0; border-top:1px solid var(--line); align-content:start; min-width:0;
+}
+.post-thumb { grid-area:thumb; display:block; align-self:start; }
+.post-thumb .avatar { width:56px; height:56px; border-radius:4px; font-size:20px; }
+.post-classification { grid-area:when; align-self:baseline; }
 .post-type { font-size:12px; color:var(--accent); display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
 .post-type::before { content:''; width:3px; height:11px; background:currentColor; flex:none; } .post-type.join { color:var(--accent-alt); }
-.post-age { font-size:11px; color:var(--muted); }
-.post-content { min-width:0; }
-.post-card h2 .post-type { margin-right:10px; vertical-align:2px; }
-.post-card h2 { font-size:20px; line-height:1.6; font-weight:600; margin:8px 0 10px; overflow-wrap:anywhere; }
+.post-age { font-size:12px; color:var(--muted); }
+
+.post-content { grid-area:body; display:flex; flex-wrap:wrap; align-items:baseline; gap:0 12px; min-width:0; }
+.post-card h2 { order:1; width:100%; font-size:17px; line-height:1.5; font-weight:600; margin:0 0 3px; overflow-wrap:anywhere; }
+.post-card h2 .post-type { margin-right:10px; vertical-align:1px; }
 .post-card h2 a:hover { text-decoration:underline; text-underline-offset:4px; }
-.post-roles { font-size:14px; font-weight:600; line-height:1.6; }
-.post-roles > span { font-size:12px; font-weight:400; color:var(--muted); margin-right:10px; }
-.post-location { color:var(--muted); font-size:12px; line-height:1.7; margin-bottom:10px; overflow-wrap:anywhere; }
-.post-location > span { display:block; }
-.post-card .excerpt { font-size:14px; line-height:1.8; margin-bottom:12px; color:var(--muted); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
-.post-card .chip { font-size:12px; }
-.post-person { display:flex; flex-direction:column; gap:22px; padding-left:16px; border-left:1px solid var(--line); }
-.post-person .person { align-items:flex-start; gap:8px; } .post-person .person > span:last-child { min-width:0; } .post-person .avatar { width:28px; height:28px; font-size:12px; }
-.post-person .person-name,.post-person .person-sub { display:block; } .post-person .person-name { font-size:13px; font-weight:600; } .post-person .person-sub { margin-top:8px; font-size:11px; }
-.post-contact { display:grid; gap:10px; margin-top:auto; }
-.read-post { display:inline-flex; align-items:center; gap:12px; min-height:40px; font-size:13px; color:var(--muted); }
-.read-post .icon { width:16px; }
+.post-roles { order:2; font-size:13.5px; font-weight:600; line-height:1.7; }
+.post-roles > span { font-size:12px; font-weight:400; color:var(--muted); margin-right:8px; }
+.post-location { order:3; color:var(--muted); font-size:12px; line-height:1.7; margin:0; overflow-wrap:anywhere; }
+.post-location > span { margin-left:10px; }
+/* The body and the genres belong to the post, not to the decision to open it. */
+.post-card .excerpt, .post-content .chips { display:none; }
+
+.post-person { grid-area:who; display:flex; align-items:baseline; min-width:0; padding:0; border:0; }
+.post-person .person { align-items:baseline; gap:0; min-width:0; position:relative; z-index:1; }
+/* .person is a flex container, so the clipping belongs on the text wrapper inside it. */
+.post-person .person > span:last-child { display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.post-person .avatar { display:none; }
+.post-person .person-name { display:inline; font-size:12px; font-weight:400; color:var(--muted); }
+.post-person .person-sub { display:inline; font-size:12px; margin-left:10px; }
+.post-contact { display:none; }
+/* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
+.post-card h2 a::after { content:''; position:absolute; inset:0; }
 .load-more { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:16px; padding:24px 0; border-top:1px solid var(--line); }
-.board-footnote { color:var(--muted); font-size:12px; padding-block:20px; }
 .search-empty { padding:36px 0; border-top:1px solid var(--line); } .search-empty h2 { font-size:23px; } .search-empty > p { color:var(--muted); max-width:560px; margin:16px 0 24px; font-size:15px; }
 .relax-search { display:grid; margin-bottom:24px; max-width:480px; } .relax-search a { min-height:48px; border-top:1px solid var(--line); padding:12px 0; display:flex; align-items:center; justify-content:space-between; font-size:14px; }
 .detail-layout { display:grid; grid-template-columns:minmax(0,1fr) 282px; gap:64px; }
@@ -98,13 +116,11 @@
  .filter-actions { grid-template-columns:1fr 1fr; } .filter-actions p { grid-column:1/-1; }
  .detail-layout { grid-template-columns:minmax(0,1fr) 230px; gap:32px; }
 }
+/* The row that used to be rebuilt for narrow screens here is now one shape at every width,
+   so this breakpoint only needs the width the three columns stop fitting at. */
 @media(max-width:760px) {
- .post-card { grid-template-columns:1fr; gap:12px; padding:24px 0; }
- .post-classification { flex-direction:row; justify-content:space-between; padding:0; }
- .post-person { flex-direction:row; align-items:center; padding:16px 0 0; border-left:0; gap:16px; }
- .post-person .person { flex:1; align-items:center; } .post-person .person-sub { margin-top:2px; }
- .post-contact { margin:0; gap:0; flex:none; } .post-contact .read-post { display:none; }
- .post-card h2 { font-size:20px; } .post-location > span { display:inline; margin-left:12px; }
+  .post-card { grid-template-columns:66px minmax(0,1fr) auto; }
+  .post-thumb .avatar { width:50px; height:50px; font-size:18px; }
 }
 @media(max-width:640px) {
  .board-heading { align-items:flex-start; padding-bottom:20px; margin-bottom:20px; flex-wrap:wrap; gap:16px; }
@@ -121,67 +137,43 @@
  .search-empty h2 { font-size:21px; } .search-empty .row { align-items:flex-start; flex-direction:column; }
 }
 
-/* Mobile listing, following the row OURSOUNDS uses on a phone. Measured there at 375px: a
-   64-80px left gutter holding the picture, then one piece of information per line — title, place,
-   who, when — at 12px/19.2 for the title and 10.3px/16.5 for the meta, inside 10px of padding.
-
-   The version before this fitted more posts on the screen and read as a wall: the first line
-   carried the badge, the time, the avatar, the name and the activity all at once, and the third
-   carried part, area and frequency. Same information, four calmer lines instead of two crammed
-   ones. Type is kept a little larger than the reference — 10.3px Japanese body is small. */
+/* The phone keeps the same row, smaller. Sized against the OURSOUNDS phone listing: 92-111px a
+   row against our 108, at 10.3px meta against our 10.5 — theirs is smaller than Japanese body
+   text should go. Frequency leaves the line here because three items made it wrap; their listing
+   does not carry it either. */
 @media(max-width:640px) {
   .board-heading { padding-bottom:14px; margin-bottom:14px; gap:12px; }
   .board-heading h1 { font-size:21px; }
   .board-heading p { display:none; }
   .board-heading > .button { min-height:38px; padding:8px 14px; font-size:13px; }
 
-  /* The keyword field says what it is in its own placeholder; the label above it cost a line. */
+  /* The board opens on posts: the keyword field is one tap away rather than taking the first
+     screen, and its label is carried by the field's own placeholder. */
+  .search-actions { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; }
+  .search-toggle { display:inline-flex; gap:8px; }
+  .search-rail form { display:block; }
+  .search-keyword { display:none; margin-bottom:10px; }
   .search-keyword > label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
-  .search-rail { gap:10px; }
+  .search-rail.searching .search-keyword { display:block; }
+  .filter-toggle { margin-top:0; }
   .browse-hint { display:none; }
   .tab { padding-block:10px; }
 
-  .post-card {
-    position:relative;
-    grid-template-columns:60px minmax(0,1fr) auto;
-    grid-template-areas:"thumb body body" "thumb who when";
-    gap:2px 0; padding:11px 0; align-content:start;
-  }
-  .post-thumb { grid-area:thumb; display:block; align-self:start; }
+  .post-card { grid-template-columns:60px minmax(0,1fr) auto; padding:11px 0; }
   .post-thumb .avatar { width:46px; height:46px; font-size:16px; border-radius:4px; }
-  .post-classification { grid-area:when; align-self:baseline; line-height:1.45; }
-  .post-content { grid-area:body; display:flex; flex-wrap:wrap; align-items:baseline; gap:0 10px; }
-  /* The badge rides the title the way the reference does, so it costs no line of its own. */
-  .post-card h2 .post-type { margin-right:8px; vertical-align:1px; }
-  .post-person { grid-area:who; justify-content:flex-start; line-height:1.45; min-width:0; padding:0; border-left:0; }
-
+  .post-classification, .post-person { line-height:1.45; }
   .post-type { font-size:11px; } .post-age { font-size:10.5px; }
   .post-card h2 {
-    order:1; width:100%; font-size:14.5px; line-height:1.45; margin:0 0 1px; font-weight:600;
+    font-size:14.5px; line-height:1.45; margin:0 0 1px;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
   }
-  .post-roles { order:2; font-size:11.5px; }
+  .post-roles { font-size:11.5px; }
   .post-roles > span { font-size:10.5px; margin-right:5px; }
-  .post-location { order:3; font-size:10.5px; line-height:1.45; margin:0; }
-  /* Frequency is the least decisive of the three and the one that pushed the line to wrap.
-     OURSOUNDS does not carry it in the list either; it is on the detail page. */
+  .post-location { font-size:10.5px; line-height:1.45; }
   .post-location > span { display:none; }
-  .post-card .excerpt, .post-content .chips { display:none; }
+  .post-person .person-name, .post-person .person-sub { font-size:10.5px; }
+  .post-person .person-sub { margin-left:8px; }
 
-  /* The picture lives in the gutter now, so the copy of it beside the name would be a second one. */
-  .post-person .avatar { display:none; }
-  .post-person .person { gap:0; align-items:baseline; min-width:0; position:relative; z-index:1; }
-  .post-person .person > span:last-child { display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .post-person .person-name { display:inline; font-size:10.5px; font-weight:400; color:var(--muted); }
-  .post-person .person-sub { display:inline; font-size:10.5px; margin:0 0 0 8px; }
-  .post-contact { display:none; }
-
-  /* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
-  .post-card h2 a::after { content:''; position:absolute; inset:0; }
-
-  .search-rail form { display:flex; align-items:center; gap:8px; }
-  .search-keyword { flex:1; min-width:0; }
-  .filter-toggle { flex:none; }
   .discover-tabs { margin-top:14px; }
 }
 

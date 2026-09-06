@@ -27,7 +27,6 @@ export async function listing(renderCard){
     ${applied.length?`<div class="applied-conditions"><p>検索中の条件</p><div class="active-filters">${applied.map(x=>`<a class="active-filter" href="${h(removeUrl(params,x.key,x.value))}" aria-label="${h(x.title+'：'+x.label)}を外して検索"><span><small>${h(x.title)}</small>${h(x.label)}</span>${icon('close')}</a>`).join('')}<a class="clear-search" href="/posts">すべて解除</a></div></div>`:'<p class="browse-hint">パートや活動場所が合う募集から、内容を読んでみましょう。</p>'}
     <div class="results-heading"><strong id="result-count" role="status">募集を読み込み中…</strong><span>新しい掲載順</span></div>
     <div id="results" class="post-grid" aria-busy="true"></div><div class="load-more" id="load-sentinel"><p id="page-status" class="hint" role="status"></p><button class="button secondary" id="load-more" hidden>さらに表示</button></div>
-    <p class="board-footnote">募集とプロフィールは登録なしで閲覧できます。連絡にはログインとメール確認が必要です。</p>
    </section>
   </div></div>`,'バンドメンバー募集');
  const form=main.querySelector('#search-form');let type=params.get('type')||'';
