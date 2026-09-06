@@ -99,10 +99,50 @@ async function ownPosts(){
  main.querySelectorAll('[data-reopen]').forEach(el=>el.onclick=async()=>{el.disabled=true;try{await api('/api/posts/'+el.dataset.reopen+'/reopen',{method:'PATCH'});await ownPosts();toast('募集を再公開しました。');}catch(e){toast(e.message);el.disabled=false;}});
 }
 async function editor(id){
- const [m,p]=await Promise.all([masters(),id?api('/api/posts/'+id):Promise.resolve(null)]);if(p&&p.userId!==state.user.id)throw new Error('この募集を編集できるのは投稿者本人だけです。');
+ const [m,p,existingImages]=await Promise.all([masters(),id?api('/api/posts/'+id):Promise.resolve(null),id?api('/api/posts/'+id+'/images').catch(()=>[]):Promise.resolve([])]);if(p&&p.userId!==state.user.id)throw new Error('この募集を編集できるのは投稿者本人だけです。');
  const section=(key,label,source)=>`<div class="form-field"><span class="form-label">${label} <span class="optional">必須${source==='prefectures'?'・3つまで':''}</span></span>${source==='prefectures'?`<label class="sr-only" for="post-area">活動エリア</label><select id="post-area" name="prefectureIds" multiple required size="6">${m.prefectures.map(x=>`<option value="${x.id}" ${p?.prefectures?.some(y=>y.id===x.id)?'selected':''}>${h(x.name)}</option>`).join('')}</select><p class="hint">Ctrl / ⌘を押しながら、複数の都道府県を選択できます。</p>`:choices(key,m[source],p?.[source]?.map(x=>x.id)||[])}</div>`;
- showPage(`<div class="page post-editor-page"><a class="back-link" href="/my/posts">${icon('back')}自分の募集へ</a><div class="page-heading"><div><h1>${id?'募集を編集する':'バンドの募集を掲載する'}</h1><p>活動場所や練習のペースを、具体的に伝えましょう。</p></div></div><div class="editor-layout"><aside class="editor-guide"><strong>募集に書くこと</strong><ol><li>募集の内容</li><li>エリア・パート</li><li>活動のペース</li></ol><p>公開後の編集は12時間に1回です。画像も含めて確認してください。</p></aside><div>${verificationNotice()}<form id="post-form" style="margin-top:28px"><fieldset class="form-section"><legend>01　どんな仲間を探していますか？</legend><div class="stack">${!id?`<div class="form-field"><span class="form-label">募集の種類</span>${choices('type',[['MEMBER_WANTED','メンバーを募集したい'],['WANTS_TO_JOIN','バンドに参加したい']],['MEMBER_WANTED'],true)}</div>`:''}<div class="form-field"><label for="title">募集タイトル <span class="optional">必須</span></label><input id="title" name="title" required maxlength="100" placeholder="例：週末に一緒に音を鳴らす、ギター仲間を募集" value="${h(p?.title)}"><span class="hint" data-count="title"></span></div><div class="form-field"><label for="content">募集の本文 <span class="optional">必須</span></label><textarea id="content" name="content" required maxlength="2000" rows="9" placeholder="やりたい音楽、好きなアーティスト、活動の目標など。具体的に書くと、相性のよい仲間に伝わりやすくなります。">${h(p?.content)}</textarea><span class="hint" data-count="content"></span></div><div class="form-field"><label for="images">募集画像 <span class="optional">任意・5枚まで、1枚5MB</span></label><input class="input" id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="hint">jpg / png / webp。選択した画像は保存すると公開されます。</span><div id="image-selection" class="image-selection" aria-live="polite"></div></div></div></fieldset><fieldset class="form-section"><legend>02　活動エリアと音楽の好み</legend><div class="stack">${section('prefectureIds','活動エリア','prefectures')}<div class="form-field"><label for="areaSub">市区町村・駅など <span class="optional">任意</span></label><input id="areaSub" name="areaSub" maxlength="100" placeholder="例：下北沢、新宿周辺のスタジオ" value="${h(p?.areaSub)}"></div>${section('partIds','パート','parts')}${section('genreIds','ジャンル','genres')}${section('stanceIds','活動スタンス','stances')}</div></fieldset><fieldset class="form-section"><legend>03　活動のペース</legend><div class="stack"><div class="form-field"><span class="form-label">希望年齢層</span>${choices('ageRanges',ages,p?.ageRanges||['ANY'])}</div><div class="form-field"><label for="frequency">活動頻度</label><select id="frequency" name="activityFrequency">${frequencies.map(([v,l])=>`<option value="${v}" ${(p?.activityFrequency||'NEGOTIABLE')===v?'selected':''}>${l}</option>`).join('')}</select></div></div></fieldset>${notice('保存後12時間は、新規投稿・編集ができません。公開期間は30日です。内容を確認してから保存してください。')}<div class="sticky-actions">${button('キャンセル','/my/posts','secondary')}<button type="submit" class="button primary" ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'募集を公開する'}</button></div></form></div></div></div>`,id?'募集の編集':'募集の作成');
+ showPage(`<div class="page post-editor-page"><a class="back-link" href="/my/posts">${icon('back')}自分の募集へ</a><div class="page-heading"><div><h1>${id?'募集を編集する':'バンドの募集を掲載する'}</h1><p>活動場所や練習のペースを、具体的に伝えましょう。</p></div></div><div class="editor-layout"><aside class="editor-guide"><strong>募集に書くこと</strong><ol><li>募集の内容</li><li>エリア・パート</li><li>活動のペース</li></ol><p>公開後の編集は12時間に1回です。画像も含めて確認してください。</p></aside><div>${verificationNotice()}<form id="post-form" style="margin-top:28px"><fieldset class="form-section"><legend>01　どんな仲間を探していますか？</legend><div class="stack">${!id?`<div class="form-field"><span class="form-label">募集の種類</span>${choices('type',[['MEMBER_WANTED','メンバーを募集したい'],['WANTS_TO_JOIN','バンドに参加したい']],['MEMBER_WANTED'],true)}</div>`:''}<div class="form-field"><label for="title">募集タイトル <span class="optional">必須</span></label><input id="title" name="title" required maxlength="100" placeholder="例：週末に一緒に音を鳴らす、ギター仲間を募集" value="${h(p?.title)}"><span class="hint" data-count="title"></span></div><div class="form-field"><label for="content">募集の本文 <span class="optional">必須</span></label><textarea id="content" name="content" required maxlength="2000" rows="9" placeholder="やりたい音楽、好きなアーティスト、活動の目標など。具体的に書くと、相性のよい仲間に伝わりやすくなります。">${h(p?.content)}</textarea><span class="hint" data-count="content"></span></div><div class="form-field"><label for="images">募集画像 <span class="optional">任意・5枚まで、1枚5MB</span></label><input class="input" id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="hint">jpg / png / webp。選択した画像は保存すると公開されます。</span><div id="image-selection" class="image-selection" aria-live="polite"></div><div id="saved-images" class="saved-images" aria-live="polite"></div></div></div></fieldset><fieldset class="form-section"><legend>02　活動エリアと音楽の好み</legend><div class="stack">${section('prefectureIds','活動エリア','prefectures')}<div class="form-field"><label for="areaSub">市区町村・駅など <span class="optional">任意</span></label><input id="areaSub" name="areaSub" maxlength="100" placeholder="例：下北沢、新宿周辺のスタジオ" value="${h(p?.areaSub)}"></div>${section('partIds','パート','parts')}${section('genreIds','ジャンル','genres')}${section('stanceIds','活動スタンス','stances')}</div></fieldset><fieldset class="form-section"><legend>03　活動のペース</legend><div class="stack"><div class="form-field"><span class="form-label">希望年齢層</span>${choices('ageRanges',ages,p?.ageRanges||['ANY'])}</div><div class="form-field"><label for="frequency">活動頻度</label><select id="frequency" name="activityFrequency">${frequencies.map(([v,l])=>`<option value="${v}" ${(p?.activityFrequency||'NEGOTIABLE')===v?'selected':''}>${l}</option>`).join('')}</select></div></div></fieldset>${notice('保存後12時間は、新規投稿・編集ができません。公開期間は30日です。内容を確認してから保存してください。')}<div class="sticky-actions">${button('キャンセル','/my/posts','secondary')}<button type="submit" class="button primary" ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'募集を公開する'}</button></div></form></div></div></div>`,id?'募集の編集':'募集の作成');
  const form=main.querySelector('form');counter(form);
+ // Images already saved on the post had no management UI: once uploaded they could not be removed
+ // or ordered, although the API supports both. Order decides which one leads the detail gallery.
+ let saved = Array.isArray(existingImages) ? [...existingImages] : [];
+ const savedBox = main.querySelector('#saved-images');
+ function renderSaved() {
+   if (!savedBox) return;
+   if (!saved.length) { savedBox.innerHTML = ''; return; }
+   savedBox.innerHTML = `<p class="form-label">保存済みの画像 <span class="optional">${saved.length}枚</span></p>
+     <p class="hint">左端の画像が募集の先頭に表示されます。</p>
+     <ol class="saved-image-list">${saved.map((image, index) => `<li>
+       <img src="${h(image.imageUrl)}" alt="保存済みの募集画像 ${index + 1}枚目" loading="lazy">
+       <div class="saved-image-actions">
+         <button type="button" class="button quiet small" data-move="${image.id}" data-dir="-1" ${index === 0 ? 'disabled' : ''} aria-label="${index + 1}枚目を前へ">前へ</button>
+         <button type="button" class="button quiet small" data-move="${image.id}" data-dir="1" ${index === saved.length - 1 ? 'disabled' : ''} aria-label="${index + 1}枚目を後ろへ">後ろへ</button>
+         <button type="button" class="button text-button" data-delete-image="${image.id}" aria-label="${index + 1}枚目を削除">削除</button>
+       </div></li>`).join('')}</ol>`;
+ }
+ renderSaved();
+ savedBox?.addEventListener('click', async event => {
+   const move = event.target.closest('[data-move]');
+   const remove = event.target.closest('[data-delete-image]');
+   if (move) {
+     const from = saved.findIndex(image => String(image.id) === move.dataset.move);
+     const to = from + Number(move.dataset.dir);
+     if (from < 0 || to < 0 || to >= saved.length) return;
+     [saved[from], saved[to]] = [saved[to], saved[from]];
+     renderSaved();
+     try { await api(`/api/posts/${id}/images`, { method: 'PATCH', body: saved.map(image => image.id) }); toast('並び順を保存しました。'); }
+     catch (error) { toast(error.message); saved = await api(`/api/posts/${id}/images`).catch(() => saved); renderSaved(); }
+     return;
+   }
+   if (remove) {
+     confirmAction('この画像を削除しますか？', '削除すると募集からすぐに表示されなくなります。元に戻せません。', async () => {
+       await api(`/api/posts/${id}/images/${remove.dataset.deleteImage}`, { method: 'DELETE' });
+       saved = saved.filter(image => String(image.id) !== remove.dataset.deleteImage);
+       renderSaved();
+       toast('画像を削除しました。');
+     });
+   }
+ });
  let imagePreviews=[];
  const clearPreviews=()=>{imagePreviews.forEach(URL.revokeObjectURL);imagePreviews=[];};
  form.elements.images.addEventListener('change',()=>{clearPreviews();const files=[...form.elements.images.files];const container=main.querySelector('#image-selection');container.innerHTML=files.slice(0,5).map(file=>{const url=URL.createObjectURL(file);imagePreviews.push(url);return `<figure><img src="${h(url)}" alt="選択した画像"><figcaption>${h(file.name)}</figcaption></figure>`;}).join('')+(files.length>5?notice('画像は5枚までです。選び直してください。','error'):'');});

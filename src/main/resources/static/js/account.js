@@ -73,7 +73,7 @@ async function profilePage(id){
           <p class="profile-part">${h(names(p.parts)||'パート未設定')}</p>
           <p class="muted">${h(names(p.prefectures)||'活動エリア未設定')}</p>
           <div class="profile-contact">${contact}${!own?'<p class="hint">募集が出ていなくても、連絡できます。</p>':''}</div>
-          ${!own&&state.user?'<button class="button quiet small" id="report-user">プロフィールを通報</button>':''}
+          ${!own&&state.user?'<div class="profile-guard"><button class="button quiet small" id="block-user">この人をブロック</button><button class="button quiet small" id="report-user">プロフィールを通報</button></div>':''}
         </aside>
         <article class="profile-story">
           <section class="profile-intro"><h2>自己紹介</h2><p class="body-text">${h(p.bio||'自己紹介はまだ登録されていません。')}</p></section>
@@ -83,6 +83,12 @@ async function profilePage(id){
       </div>
     </div>`,p.username);
     main.querySelector('#report-user')?.addEventListener('click',()=>report('USER',id));
+    // Blocking had no entry point in the UI at all, so the feature was unreachable: the blocks page
+    // could only list and undo blocks that never had a way to be created.
+    main.querySelector('#block-user')?.addEventListener('click',()=>confirmAction(
+      'この人をブロックしますか？',
+      'ブロックすると、お互いの募集が一覧に表示されなくなり、メッセージも送れなくなります。過去の会話は残ります。設定のブロック一覧からいつでも解除できます。',
+      async()=>{await api('/api/blocks?userId='+encodeURIComponent(id),{method:'POST'});toast('ブロックしました。');location.assign('/settings/blocks');}));
   } catch(e){showPage(`<div class="page">${empty('プロフィールを表示できません。',e.message,button('募集を探す','/posts','secondary'))}</div>`,'プロフィール');}
 }
 async function profileEdit(){

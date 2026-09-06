@@ -46,3 +46,7 @@
   .profile-image-editor { gap: 16px; } .profile-image-editor .avatar.large { width: 80px; height: 80px; }
   .auth-layout { padding-top: 28px; } .auth-aside { display: none; }
 }
+
+/* Guard actions sit together, away from the contact button they must not be confused with. */
+.profile-guard { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.profile-guard .button { padding-inline: 0; }

@@ -20,9 +20,10 @@ public class PostController {
     private final PostService postService;
     private final UserRepository userRepository;
     private final com.example.bandlink.service.SearchHistoryService searchHistoryService;
+    private final com.example.bandlink.repository.BlockRepository blocks;
 
-    public PostController(PostService postService, UserRepository userRepository, com.example.bandlink.service.SearchHistoryService searchHistoryService) {
-        this.postService = postService; this.userRepository = userRepository; this.searchHistoryService = searchHistoryService;
+    public PostController(PostService postService, UserRepository userRepository, com.example.bandlink.service.SearchHistoryService searchHistoryService, com.example.bandlink.repository.BlockRepository blocks) {
+        this.postService = postService; this.userRepository = userRepository; this.searchHistoryService = searchHistoryService; this.blocks = blocks;
     }
 
     @PostMapping
@@ -56,7 +57,8 @@ public class PostController {
                                    Authentication authentication) {
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
         if (authentication != null && authentication.isAuthenticated()) userRepository.findByEmail(authentication.getName()).ifPresent(u -> searchHistoryService.record(u.getId(), criteria));
-        return postService.search(criteria).stream().map(PostResponse::from).toList();
+        java.util.Set<Long> hidden = hiddenAuthorIds(authentication);
+        return postService.search(criteria).stream().filter(p -> !hidden.contains(p.getUser().getId())).map(PostResponse::from).toList();
     }
 
 
@@ -75,10 +77,11 @@ public class PostController {
                                  @RequestParam(required=false) java.util.Set<ActivityFrequency> activityFrequency,
                                  @RequestParam(required=false) com.example.bandlink.entity.PostType type,
                                  @RequestParam(required=false) String cursor,
-                                 @RequestParam(defaultValue="12") int limit) {
+                                 @RequestParam(defaultValue="12") int limit, Authentication authentication) {
         if (limit < 1 || limit > 50) limit = 12;
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
-        List<PostResponse> all = postService.search(criteria).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
+        java.util.Set<Long> hidden = hiddenAuthorIds(authentication);
+        List<PostResponse> all = postService.search(criteria).stream().filter(p -> type == null || p.getType().name().equals(type.name())).filter(p -> !hidden.contains(p.getUser().getId())).map(PostResponse::from).toList();
         int offset = 0;
         if (cursor != null && cursor.matches("[0-9]+")) offset = Math.min(Integer.parseInt(cursor), all.size());
         int end = Math.min(offset + limit, all.size());
@@ -91,6 +94,21 @@ public class PostController {
         return PostResponse.from(postService.getPublic(id));
     }
 
+
+    /**
+     * Authors the viewer should not see in listings because a block exists in either direction
+     * (requirements 8章). The post stays reachable by its own URL: blocking hides someone from
+     * browsing, it is not an access control (docs/decisions/0004).
+     */
+    private java.util.Set<Long> hiddenAuthorIds(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) return java.util.Set.of();
+        return userRepository.findByEmail(authentication.getName())
+                .map(viewer -> blocks.findByBlockerIdOrBlockedId(viewer.getId(), viewer.getId()).stream()
+                        .map(block -> block.getBlocker().getId().equals(viewer.getId())
+                                ? block.getBlocked().getId() : block.getBlocker().getId())
+                        .collect(java.util.stream.Collectors.toSet()))
+                .orElseGet(java.util.Set::of);
+    }
     private Long userId(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません")).getId();
     }

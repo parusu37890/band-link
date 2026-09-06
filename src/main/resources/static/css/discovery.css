@@ -64,3 +64,12 @@
   .detail-layout { grid-template-columns: 1fr; gap: 40px; } .sidebar { position: static; } .detail-title { font-size: 28px; } .facts { grid-template-columns: 82px minmax(0,1fr); gap: 18px 14px; }
   .join-banner { align-items: flex-start; flex-direction: column; } .join-banner h2 { font-size: 20px; }
 }
+
+/* Saved images are managed in place: order is visible, and each row carries its own actions. */
+.saved-images { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.saved-images .hint { margin-bottom: 12px; }
+.saved-image-list { list-style: none; display: flex; flex-wrap: wrap; gap: 16px; margin: 0; padding: 0; counter-reset: saved; }
+.saved-image-list li { width: 132px; }
+.saved-image-list img { display: block; width: 132px; height: 100px; object-fit: cover; border: 1px solid var(--line); }
+.saved-image-actions { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; }
+.saved-image-actions .button { padding: 6px 0; min-height: 36px; font-size: 12px; }
