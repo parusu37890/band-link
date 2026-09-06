@@ -1,17 +1,40 @@
+/* Light. The board is mostly Japanese body text and long lists, so the canvas is a warm off-white
+   rather than pure white — white is kept for the surfaces that sit on it, which is where reading
+   actually happens. The sage the dark theme carried stays as the accent, darkened to a moss that
+   holds up as link text. Every value below was measured, not guessed; the ratios are noted where
+   a rule depends on them. */
 :root {
-  color-scheme: dark;
-  --bg: #141514;
-  --surface: #1b1d1b;
-  --raised: #252825;
-  --ink: #f0f0e9;
-  --muted: #a9ada6;
-  --line: #3a3e39;
+  color-scheme: light;
+  --bg: #f4f3ee;             /* page canvas — warm paper */
+  --surface: #ffffff;        /* panels, inputs, anything meant to be read on */
+  --raised: #eceae2;         /* quiet fill: active rows, hovers, file buttons */
+  --ink: #1b1d19;            /* 15.29:1 on --bg */
+  --muted: #63675e;          /* 5.20:1 on --bg, 4.80:1 on --raised */
+  --line: #d8d6cc;           /* hairline separators — decorative, not a control boundary */
   /* Borders that carry a control boundary need 3:1 against the page (WCAG 1.4.11).
      --line is a quiet separator and sits below that, so form controls use this instead. */
-  --control-line: #606b5b;
-  --accent: #a4bfff;
-  --danger: #ffb5ae;
-  --success: #c1d8b4;
+  --control-line: #7f8577;   /* 3.42:1 on --bg, 3.16:1 on --raised */
+  --accent: #45643c;         /* 6.02:1 on --bg — moss, the dark theme's sage brought to light */
+  --accent-alt: #8a4a2a;    /* 6.11:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
+  --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 9.72:1 */
+  --rule: #45643c;           /* the 3px rule that opens a profile, an auth panel, a contact block */
+  --danger: #9c3025;         /* 6.60:1 on --bg */
+  --danger-line: #b07668;    /* 3.35:1 on --bg — danger control boundary */
+  --danger-bg: #fbeeec;      /* --danger on it is 6.48:1 */
+  --success: #3f6b3a;        /* 5.60:1 on --bg */
+  --success-bg: #edf3ea;     /* --success on it is 5.51:1 */
+  --notice-bg: #eaf0f6;
+  --notice-line: #4a6f96;
+  --notice-ink: #2b4a66;     /* 8.04:1 on --notice-bg */
+  --field: #ffffff;          /* input fill */
+  --placeholder: #6e7268;    /* 4.92:1 on --field */
+  --avatar-bg: #dcdcd2;
+  --avatar-ink: #3f443b;     /* 7.24:1 on --avatar-bg */
+  --bubble-bg: #cbd8c0;      /* the reader's own messages — 1.23:1 against the incoming bubble.
+                                #dfe4da was only 1.07 and the two sides read as one colour once the
+                                theme went light; alignment carried the whole distinction. */
+  --bubble-ink: #1b2118;     /* 12.72:1 on --bubble-bg */
+  --scrim: #1b1d19a6;        /* dialog backdrop */
   --radius: 3px;
   --page: 1240px;
   --gutter: clamp(20px, 4vw, 64px);

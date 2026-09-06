@@ -41,7 +41,7 @@
 .post-card { display:grid; grid-template-columns:88px minmax(0,1fr) 188px; gap:20px; padding:28px 0; border-top:1px solid var(--line); min-width:0; }
 .post-classification { display:flex; flex-direction:column; gap:12px; padding-top:4px; }
 .post-type { font-size:12px; color:var(--accent); display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
-.post-type::before { content:''; width:3px; height:11px; background:currentColor; flex:none; } .post-type.join { color:#c7cbbf; }
+.post-type::before { content:''; width:3px; height:11px; background:currentColor; flex:none; } .post-type.join { color:var(--accent-alt); }
 .post-age { font-size:11px; color:var(--muted); }
 .post-content { min-width:0; } .post-card h2 { font-size:20px; line-height:1.6; font-weight:600; margin:8px 0 10px; overflow-wrap:anywhere; }
 .post-card h2 a:hover { text-decoration:underline; text-underline-offset:4px; }

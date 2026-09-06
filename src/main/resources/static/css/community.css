@@ -33,7 +33,7 @@
 .message { align-self: flex-start; max-width: 82%; font-size: 15px; }
 .message.mine { align-self: flex-end; }
 .message > .message-text { padding: 14px 18px; background: var(--raised); border-radius: 0 4px 4px; }
-.message.mine > .message-text { background: #d7ddd1; color: #1b2118; border-radius: 4px 0 4px 4px; }
+.message.mine > .message-text { background: var(--bubble-bg); color: var(--bubble-ink); border-radius: 4px 0 4px 4px; }
 .message > .message-text:empty { display: none; }
 .message-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
 .message-meta .button { min-height: 36px; padding: 4px; }
@@ -87,7 +87,7 @@
 }
 
 /* The reported message is quoted apart from the report itself, so the two are not confused. */
-.report-snapshot { border-left: 3px solid #71534e; padding: 4px 0 4px 18px; margin-top: 4px; }
+.report-snapshot { border-left: 3px solid var(--danger-line); padding: 4px 0 4px 18px; margin-top: 4px; }
 .report-snapshot h4 { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
 .report-snapshot .message-text { font-size: 14px; }
 .report-snapshot .hint { margin-top: 10px; }

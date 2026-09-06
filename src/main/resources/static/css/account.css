@@ -1,6 +1,6 @@
 /* Person first: identity column and open, readable profile content. */
 .profile-layout { display: grid; grid-template-columns: 290px minmax(0,1fr); gap: 80px; }
-.profile-identity { align-self: start; border-top: 3px solid #a9b7a0; padding-top: 28px; }
+.profile-identity { align-self: start; border-top: 3px solid var(--rule); padding-top: 28px; }
 .profile-identity > .eyebrow { margin-top: 20px; margin-bottom: 0; }
 .profile-identity h1 { font-size: 30px; margin: 24px 0 12px; overflow-wrap: anywhere; }
 .profile-part { font-size: 16px; margin-bottom: 12px; }
@@ -30,7 +30,7 @@
 .auth-aside h2 { font-size: clamp(32px,4vw,48px); max-width: 440px; }
 .auth-aside > p { color: var(--muted); max-width: 370px; margin-top: 24px; line-height: 1.9; }
 .auth-aside-note { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 24px; font-size: 14px; }
-.auth-panel { padding: 28px 0; background: none; border: 0; border-top: 3px solid #a9b7a0; }
+.auth-panel { padding: 28px 0; background: none; border: 0; border-top: 3px solid var(--rule); }
 .auth-panel form { display: grid; gap: 22px; }
 .auth-panel h2 { margin-bottom: 12px; } .auth-panel > p { margin-bottom: 28px; color: var(--muted); }
 .auth-footer { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
@@ -60,7 +60,7 @@
 .help-item h3 { font-size: 17px; font-weight: 500; margin-bottom: 12px; }
 .help-item p { color: var(--muted); line-height: 1.9; }
 .help-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 14px; color: var(--accent); }
-.help-contact { max-width: 760px; border-top: 3px solid #a9b7a0; padding-top: 28px; }
+.help-contact { max-width: 760px; border-top: 3px solid var(--rule); padding-top: 28px; }
 .help-contact h2 { font-size: 20px; margin-bottom: 16px; }
 .help-contact p { color: var(--muted); line-height: 1.9; }
 .help-contact .hint { margin-top: 14px; }
