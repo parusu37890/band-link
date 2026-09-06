@@ -42,6 +42,7 @@ class AuthServiceTest {
         assertFalse(response.emailVerified());
         verify(passwordEncoder).encode("password123");
         verify(userRepository).save(argThat(user -> user.getPasswordHash().equals("bcrypt-hash") && user.getUsername().equals("Haruki")));
+        verify(mail).sendVerification(eq("a@example.com"), anyString());
     }
 
     @Test

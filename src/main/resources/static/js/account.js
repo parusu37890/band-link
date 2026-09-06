@@ -35,19 +35,23 @@ async function authPage(path){
   const config={
     '/login':['ログイン','登録したメールアドレスでログインしてください。','気になる募集が見つかったら、プロフィールからメッセージを。'],
     '/register':['アカウントを作成','表示名とメールアドレスを登録してください。','担当パートも、好きな音楽も。プロフィールが、最初の自己紹介になります。'],
-    '/verify-email':['メールアドレスを確認','登録時に届いた確認トークンを入力してください。','メールアドレスの確認後、募集の投稿とメッセージの送信ができます。'],
+    '/verify-email':['メールアドレスを確認','登録時のメール内リンクを開いて、本登録を完了してください。','メールアドレスの確認後、募集の投稿とメッセージの送信ができます。'],
     '/password-reset':['パスワードを再設定','登録メールアドレスに再設定用の案内を送ります。','パスワードを忘れた場合は、こちらから再設定できます。'],
     '/password-reset/confirm':['新しいパスワードを設定','届いたトークンと新しいパスワードを入力してください。','再設定後は、新しいパスワードでログインしてください。']
   }[path];
   const register=path==='/register', verify=path==='/verify-email', reset=path==='/password-reset', confirm=path==='/password-reset/confirm';
+  const verificationToken=verify?new URLSearchParams(location.search).get('token'):'';
   let form='';
   if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" minlength="8" required></div><button class="button primary full" type="submit">ログイン</button></form>`;
   if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required><span class="hint">8文字以上で設定してください。</span></div><button class="button primary full" type="submit">アカウントを作成</button></form>`;
-  if(verify) form=`<form id="auth-form"><div class="form-field"><label for="token">確認トークン</label><input class="input" id="token" name="token" maxlength="100" required autocomplete="one-time-code" placeholder="メールに記載されたトークン"></div><button class="button primary full" type="submit">メールアドレスを確認</button></form>`;
+  if(verify) form=verificationToken
+    ? `<div class="verify-link-state"><p class="muted">メール内のリンクを確認しています…</p></div>`
+    : `<form id="auth-form"><div class="form-field"><label for="token">確認トークン</label><input class="input" id="token" name="token" maxlength="100" required autocomplete="one-time-code" placeholder="リンクを開けない場合に入力"></div><button class="button primary full" type="submit">確認トークンを入力する</button><p class="hint">確認メールが届かない場合は、迷惑メールフォルダも確認してください。</p></form>`;
   if(reset) form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><button class="button primary full" type="submit">再設定メールを送る</button></form>`;
   if(confirm) form=`<form id="auth-form"><div class="form-field"><label for="token">再設定トークン</label><input class="input" id="token" name="token" maxlength="100" required></div><div class="form-field"><label for="newPassword">新しいパスワード</label><input class="input" id="newPassword" name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div><button class="button primary full" type="submit">パスワードを更新</button></form>`;
   showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside"><a class="back-link" href="/posts">${icon('back')}募集を探す</a><p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite"></div>${form}<div class="auth-footer">${path==='/login'?`アカウントをお持ちでない方は <a href="/register">新規登録</a><br><a href="/password-reset">パスワードを忘れた方</a>`:register?`すでに登録済みの方は <a href="/login">ログイン</a>`:`<a href="/login">ログインへ戻る</a>`}</div></section></div>`,config[0]);
-  bindForm(main.querySelector('#auth-form'),async fd=>{
+  const authForm=main.querySelector('#auth-form');
+  if(authForm) bindForm(authForm,async fd=>{
     let response;
     if(path==='/login') response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
     else if(register) response=await api('/api/auth/register',{method:'POST',body:{username:fd.get('username'),email:fd.get('email'),password:fd.get('password')}});
@@ -56,6 +60,22 @@ async function authPage(path){
     else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
     if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register?'/verify-email':next);}
   });
+  if(verify&&verificationToken){
+    try {
+      await api('/api/auth/verify-email',{method:'POST',body:{token:verificationToken}});
+      if(state.user) state.user.emailVerified=true;
+      history.replaceState({},'', '/verify-email');
+      const destination=state.user?'/posts/new':'/login';
+      main.querySelector('#auth-message').innerHTML=notice(
+        state.user?'本登録が完了しました。募集を投稿したり、メッセージを送ったりできます。':'本登録が完了しました。ログインすると募集を投稿できます。',
+        'success'
+      )+`<div class="auth-link-action">${button(state.user?'募集を作成する':'ログインする',destination,'primary')}</div>`;
+      main.querySelector('.verify-link-state')?.remove();
+    } catch(e) {
+      main.querySelector('#auth-message').innerHTML=notice(e.message||'確認リンクを確認できませんでした。','error');
+      main.querySelector('.verify-link-state')?.replaceWith(document.createRange().createContextualFragment(`<p class="hint">登録時の確認メールを開き直すか、リンクの有効期限を確認してください。</p>`));
+    }
+  }
 }
 async function profilePage(id){
   try {
@@ -203,4 +223,3 @@ function supportPage(){
     </section>
   </div>`, 'ヘルプ');
 }
-
