@@ -63,6 +63,17 @@ public class AuthService {
         stored.setUsedAt(now());
     }
 
+    /** Sends a fresh one-time confirmation link to the currently signed-in, unverified user. */
+    @Transactional
+    public void resendVerification(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidTokenException());
+        if (user.isEmailVerified()) return;
+        verificationTokens.findAllByUserIdAndUsedAtIsNull(userId).forEach(token -> token.setUsedAt(now()));
+        String token = UUID.randomUUID().toString();
+        verificationTokens.save(new EmailVerificationToken(user, token, now().plusHours(24)));
+        mail.sendVerification(user.getEmail(), token);
+    }
+
     @Transactional
     public void requestPasswordReset(String email) {
         userRepository.findByEmail(email.trim().toLowerCase(java.util.Locale.ROOT)).ifPresent(user -> {

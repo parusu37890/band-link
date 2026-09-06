@@ -24,12 +24,14 @@
 .profile-image-editor > div { min-width: 0; } .profile-image-editor .row { margin-block: 12px; }
 .profile-image-editor .hint { overflow-wrap: anywhere; }
 .account-settings { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 28px; }
-.auth-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; max-width: 1050px; padding-top: 64px; }
+.auth-page { max-width: 560px; padding-top: 64px; }
 .auth-aside { padding-top: 12px; }
 .auth-aside h2 { font-size: clamp(32px,4vw,48px); max-width: 440px; }
 .auth-aside > p { color: var(--muted); max-width: 370px; margin-top: 24px; line-height: 1.9; }
 .auth-aside-note { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 24px; font-size: 14px; }
 .auth-panel { padding: 28px 0; background: none; border: 0; border-top: 3px solid var(--rule); }
+.auth-mark { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 36px; font-size: 21px; font-weight: 650; }
+.auth-mark img { width: 34px; height: 34px; }
 .auth-panel form { display: grid; gap: 22px; }
 .auth-panel h2 { margin-bottom: 12px; } .auth-panel > p { margin-bottom: 28px; color: var(--muted); }
 .auth-footer { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
@@ -40,14 +42,14 @@
 .line-login:hover { background:#05b34c; border-color:#05b34c; color:#fff; }
 @media (max-width: 1000px) { .profile-layout { grid-template-columns: 240px minmax(0,1fr); gap: 40px; } .settings-layout { grid-template-columns: 170px minmax(0,1fr); gap: 32px; } .auth-layout { gap: 48px; } }
 @media (max-width: 640px) {
-  .profile-layout, .settings-layout, .auth-layout { grid-template-columns: 1fr; gap: 32px; }
+  .profile-layout, .settings-layout { grid-template-columns: 1fr; gap: 32px; }
   .profile-identity { padding-top: 24px; } .profile-identity h1 { font-size: 28px; }
   .profile-contact { flex-direction: row; flex-wrap: wrap; } .profile-contact .button { width: auto; flex: 1; }
   .profile-intro .body-text { font-size: 16px; }
   .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: 0 20px; }
   .settings-nav a { border: none; } .settings-nav a[aria-current=page] { border: 0; border-bottom: 2px solid var(--accent); padding-left: 0; }
   .profile-image-editor { gap: 16px; } .profile-image-editor .avatar.large { width: 80px; height: 80px; }
-  .auth-layout { padding-top: 28px; } .auth-aside { display: none; }
+  .auth-page { padding-top: 28px; }
 }
 
 /* Guard actions sit together, away from the contact button they must not be confused with. */

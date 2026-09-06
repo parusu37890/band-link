@@ -6,7 +6,7 @@ const groups = [
   ['genreIds','ジャンル','genres',3],
   ['stanceIds','活動スタンス','stances',1]
 ];
-const labels = ['条件を選ぶ','募集を書く','確認して公開'];
+const labels = ['条件','本文','確認'];
 const inputChoices = (name,items,selected=[],radio=false) => `<div class="editor-choices">${items.map(item=>{
   const [value,label]=Array.isArray(item)?item:[item.id,item.name];
   return `<label class="editor-choice"><input type="${radio?'radio':'checkbox'}" name="${h(name)}" value="${h(value)}" ${selected.map(String).includes(String(value))?'checked':''}><span>${h(label)}</span></label>`;
@@ -25,27 +25,27 @@ export async function postEditor(id) {
     return `<fieldset class="editor-fieldset" data-selection="${key}" data-max="${max}"><legend>${label}<span class="required">必須</span></legend><p class="editor-selection-status" id="${key}-status" aria-live="polite"></p>${source==='prefectures'?`<details class="editor-area-options"><summary>都道府県を選ぶ・変更する</summary>${options}</details>`:options}</fieldset>`;
   };
   showPage(`<div class="page post-editor-page guided-editor"><a class="back-link" href="/my/posts">${icon('back')}自分の募集へ</a>
-    <div class="page-heading"><div><h1>${id?'募集を編集する':'募集を掲載する'}</h1><p>条件を選び、内容を確認してから${id?'変更を保存':'公開'}します。</p></div></div>
+    <div class="page-heading"><div><h1>バンドメンバー募集</h1></div></div>
     <nav class="editor-progress" aria-label="募集の入力手順"><ol>${labels.map((label,index)=>`<li><button type="button" data-editor-go="${index}" ${index===0?'aria-current="step"':''}><span class="editor-step-number" aria-hidden="true">${index+1}</span><span>${label}</span></button></li>`).join('')}</ol></nav>
     ${verificationNotice()}<form id="post-form" novalidate>
       <div class="form-error" tabindex="-1" role="alert" id="editor-error"></div>
       <section class="editor-step" data-editor-step="0" aria-labelledby="editor-heading-0">
-        <div class="editor-step-heading"><h2 id="editor-heading-0" tabindex="-1">誰と、どこで活動しますか？</h2><p>検索に使われる条件です。合うものを選んでください。</p></div>
+        <div class="editor-step-heading"><h2 id="editor-heading-0" tabindex="-1">活動条件</h2></div>
         <div class="editor-form-content">
           ${!id?`<fieldset class="editor-fieldset"><legend>募集の種類<span class="required">必須</span></legend>${inputChoices('type',[['MEMBER_WANTED','メンバーを募集したい'],['WANTS_TO_JOIN','バンドに参加したい']],['MEMBER_WANTED'],true)}</fieldset>`:`<p class="hint">募集の種類：${p.type==='WANTS_TO_JOIN'?'参加希望':'メンバー募集'}</p>`}
           ${fieldGroup(groups[0])}
-          <div class="form-field"><label for="areaSub">市区町村・駅など<span class="optional">任意</span></label><input id="areaSub" name="areaSub" maxlength="100" value="${h(p?.areaSub)}" placeholder="例：下北沢、新宿周辺のスタジオ"><p class="hint">通える場所が伝わると、活動の相談がしやすくなります。</p></div>
+          <div class="form-field"><label for="areaSub">市区町村・駅など<span class="optional">任意</span></label><input id="areaSub" name="areaSub" maxlength="100" value="${h(p?.areaSub)}" placeholder="例：新宿駅"></div>
           ${fieldGroup(groups[1])}<p class="hint" data-part-hint>メンバー募集では募集するパート、参加希望では自分が担当したいパートを選びます。</p>
           ${fieldGroup(groups[2])}${fieldGroup(groups[3])}
         </div>
       </section>
       <section class="editor-step" data-editor-step="1" aria-labelledby="editor-heading-1" hidden>
-        <div class="editor-step-heading"><h2 id="editor-heading-1" tabindex="-1">やりたい音楽を伝えましょう</h2><p>好きな音楽や、どんな活動にしたいかを自分の言葉で。</p></div>
+        <div class="editor-step-heading"><h2 id="editor-heading-1" tabindex="-1">募集内容</h2></div>
         <div class="editor-form-content">
-          <div class="form-field"><label for="title">募集タイトル<span class="required">必須</span></label><input id="title" name="title" required maxlength="100" value="${h(p?.title)}" placeholder="例：下北沢で月2回、インディーロックのドラム募集"><span class="hint" data-count="title"></span></div>
-          <div class="form-field"><label for="content">募集の本文<span class="required">必須</span></label><p class="hint" id="content-help">好きなアーティスト、現在のメンバー、練習の曜日、ライブの予定など。決まっていないことは、相談したいと書いても大丈夫です。</p><textarea id="content" name="content" required maxlength="2000" rows="9" aria-describedby="content-help" placeholder="どんな音楽を、どんな仲間とやってみたいですか？">${h(p?.content)}</textarea><span class="hint" data-count="content"></span></div>
+          <div class="form-field"><label for="title">募集タイトル<span class="required">必須</span></label><input id="title" name="title" required maxlength="30" value="${h(p?.title)}" placeholder="例：新宿でドラム募集"><span class="hint" data-count="title"></span></div>
+          <div class="form-field"><label for="content">募集の本文<span class="required">必須</span></label><p class="hint" id="content-help">好きなアーティスト、現在のメンバー、練習の曜日、ライブの予定などを書いてみましょう</p><textarea id="content" name="content" required maxlength="500" rows="9" aria-describedby="content-help" placeholder="どんな音楽を、どんな仲間とやってみたいですか？">${h(p?.content)}</textarea><span class="hint" data-count="content"></span></div>
           <div class="editor-extra-fields"><h3>活動のペースと希望</h3><div class="form-field"><label for="frequency">活動頻度</label><select id="frequency" name="activityFrequency">${frequencies.map(([value,label])=>`<option value="${value}" ${(p?.activityFrequency||'MONTHLY_1')===value?'selected':''}>${h(label)}</option>`).join('')}</select></div><fieldset class="editor-fieldset"><legend>希望年齢層</legend>${inputChoices('ageRanges',ages,p?.ageRanges?.length?p.ageRanges:['ANY'])}</fieldset></div>
-          <div class="editor-extra-fields"><h3>募集画像<span class="optional">任意</span></h3><p class="hint">演奏やバンドの雰囲気を伝える画像があれば追加できます。保存済みと合わせて5枚まで、1枚5MBまで。</p><label class="sr-only" for="images">募集画像を選択</label><input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><p class="hint">jpg / png / webp。新しく選んだ画像は、最後の保存時に公開されます。</p><div id="image-selection" class="image-selection" aria-live="polite"></div><button type="button" class="button quiet small" data-clear-images hidden>選択した画像を取り消す</button><div id="saved-images" class="saved-images" aria-live="polite"></div></div>
+          <div class="editor-extra-fields"><h3>募集画像<span class="optional">任意</span></h3><label class="sr-only" for="images">募集画像を選択</label><input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><div id="image-selection" class="image-selection" aria-live="polite"></div><button type="button" class="button quiet small" data-clear-images hidden>選択した画像を取り消す</button><div id="saved-images" class="saved-images" aria-live="polite"></div></div>
         </div>
       </section>
       <section class="editor-step" data-editor-step="2" aria-labelledby="editor-heading-2" hidden>

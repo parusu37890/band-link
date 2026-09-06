@@ -3,7 +3,7 @@ import { api, h, icon, avatar, state, main, showPage, notice, empty, button, toa
 
 const positiveId = value => /^[1-9]\d*$/.test(String(value ?? '')) ? String(value) : null;
 const personName = user => user?.status === 'WITHDRAWN' ? '退会済みユーザー' : user?.status === 'SUSPENDED' ? '利用停止中ユーザー' : (user?.username || 'ユーザー');
-const heading = (title, description, action = '') => `<header class="page-heading"><div class="page-heading-copy"><h1>${h(title)}</h1><p class="muted">${h(description)}</p></div>${action}</header>`;
+const heading = (title, description = '', action = '') => `<header class="page-heading"><div class="page-heading-copy"><h1>${h(title)}</h1>${description?`<p class="muted">${h(description)}</p>`:''}</div>${action}</header>`;
 const errorText = error => error?.message || '読み込めませんでした。時間をおいて、もう一度お試しください。';
 const retryMarkup = message => `${notice(message, 'error')}<button type="button" class="button secondary" data-retry>もう一度読み込む</button>`;
 
@@ -74,15 +74,28 @@ async function messagesPage(path) {
   let draftContent = '';
   let draftImage = null;
   let previewUrl = null;
+  let stream = null;
+  let streamConversationId = null;
   let conversationLimit = 15;
   let messageLimit = 30;
   let messageItems = [];
   let frozenEndId = null;
-  window.addEventListener('pagehide', () => { disposed = true; if (previewUrl) URL.revokeObjectURL(previewUrl); }, { once: true });
+  window.addEventListener('pagehide', () => { disposed = true; stream?.close(); stream = null; streamConversationId = null; if (previewUrl) URL.revokeObjectURL(previewUrl); }, { once: true });
 
-  showPage(`<div class="page messages-page">${heading('メッセージ', '届いた話を確認し、日程や音楽のことを相談できます。')}
+  function closeStream() { stream?.close(); stream = null; streamConversationId = null; }
+  function openStream() {
+    if (!conversationId || streamConversationId === conversationId || disposed) return;
+    closeStream();
+    streamConversationId = conversationId;
+    stream = new EventSource(`/api/messages/conversation/${conversationId}/stream`);
+    stream.addEventListener('message', () => refresh());
+    stream.addEventListener('read', () => refresh());
+    stream.onerror = () => { status.textContent = 'リアルタイム接続を再試行しています…'; status.classList.add('error'); };
+  }
+
+  showPage(`<div class="page messages-page">${heading('メッセージ')}
     <div class="chat-shell" data-chat-shell>
-      <aside class="conversation-list" aria-label="会話一覧"><div class="inbox-heading"><h2>会話一覧</h2><a href="/posts">募集を探す</a><label class="form-field conversation-search" for="conversation-search">相手の名前で探す<input class="input" type="search" id="conversation-search" autocomplete="off"></label></div><div data-conversations aria-busy="true"><p class="panel muted" role="status">会話を読み込んでいます…</p></div><div class="collection-more"><p class="muted" data-conversation-count role="status"></p><button type="button" class="button secondary small" data-more-conversations hidden>続きを表示</button></div></aside>
+      <aside class="conversation-list" aria-label="会話一覧"><div class="inbox-heading"><h2>会話一覧</h2><label class="form-field conversation-search" for="conversation-search">相手の名前で探す<input class="input" type="search" id="conversation-search" autocomplete="off"></label></div><div data-conversations aria-busy="true"><p class="panel muted" role="status">会話を読み込んでいます…</p></div><div class="collection-more"><p class="muted" data-conversation-count role="status"></p><button type="button" class="button secondary small" data-more-conversations hidden>続きを表示</button></div></aside>
       <section class="chat-pane" aria-label="メッセージ"><div data-chat-header></div><p class="chat-status muted" data-chat-status role="status" aria-live="polite"></p><div class="message-update" data-message-updates hidden><button type="button" class="button secondary small" data-latest-messages>最新のメッセージへ</button></div><div class="chat-messages" data-messages aria-label="会話の内容" tabindex="0"><p class="muted" role="status">読み込んでいます…</p></div><div data-composer></div></section>
     </div></div>`, 'メッセージ');
 
@@ -112,7 +125,7 @@ async function messagesPage(path) {
       return `<a class="conversation-item${id === conversationId ? ' active' : ''}" href="/messages/${id}"${id === conversationId ? ' aria-current="page"' : ''}>${avatar(other)}<span class="stack"><strong>${h(personName(other))}</strong><span class="muted">${h(time(conversation.lastMessageAt))}</span></span></a>`;
     };
     if (visible.length) reconcileRows(list, visible, markup);
-    else list.innerHTML = query ? '<div class="panel"><p>その名前の会話はありません。</p><p class="muted">名前の一部で探すか、検索欄を空にしてください。</p></div>' : `<div class="panel"><h3>まだ会話がありません</h3><p class="muted">募集や公開プロフィールから送ったメッセージと、受け取った返信がここに並びます。</p>${button('募集から相手を探す', '/posts', 'secondary')}</div>`;
+    else list.innerHTML = query ? '<div class="panel"><p>その名前の会話はありません。</p></div>' : empty('まだ会話がありません');
     conversationCount.textContent = matches.length ? `${visible.length} / ${matches.length}件` : '';
     conversationMore.hidden = visible.length >= matches.length;
     conversationMore.textContent = `続きを${Math.min(15, matches.length - visible.length)}件表示`;
@@ -129,7 +142,7 @@ async function messagesPage(path) {
     if (!peer) {
       header.innerHTML = '';
       composer.innerHTML = '';
-      messages.innerHTML = conversations.length ? empty('会話を選んで、続きを話す', '左の会話一覧から相手を選ぶと、これまでのメッセージと返信欄を開けます。') : empty('募集から相手を探す', '活動エリアや担当パートが合う募集を見つけたら、募集や公開プロフィールからメッセージを送れます。', button('募集を探す', '/posts', 'secondary'));
+      messages.innerHTML = conversations.length ? empty('会話を選んで、続きを話す') : empty('まだ会話がありません');
       return;
     }
     shell.classList.add('has-conversation');
@@ -145,7 +158,7 @@ async function messagesPage(path) {
     }
     // Keep the live form during polling, including focus, selection and attachment.
     if (composer.querySelector('[data-message-form]')) return;
-    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="2000" placeholder="自己紹介や、募集について聞きたいことを書いてください。" aria-describedby="message-help"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div><button type="button" class="button secondary small" data-attach>画像を添付</button><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" hidden><p class="muted composer-help" id="message-help">2,000文字まで · 画像は1枚 / 5MBまで</p></div><button class="button primary" type="submit">送信する ${icon('arrow')}</button></div><div data-form-error role="alert"></div></form>`;
+    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="1000" placeholder="自己紹介や、募集について聞きたいことを書いてください。"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div><button type="button" class="button secondary small" data-attach>画像を添付</button><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" hidden></div><button class="button primary" type="submit">送信する ${icon('arrow')}</button></div><div data-form-error role="alert"></div></form>`;
     const form = composer.querySelector('form');
     const input = form.elements.content;
     const imageInput = form.elements.image;
@@ -190,6 +203,7 @@ async function messagesPage(path) {
           conversationId = positiveId(result.conversationId);
           recipientId = null;
           history.replaceState(null, '', `/messages/${conversationId}`);
+          openStream();
         }
         lastMessageState = '';
         status.textContent = '送信しました。';
@@ -232,7 +246,7 @@ async function messagesPage(path) {
       return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl) ? `<img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy">` : ''}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
     };
     if (visible.length) reconcileRows(rows, visible, markup);
-    else rows.innerHTML = empty('最初のメッセージを送る', '担当パートや気になった募集について、相手に伝えてみましょう。');
+    else rows.innerHTML = empty('まだ会話がありません');
     if (initial || nearBottom || scrollToLatest) messages.scrollTop = messages.scrollHeight;
     else {
       const nextAnchor = anchorId ? messages.querySelector(`[data-message-id="${anchorId}"]`) : null;
@@ -291,7 +305,7 @@ async function messagesPage(path) {
           await api(`/api/messages/conversation/${conversationId}/read`, { method: 'PATCH' });
         }
       } else if (!recipientId) renderPeer();
-      status.textContent = '15秒ごとに自動更新しています。';
+      status.textContent = '';
       status.classList.remove('error');
     } catch (error) {
       status.textContent = `${errorText(error)} 自動で再試行します。`;
@@ -309,25 +323,26 @@ async function messagesPage(path) {
     if (recipientId) {
       if (recipientId === String(state.user.id)) throw new Error('自分自身にメッセージは送信できません。');
       peer = await api(`/api/users/${recipientId}`);
-      messages.innerHTML = empty('会話をはじめよう。', '自己紹介や好きな音楽について、最初のメッセージを送ってみましょう。');
+      messages.innerHTML = empty('まだ会話がありません');
     }
     // Do not silently treat a failed block lookup as an unblocked relationship.
     const blocks = await api('/api/blocks');
     await refresh();
     blocked = Array.isArray(blocks) && blocks.some(user => String(user.id) === String(peer?.id));
     renderPeer();
-    poll(() => refresh());
+    openStream();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   } catch (error) {
     messages.innerHTML = empty('メッセージを表示できません。', errorText(error), button('会話一覧へ', '/messages', 'secondary'));
     composer.innerHTML = '';
     status.textContent = '';
     list.setAttribute('aria-busy', 'false');
-    list.innerHTML = `<div class="panel">${button('募集を探す', '/posts', 'secondary')}</div>`;
+    list.innerHTML = empty('会話を読み込めません。', errorText(error), button('会話一覧へ', '/messages', 'secondary'));
   }
 }
 
 async function notificationsPage() {
-  showPage(`<div class="page notifications-page">${heading('通知', '未読のお知らせから、届いた会話を確認できます。', '<button type="button" class="button secondary small" data-read-all disabled>すべて既読にする</button>')}<section class="notification-feed" aria-label="通知一覧"><div class="section-toolbar notification-toolbar"><div class="notification-filters" role="group" aria-label="通知の絞り込み"><button class="button quiet" type="button" data-notification-filter="all" aria-pressed="true">すべて</button><button class="button quiet" type="button" data-notification-filter="unread" aria-pressed="false">未読だけ</button></div><span class="muted" data-unread-summary role="status" tabindex="-1"></span></div><div data-notifications aria-busy="true"><p role="status">通知を読み込んでいます…</p></div><div class="collection-more"><p class="muted" data-notification-count role="status"></p><button class="button secondary" type="button" data-more-notifications hidden>以前の通知を表示</button></div><p class="muted update-note" data-notification-status role="status"></p></section></div>`, '通知');
+  showPage(`<div class="page notifications-page">${heading('通知', '', '<button type="button" class="button secondary small" data-read-all disabled>すべて既読にする</button>')}<section class="notification-feed" aria-label="通知一覧"><div class="section-toolbar notification-toolbar"><div class="notification-filters" role="group" aria-label="通知の絞り込み"><button class="button quiet" type="button" data-notification-filter="all" aria-pressed="true">すべて</button><button class="button quiet" type="button" data-notification-filter="unread" aria-pressed="false">未読だけ</button></div><span class="muted" data-unread-summary role="status" tabindex="-1"></span></div><div data-notifications aria-busy="true"><p role="status">通知を読み込んでいます…</p></div><div class="collection-more"><p class="muted" data-notification-count role="status"></p><button class="button secondary" type="button" data-more-notifications hidden>以前の通知を表示</button></div><p class="muted update-note" data-notification-status role="status"></p></section></div>`, '通知');
   const container = main.querySelector('[data-notifications]');
   const status = main.querySelector('[data-notification-status]');
   const readAll = main.querySelector('[data-read-all]');
@@ -353,7 +368,7 @@ async function notificationsPage() {
       const anchorTop = anchor?.getBoundingClientRect().top;
       const markup = item => `<article class="notification-item${!item.readAt ? ' is-unread' : ''}" tabindex="-1"><div class="notification-copy"><div class="notification-meta"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : '<span class="muted">既読</span>'}<time datetime="${h(item.createdAt)}">${h(time(item.createdAt))}</time></div><p>${h(item.content)}</p><div class="notification-actions">${item.type === 'NEW_MESSAGE' ? `<a href="${positiveId(item.relatedId) ? `/messages/${positiveId(item.relatedId)}` : '/messages'}">メッセージを開く ${icon('arrow')}</a>` : ''}${!item.readAt && positiveId(item.id) ? `<button type="button" class="button quiet small" data-read-notification="${positiveId(item.id)}">既読にする</button>` : ''}</div></div></article>`;
       if (visible.length) reconcileRows(container, visible, markup);
-      else container.innerHTML = filter === 'unread' && items.length ? empty('未読の通知はありません', 'これまでの通知は「すべて」から確認できます。') : empty('まだ通知はありません', 'メッセージを受け取ると、相手との会話をここから開けます。', button('募集を探す', '/posts', 'secondary'));
+      else container.innerHTML = filter === 'unread' && items.length ? empty('未読の通知はありません') : empty('まだ通知はありません');
       const nextAnchor = anchorId ? [...container.children].find(node => node.dataset.rowId === anchorId) : null;
       if (nextAnchor && anchorTop < 0) window.scrollBy(0, nextAnchor.getBoundingClientRect().top - anchorTop);
       if (focused && !container.contains(document.activeElement)) (container.querySelector('.notification-item') || summary).focus({ preventScroll: true });
@@ -391,7 +406,7 @@ async function notificationsPage() {
       if (!Array.isArray(result)) throw new Error('通知を読み込めませんでした。');
       items = result;
       render();
-      status.textContent = '15秒ごとに自動更新しています。';
+      status.textContent = '';
     } catch (error) {
       status.textContent = errorText(error);
       if (!last) {

@@ -49,7 +49,7 @@ public class EmailVerificationGateFilter extends OncePerRequestFilter {
     private boolean isAllowed(HttpServletRequest request) {
         String path = request.getRequestURI();
         if (PAGE_ALLOWLIST.contains(path)) return true;
-        if (path.equals("/api/auth/verify-email") || path.equals("/api/auth/logout")
+        if (path.equals("/api/auth/verify-email") || path.equals("/api/auth/verify-email/resend") || path.equals("/api/auth/logout")
                 || path.equals("/api/auth/me") || path.equals("/api/csrf")) return true;
         return path.startsWith("/css/") || path.startsWith("/js/")
                 || path.startsWith("/assets/") || path.startsWith("/uploads/")

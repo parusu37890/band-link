@@ -58,7 +58,7 @@
 | user_id | bigint | NOT NULL, FK | |
 | type | enum | NOT NULL | MEMBER_WANTED（メンバー募集） / WANTS_TO_JOIN（参加希望） |
 | title | varchar(100) | NOT NULL | 文字数上限は実装案（11章対応、下記§5参照） |
-| content | text | NOT NULL, 最大2000文字 | 実装案（11章対応） |
+| content | text | NOT NULL, 最大500文字 | 募集本文 |
 | area_sub | varchar(100) | NULL可 | 市区町村・駅など自由記入 |
 | activity_frequency | enum | NOT NULL | WEEKLY_2PLUS / WEEKLY_1 / MONTHLY_2_3 / MONTHLY_1 / IRREGULAR / NEGOTIABLE |
 | status | enum | NOT NULL, DEFAULT 'OPEN' | OPEN / CLOSED（一覧表示可否はこれだけを見る） |
@@ -91,7 +91,7 @@
 `conversations`: id, user_a_id, user_b_id, created_at, last_message_at
 - 2人の組は常に`user_a_id < user_b_id`になるよう保存し、`UNIQUE(user_a_id, user_b_id)`で1組1会話を強制する。
 
-`messages`: id, conversation_id, sender_id, content(NULL可,最大2000文字), image_url(NULL可), created_at, **read_at**(timestamp, NULL可)
+`messages`: id, conversation_id, sender_id, content(NULL可,最大1000文字), image_url(NULL可), created_at, **read_at**(timestamp, NULL可)
 - 既存実装は`read`真偽値だったが、モック画面(`band-link-preview.html`)が「既読 14:24」と既読**時刻**を表示する設計になっているため、`read`→`read_at`(nullable timestamp)に変更する。
 
 ### 1.7 notifications
@@ -275,13 +275,13 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 
 | 項目 | 提案値 | 備考 |
 |---|---|---|
-| 投稿タイトル文字数上限 | 100文字 | |
-| 投稿本文文字数上限 | 2,000文字 | |
-| メッセージ本文文字数上限 | 2,000文字 | |
+| 投稿タイトル文字数上限 | 30文字 | |
+| 投稿本文文字数上限 | 500文字 | |
+| メッセージ本文文字数上限 | 1,000文字 | |
 | 活動エリア自由記入上限 | 100文字 | |
 | 画像許可形式 | jpg, png, webp | 拡張子だけでなくマジックバイト検証も行う（11章「画像実体検証」対応） |
 | 1ページ取得件数 | 20件 | 無限スクロールのカーソル方式と併用 |
-| メッセージ・通知の自動更新間隔 | 15秒ポーリング | WebSocket/SSEは将来検討、初期はシンプルなポーリングを提案 |
+| メッセージ・通知の自動更新 | メッセージはSSEで即時反映、通知は既存の自動更新を維持 | ページ再読み込みなしで会話を続けられる |
 | トークン有効期限（メール確認・PW再設定） | 24時間 | |
 
 ## 6. 未解決事項（本書でも解消しなかったもの）

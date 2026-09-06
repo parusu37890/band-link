@@ -14,9 +14,9 @@
 .editor-selection-status { color: var(--muted); font-size: 13px; margin: 0 0 10px; overflow-wrap: anywhere; }
 .editor-choices { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .editor-choice { display: inline-flex; align-items: flex-start; gap: 9px; min-height: 44px; padding: 10px 0; font-size: 14px; cursor: pointer; }
-.editor-choice input { flex: none; width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--accent); }
+.editor-choice input { flex: none; width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--focus); }
 .editor-choice:has(input:checked) { color: var(--ink); font-weight: 600; }
-.editor-choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.editor-choice:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
 .editor-area-options { border: 1px solid var(--control-line); }
 .editor-area-options summary { padding: 12px 16px; cursor: pointer; min-height: 48px; font-size: 14px; }
 .editor-area-options .editor-choices { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); padding: 8px 16px 16px; gap: 0 12px; border-top: 1px solid var(--line); }

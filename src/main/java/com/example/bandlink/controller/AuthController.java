@@ -61,6 +61,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
+        if (!userRepository.existsByEmail(email)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED, "このメールアドレスは登録されていません。");
+        }
         Authentication authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
         touchLogin(request.email());
         return currentUser(authentication);
@@ -152,6 +157,14 @@ public class AuthController {
     public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
         authService.verifyEmail(request.token());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/verify-email/resend")
+    public ResponseEntity<Void> resendVerification(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
+        authService.resendVerification(user.getId());
+        return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/password-reset/request")

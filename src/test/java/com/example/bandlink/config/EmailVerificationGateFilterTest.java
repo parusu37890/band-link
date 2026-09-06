@@ -57,6 +57,16 @@ class EmailVerificationGateFilterTest {
         verify(chain).doFilter(any(), any());
     }
 
+    @Test
+    void resendVerificationRemainsReachable() throws Exception {
+        authenticatedUnverifiedUser();
+        FilterChain chain = mock(FilterChain.class);
+
+        filter.doFilter(request("/api/auth/verify-email/resend"), new MockHttpServletResponse(), chain);
+
+        verify(chain).doFilter(any(), any());
+    }
+
     private MockHttpServletRequest request(String path) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI(path);

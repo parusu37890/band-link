@@ -24,7 +24,7 @@
 .button.danger { color: var(--danger); border-color: var(--danger-line); }
 .button.small { padding: 8px 12px; font-size: 13px; }
 .button.full { width: 100%; }
-.required { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.required { margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--danger); }
 .avatar { height: 36px; width: 36px; display: inline-flex; align-items: center; justify-content: center; background: var(--avatar-bg); color: var(--avatar-ink); border-radius: 50%; font-size: 13px; flex: none; overflow: hidden; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .avatar.large { height: 112px; width: 112px; border-radius: 3px; font-size: 40px; }
@@ -36,15 +36,17 @@
 .chip + .chip::before { content: '/'; color: var(--muted); margin-right: 8px; }
 .chip-select { position: relative; cursor: pointer; display: inline-flex; }
 .chip-select input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.chip-select span { border: 1px solid var(--control-line); padding: 9px 12px; min-height: 44px; border-radius: 2px; font-size: 14px; color: var(--muted); }
-.chip-select input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.chip-select input:checked + span::before { content: '✓ '; }
-.chip-select input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
+.chip-select span { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--control-line); padding: 9px 12px; min-height: 44px; border-radius: 2px; font-size: 14px; color: var(--muted); background: var(--surface); }
+.chip-select span::before { content: ''; width: 16px; height: 16px; border: 1px solid var(--control-line); border-radius: 50%; background: var(--surface); flex: none; }
+.chip-select input:checked + span { background: var(--surface); border-color: var(--focus); color: var(--ink); }
+.chip-select input:checked + span::before { background: var(--focus); border-color: var(--focus); box-shadow: inset 0 0 0 4px var(--surface); }
+.chip-select input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 3px; }
 .badge { display: inline-flex; font-size: 12px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 2px; }
 .form-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .form-field > label, .form-label { font-size: 14px; font-weight: 600; }
 .optional { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted); }
 .input, input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(.search-input), select, textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--control-line); border-radius: var(--radius); color: var(--ink); background: var(--field); }
+.input:focus, input:focus, select:focus, textarea:focus { border-color: var(--focus); }
 input::placeholder, textarea::placeholder { color: var(--placeholder); }
 textarea { min-height: 150px; resize: vertical; line-height: 1.85; }
 input[type=file] { font-size: 14px; }
@@ -70,6 +72,10 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 .site-footer { border-top: 1px solid var(--line); display: flex; align-items: center; gap: 24px; padding-block: 28px; color: var(--muted); font-size: 12px; }
 .site-footer .wordmark { font-size: 20px; color: var(--ink); } .site-footer p { flex: 1; } .copyright { font: 11px var(--mono); }
 .mobile-only { display: none; }
+.password-field { position: relative; }
+.password-field .input { padding-right: 52px; }
+.password-toggle { position: absolute; right: 6px; top: 5px; width: 40px; height: 38px; border: 0; background: transparent; color: var(--muted); }
+.password-toggle:hover { color: var(--ink); background: var(--raised); }
 @media (max-width: 900px) { .header-inner { gap: 24px; } .main-nav { gap: 16px; } .header-actions { gap: 8px; } }
 @media (max-width: 640px) {
   .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 12px; padding-top: 10px; }

@@ -11,8 +11,8 @@ public final class PostRequests {
     private PostRequests() {}
     public record Create(
             @NotNull PostType type,
-            @NotBlank @Size(max = 100) String title,
-            @NotBlank @Size(max = 2000) String content,
+            @NotBlank @Size(max = 30) String title,
+            @NotBlank @Size(max = 500) String content,
             @Size(max = 100) String areaSub,
             @NotEmpty Set<Long> partIds,
             @NotEmpty Set<Long> genreIds,
@@ -21,8 +21,8 @@ public final class PostRequests {
             @NotEmpty Set<AgeRange> ageRanges,
             @NotNull ActivityFrequency activityFrequency) {}
     public record Update(
-            @NotBlank @Size(max = 100) String title,
-            @NotBlank @Size(max = 2000) String content,
+            @NotBlank @Size(max = 30) String title,
+            @NotBlank @Size(max = 500) String content,
             @Size(max = 100) String areaSub,
             @NotEmpty Set<Long> partIds,
             @NotEmpty Set<Long> genreIds,

@@ -33,32 +33,32 @@ async function authPage(path){
   let next='/posts';
   try { const destination=new URL(requestedNext||'/posts',location.origin);if(destination.origin===location.origin)next=destination.pathname+destination.search+destination.hash; } catch { /* Keep the local default. */ }
   const config={
-    '/login':['ログイン','登録したメールアドレスでログインしてください。','気になる募集が見つかったら、プロフィールからメッセージを。'],
-    '/register':['アカウントを作成','表示名とメールアドレスを登録してください。','担当パートも、好きな音楽も。プロフィールが、最初の自己紹介になります。'],
-    '/verify-email':['メールアドレスを確認','登録時のメール内リンクを開いて、本登録を完了してください。','メールアドレスの確認後、募集の投稿とメッセージの送信ができます。'],
-    '/password-reset':['パスワードを再設定','登録メールアドレスに再設定用の案内を送ります。','パスワードを忘れた場合は、こちらから再設定できます。'],
-    '/password-reset/confirm':['新しいパスワードを設定','届いたトークンと新しいパスワードを入力してください。','再設定後は、新しいパスワードでログインしてください。']
+    '/login':['ログイン',''],
+    '/register':['アカウントを作成',''],
+    '/verify-email':['メールアドレスを確認',''],
+    '/password-reset':['パスワードを再設定',''],
+    '/password-reset/confirm':['新しいパスワードを設定','']
   }[path];
   const register=path==='/register', verify=path==='/verify-email', reset=path==='/password-reset', confirm=path==='/password-reset/confirm';
   const verificationToken=verify?new URLSearchParams(location.search).get('token'):'';
   const lineError=new URLSearchParams(location.search).get('lineError');
-  const lineEnabled=path==='/login' ? await api('/api/auth/line/enabled').then(value=>Boolean(value?.enabled)).catch(()=>false) : false;
+  const lineEnabled=path==='/login'||register ? await api('/api/auth/line/enabled').then(value=>Boolean(value?.enabled)).catch(()=>false) : false;
   let form='';
-  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" minlength="8" required></div><button class="button primary full" type="submit">ログイン</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでログイン</a>`:''}`;
-  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required><span class="hint">8文字以上で設定してください。</span></div><button class="button primary full" type="submit">アカウントを作成</button></form>`;
+  const passwordField=(id,autocomplete)=>`<div class="password-field"><input class="input" id="${id}" name="${id==='newPassword'?'newPassword':'password'}" type="password" autocomplete="${autocomplete}" minlength="8" maxlength="128" required><button type="button" class="password-toggle" data-password-toggle="${id}" aria-label="パスワードを表示">${icon('eye')}</button></div>`;
+  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','current-password')}</div><button class="button primary full" type="submit">ログイン</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでログイン</a>`:''}`;
+  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><button class="button primary full" type="submit">アカウントを作成</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでアカウントを作成</a>`:''}`;
   if(verify) form=verificationToken
     ? `<div class="verify-link-state"><p class="muted">メール内のリンクを確認しています…</p></div>`
-    : `<div class="verify-waiting"><p>登録時に送信した確認メールを開き、本文のリンクをタップしてください。</p><p class="hint">確認メールが見つからない場合は、迷惑メールフォルダも確認してください。リンクは24時間有効です。</p></div>`;
+    : `<div class="verify-waiting"><p>登録時に送信した確認メールを開き、本文のリンクをタップしてください。</p><p class="hint">メールが見つからない場合は、迷惑メールフォルダも確認してください。</p><button type="button" class="button secondary full" id="resend-verification">確認メールを再送する</button></div>`;
   if(reset) form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><button class="button primary full" type="submit">再設定メールを送る</button></form>`;
-  if(confirm) form=`<form id="auth-form"><div class="form-field"><label for="token">再設定トークン</label><input class="input" id="token" name="token" maxlength="100" required></div><div class="form-field"><label for="newPassword">新しいパスワード</label><input class="input" id="newPassword" name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div><button class="button primary full" type="submit">パスワードを更新</button></form>`;
+  if(confirm) form=`<form id="auth-form"><div class="form-field"><label for="token">再設定トークン</label><input class="input" id="token" name="token" maxlength="100" required></div><div class="form-field"><label for="newPassword">新しいパスワード</label>${passwordField('newPassword','new-password')}</div><button class="button primary full" type="submit">パスワードを更新</button></form>`;
   const footer=path==='/login'
     ? `アカウントをお持ちでない方は <a href="/register">新規登録</a><br><a href="/password-reset">パスワードを忘れた方</a>`
     : register ? `すでに登録済みの方は <a href="/login">ログイン</a>`
     : verify ? ''
     : `<a href="/login">ログインへ戻る</a>`;
-  const back=verify?'':`<a class="back-link" href="/posts">${icon('back')}募集を探す</a>`;
   const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。':'';
-  showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside">${back}<p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
+  showPage(`<div class="page auth-page"><section class="auth-panel"><a class="auth-mark" href="/" aria-label="Band Link ホーム"><img src="/assets/mark.svg" alt=""> <span>Band Link</span></a><h1>${h(config[0])}</h1><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
     let response;
@@ -67,6 +67,18 @@ async function authPage(path){
     else if(reset){await api('/api/auth/password-reset/request',{method:'POST',body:{email:fd.get('email')}});main.querySelector('#auth-message').innerHTML=notice('再設定の案内を送信しました。メールをご確認ください。','success');return;}
     else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
     if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register?'/verify-email':next);}
+  });
+  main.querySelectorAll('[data-password-toggle]').forEach(toggle=>toggle.addEventListener('click',()=>{
+    const input=main.querySelector('#'+toggle.dataset.passwordToggle); if(!input)return;
+    const visible=input.type==='text'; input.type=visible?'password':'text';
+    toggle.setAttribute('aria-label',visible?'パスワードを表示':'パスワードを隠す');
+    toggle.innerHTML=icon(visible?'eye':'eye-off');
+  }));
+  main.querySelector('#resend-verification')?.addEventListener('click',async event=>{
+    event.currentTarget.disabled=true;
+    try { await api('/api/auth/verify-email/resend',{method:'POST'}); main.querySelector('#auth-message').innerHTML=notice('確認メールを再送しました。メールをご確認ください。','success'); }
+    catch(e){ main.querySelector('#auth-message').innerHTML=notice(e.message,'error'); }
+    finally { event.currentTarget.disabled=false; }
   });
   if(verify&&verificationToken){
     try {

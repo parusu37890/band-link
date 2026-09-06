@@ -15,6 +15,7 @@
      --line is a quiet separator and sits below that, so form controls use this instead. */
   --control-line: #7f8577;   /* 3.42:1 on --bg, 3.16:1 on --raised */
   --accent: #45643c;         /* 6.02:1 on --bg — moss, the dark theme's sage brought to light */
+  --focus: #2e6fd8;          /* blue focus and selection state */
   --accent-alt: #8a4a2a;    /* 6.11:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
   --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 9.72:1 */
   --rule: #45643c;           /* the 3px rule that opens a profile, an auth panel, a contact block */

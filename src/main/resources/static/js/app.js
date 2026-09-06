@@ -7,13 +7,14 @@ const path=()=>location.pathname.replace(/\/+$/,'')||'/';
 async function loadUser(){try{state.user=await api('/api/auth/me');}catch{state.user=null;}}
 function header(){
  const el=document.querySelector('#header');const here=path();
- if(state.user?.status==='SUSPENDED'){el.innerHTML='<div class="header-inner"><a class="wordmark" href="/support" aria-label="Band Link">Band Link</a></div>';return;}
+ const brand=(tag,attrs='')=>`<${tag} class="wordmark" ${attrs}><img class="brand-mark" src="/assets/mark.svg" alt=""><span>Band Link</span></${tag}>`;
+ if(state.user?.status==='SUSPENDED'){el.innerHTML=`<div class="header-inner">${brand('a','href="/support" aria-label="Band Link"')}</div>`;return;}
  if(state.user && !state.user.emailVerified){
-  el.innerHTML='<div class="header-inner"><span class="wordmark" aria-label="Band Link">Band Link</span><button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>';
+  el.innerHTML=`<div class="header-inner">${brand('span','aria-label="Band Link"')}<button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>`;
   el.querySelector('#verification-logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
   return;
  }
- el.innerHTML=`<div class="header-inner"><a class="wordmark" href="/posts" aria-label="Band Link ホーム">Band Link</a><nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の募集</a>`:''}</nav><div class="header-actions">${state.user?`<a class="icon-button" href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
+ el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の募集</a>`:''}</nav><div class="header-actions">${state.user?`<a class="icon-button" href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
  if(state.user){api('/api/notifications/unread-count').then(x=>{const d=el.querySelector('[data-unread-dot]');if(d)d.hidden=!(x?.count>0);}).catch(()=>{});}
 }
 // requirements 3章: while an account is suspended, the screen after login carries the notice and

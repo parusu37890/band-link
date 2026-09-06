@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 /** LINE Login v2.1 authorization-code flow and local account mapping. */
 @Service
@@ -22,7 +23,7 @@ public class LineLoginService {
     private static final String AUTHORIZE_ENDPOINT = "https://access.line.me/oauth2/v2.1/authorize";
     private static final String TOKEN_ENDPOINT = "https://api.line.me/oauth2/v2.1/token";
     private static final String PROFILE_ENDPOINT = "https://api.line.me/v2/profile";
-    private final RestClient client = RestClient.create();
+    private final RestClient client;
     private final String channelId;
     private final String channelSecret;
     private final String redirectUri;
@@ -30,12 +31,22 @@ public class LineLoginService {
     private final LineAccountRepository lineAccounts;
     private final PasswordEncoder passwordEncoder;
 
+    // A second constructor was added as a test seam, which left Spring with no way to pick one.
+    // Marked the same way AuthService and MessageService mark theirs.
+    @org.springframework.beans.factory.annotation.Autowired
     public LineLoginService(
             @Value("${app.line.channel-id:}") String channelId,
             @Value("${app.line.channel-secret:}") String channelSecret,
             @Value("${app.line.redirect-uri:}") String redirectUri,
             @Value("${app.base-url:http://localhost:8080}") String baseUrl,
             UserRepository users, LineAccountRepository lineAccounts, PasswordEncoder passwordEncoder) {
+        this(channelId, channelSecret, redirectUri, baseUrl, users, lineAccounts, passwordEncoder, RestClient.create());
+    }
+
+    /** Package-private seam for MockRestServiceServer-backed unit tests. */
+    LineLoginService(String channelId, String channelSecret, String redirectUri, String baseUrl,
+                     UserRepository users, LineAccountRepository lineAccounts, PasswordEncoder passwordEncoder,
+                     RestClient client) {
         this.channelId = channelId == null ? "" : channelId.trim();
         this.channelSecret = channelSecret == null ? "" : channelSecret.trim();
         this.redirectUri = redirectUri == null || redirectUri.isBlank()
@@ -44,6 +55,7 @@ public class LineLoginService {
         this.users = users;
         this.lineAccounts = lineAccounts;
         this.passwordEncoder = passwordEncoder;
+        this.client = client == null ? RestClient.create() : client;
     }
 
     public boolean enabled() {
@@ -67,11 +79,16 @@ public class LineLoginService {
         try {
             LineToken token = exchangeCode(code);
             LineProfile profile = fetchProfile(token.accessToken());
-            return lineAccounts.findByLineUserId(profile.userId())
+            String lineUserId = profile.userId().trim();
+            return lineAccounts.findByLineUserId(lineUserId)
                     .map(LineAccount::getUser)
-                    .orElseGet(() -> createAccount(profile));
+                    .orElseGet(() -> createAccount(profile, lineUserId));
         } catch (RestClientException e) {
             throw new LineLoginException("LINEとの通信に失敗しました", e);
+        } catch (DataIntegrityViolationException e) {
+            // A second callback can race the first one. The unique LINE id constraint wins;
+            // expose a safe retry message instead of a database error.
+            throw new LineLoginException("LINEアカウントの登録が競合しました。もう一度お試しください", e);
         }
     }
 
@@ -102,8 +119,8 @@ public class LineLoginService {
         return profile;
     }
 
-    private User createAccount(LineProfile profile) {
-        String email = syntheticEmail(profile.userId());
+    private User createAccount(LineProfile profile, String lineUserId) {
+        String email = syntheticEmail(lineUserId);
         if (users.existsByEmail(email)) throw new LineLoginException("LINEアカウントの紐付けを確認できませんでした");
         String username = profile.displayName() == null || profile.displayName().isBlank()
                 ? "LINEユーザー" : profile.displayName().trim();
@@ -112,7 +129,7 @@ public class LineLoginService {
         // LINE has already authenticated the account. No local email is stored or exposed.
         user.setEmailVerifiedAt(LocalDateTime.now());
         user = users.save(user);
-        lineAccounts.save(new LineAccount(user, profile.userId()));
+        lineAccounts.save(new LineAccount(user, lineUserId));
         return user;
     }
 

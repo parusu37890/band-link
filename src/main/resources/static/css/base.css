@@ -7,7 +7,7 @@ button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 a:hover { color: var(--accent); }
 button:disabled { opacity: .5; cursor: not-allowed; }
-:is(button,a,input,select,textarea,summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+:is(button,a,input,select,textarea,summary):focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 h1, h2, h3, h4, p { margin: 0; }
 h1 { font-size: clamp(28px, 3.3vw, 44px); font-weight: 500; line-height: 1.45; letter-spacing: -.04em; }
 h2 { font-size: 23px; font-weight: 500; line-height: 1.6; letter-spacing: -.025em; }
@@ -36,6 +36,10 @@ small, .small { font-size: 13px; }
 .body-text, .message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .body-text { font-size: 16px; line-height: 2.05; }
 .loading { padding: 88px 20px; color: var(--muted); text-align: center; }
+* { scrollbar-color: var(--focus) var(--raised); }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: var(--raised); }
+*::-webkit-scrollbar-thumb { background: var(--focus); border: 3px solid var(--raised); border-radius: 10px; }
 @media (max-width: 640px) {
   .page { padding-block: 28px 52px; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; margin-bottom: 28px; }

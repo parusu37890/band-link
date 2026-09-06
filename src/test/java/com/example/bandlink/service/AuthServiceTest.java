@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,6 +66,20 @@ class AuthServiceTest {
 
         assertTrue(user.isEmailVerified());
         assertNotNull(token.getUsedAt());
+    }
+
+    @Test
+    void resendVerificationInvalidatesOldLinksAndSendsFreshLink() {
+        User user = new User("Haruki", "a@example.com", "hash");
+        EmailVerificationToken oldToken = new EmailVerificationToken(user, "old-token", LocalDateTime.now().plusHours(1));
+        when(userRepository.findById(42L)).thenReturn(Optional.of(user));
+        when(verificationTokens.findAllByUserIdAndUsedAtIsNull(42L)).thenReturn(List.of(oldToken));
+
+        authService.resendVerification(42L);
+
+        assertNotNull(oldToken.getUsedAt());
+        verify(verificationTokens).save(argThat(token -> token.getUser() == user && token.getExpiresAt().isAfter(LocalDateTime.now())));
+        verify(mail).sendVerification(eq("a@example.com"), anyString());
     }
 
     @Test
