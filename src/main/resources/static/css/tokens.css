@@ -6,6 +6,9 @@
   --ink: #f0f0e9;
   --muted: #a9ada6;
   --line: #3a3e39;
+  /* Borders that carry a control boundary need 3:1 against the page (WCAG 1.4.11).
+     --line is a quiet separator and sits below that, so form controls use this instead. */
+  --control-line: #606b5b;
   --accent: #a4bfff;
   --danger: #ffb5ae;
   --success: #c1d8b4;

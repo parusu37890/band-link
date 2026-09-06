@@ -34,7 +34,7 @@
 .chip + .chip::before { content: '/'; color: #737a70; margin-right: 8px; }
 .chip-select { position: relative; cursor: pointer; display: inline-flex; }
 .chip-select input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.chip-select span { border: 1px solid #555d52; padding: 9px 12px; min-height: 44px; border-radius: 2px; font-size: 14px; color: var(--muted); }
+.chip-select span { border: 1px solid var(--control-line); padding: 9px 12px; min-height: 44px; border-radius: 2px; font-size: 14px; color: var(--muted); }
 .chip-select input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .chip-select input:checked + span::before { content: '✓ '; }
 .chip-select input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -42,7 +42,7 @@
 .form-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .form-field > label, .form-label { font-size: 14px; font-weight: 600; }
 .optional { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted); }
-.input, input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(.search-input), select, textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid #555d52; border-radius: var(--radius); color: var(--ink); background: #1b1e1b; }
+.input, input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(.search-input), select, textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--control-line); border-radius: var(--radius); color: var(--ink); background: #1b1e1b; }
 input::placeholder, textarea::placeholder { color: #939b8f; }
 textarea { min-height: 150px; resize: vertical; line-height: 1.85; }
 input[type=file] { font-size: 14px; }
