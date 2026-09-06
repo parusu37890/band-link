@@ -122,7 +122,10 @@ BEGIN
   ) AS v(n, part, genre) WHERE demo_copy.n = v.n;
 
   -- Refresh existing demo rows in place so re-running does not duplicate them.
-  UPDATE posts p SET title = format('【デモ %s】%s', lpad(d.n::text, 2, '0'), d.title), content = d.body
+  -- activity_frequency is refreshed too: it is only set on INSERT, so without this a demo row
+  -- keeps whatever value it was created with even after the list it came from has changed.
+  UPDATE posts p SET title = format('【デモ %s】%s', lpad(d.n::text, 2, '0'), d.title), content = d.body,
+    activity_frequency = (ARRAY['WEEKLY_2PLUS','WEEKLY_1','MONTHLY_2_3','MONTHLY_1','BIMONTHLY_1'])[(d.n % 5) + 1]
   FROM demo_copy d
   WHERE p.title LIKE format('【デモ %s】%%', lpad(d.n::text, 2, '0'));
 
@@ -132,7 +135,7 @@ BEGIN
     format('【デモ %s】%s', lpad(s.n::text, 2, '0'), d.title),
     d.body,
     CASE WHEN s.n % 4 = 0 THEN '駅から徒歩10分圏内' WHEN s.n % 4 = 1 THEN '市内スタジオ中心' WHEN s.n % 4 = 2 THEN 'オンライン相談可' ELSE '近隣エリア' END,
-    (ARRAY['WEEKLY_2PLUS','WEEKLY_1','MONTHLY_2_3','MONTHLY_1','IRREGULAR','NEGOTIABLE'])[(s.n % 6) + 1],
+    (ARRAY['WEEKLY_2PLUS','WEEKLY_1','MONTHLY_2_3','MONTHLY_1','BIMONTHLY_1'])[(s.n % 5) + 1],
     'OPEN', now() - (s.n || ' days')::interval, now() - (s.n || ' days')::interval,
     now() + interval '30 days' - (s.n || ' days')::interval, now() - (s.n || ' hours')::interval
   FROM generate_series(1,40) AS s(n)
@@ -159,7 +162,7 @@ BEGIN
   INSERT INTO post_stances (post_id, stance_id)
   SELECT p.id, s.id
   FROM posts p
-  JOIN LATERAL (SELECT (ARRAY['初心者同士で音を出したい','趣味で楽しみたい','趣味でも本格的に取り組みたい',
+  JOIN LATERAL (SELECT (ARRAY['初心者同士で合わせたい','趣味で楽しみたい','趣味でも本格的に取り組みたい',
                               'インディーズとして活動したい','プロを目指したい'])[(p.id % 5) + 1] AS name) pick ON TRUE
   JOIN stances s ON s.name = pick.name
   WHERE p.title LIKE '【デモ %】%' ON CONFLICT DO NOTHING;

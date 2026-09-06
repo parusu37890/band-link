@@ -60,9 +60,9 @@ export function report(type,id) {
   dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();bindForm(dialog.querySelector('form'),async data=>{await api('/api/reports',{method:'POST',body:{targetType:type,targetId:Number(id),reason:data.get('reason')}});dialog.close();toast('通報を受け付けました。');});dialog.showModal();
 }
 export function poll(callback) {let busy=false;const run=async()=>{if(document.hidden||busy)return;busy=true;try{await callback();}catch{/* The screen owns its polling error feedback. */}finally{busy=false;}};const timer=setInterval(run,15000);const stop=()=>{clearInterval(timer);document.removeEventListener('visibilitychange',run);};document.addEventListener('visibilitychange',run);window.addEventListener('pagehide',stop,{once:true});return stop;}
-export const frequencies=[['WEEKLY_2PLUS','週2回以上'],['WEEKLY_1','週1回程度'],['MONTHLY_2_3','月2〜3回'],['MONTHLY_1','月1回程度'],['IRREGULAR','不定期'],['NEGOTIABLE','相談して決める']];
+export const frequencies=[['WEEKLY_2PLUS','週2回以上'],['WEEKLY_1','週1回程度'],['MONTHLY_2_3','月2〜3回'],['MONTHLY_1','月1回程度'],['BIMONTHLY_1','2か月に1回']];
 export const ages=[['ANY','年齢不問'],['S10','10代'],['S20','20代'],['S30','30代'],['S40','40代'],['S50_PLUS','50代以上']];
-export const frequencyLabel = value => frequencies.find(x=>x[0]===value)?.[1] || '相談して決める';
+export const frequencyLabel = value => frequencies.find(x=>x[0]===value)?.[1] || '月1回程度';
 export function chips(values) {return `<div class="chips">${(values||[]).map(x=>`<span class="chip">${h(x.name ?? x)}</span>`).join('')}</div>`;}
 export function choices(name,values,selected=[],single=false) {return `<div class="chips">${values.map(item=>{const [id,label]=Array.isArray(item)?item:[item.id,item.name];return `<label class="chip-select"><input type="${single?'radio':'checkbox'}" name="${h(name)}" value="${h(id)}" ${selected.map(String).includes(String(id))?'checked':''}><span>${h(label)}</span></label>`;}).join('')}</div>`;}
 export function counter(form) {form.querySelectorAll('[maxlength]').forEach(el=>{const target=form.querySelector(`[data-count="${el.id}"]`);if(target){const update=()=>target.textContent=`${el.value.length} / ${el.maxLength}`;el.addEventListener('input',update);update();}});}

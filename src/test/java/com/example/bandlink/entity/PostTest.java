@@ -21,7 +21,7 @@ class PostTest {
         LocalDateTime created = LocalDateTime.of(2026, 9, 5, 12, 0);
         LocalDateTime reopened = created.plusDays(31);
         Post post = new Post(new User("u", "u@example.com", "hash"), PostType.WANTS_TO_JOIN,
-                "Title", "Content", null, ActivityFrequency.NEGOTIABLE, created);
+                "Title", "Content", null, ActivityFrequency.MONTHLY_1, created);
         post.close(ClosedReason.EXPIRED, created.plusDays(30));
         post.reopen(reopened);
 

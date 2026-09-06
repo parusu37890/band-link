@@ -98,3 +98,23 @@ $env:PGPASSWORD = "<postgresのパスワード>"
 消すと項目が空になる募集の件数も併せて報告する。
 
 psqlのNOTICEはPowerShellでは標準エラーに出るため赤字で表示されるが、`COMMIT` が出ていれば成功。
+
+## enum（活動頻度など）の値を入れ替えるとき
+
+マスタ表と違い、活動頻度は enum（`ActivityFrequency`）で `posts.activity_frequency` に文字列で入る。
+enum から値を消すと、その文字列を持つ既存の募集は**読み込んだ時点で変換に失敗する**ので、
+アプリを新しい enum で起動する前にDBを移行しておくこと。
+
+さらに、Hibernate は `@Enumerated(STRING)` の列に enum の値を並べた CHECK 制約を作るが、
+`ddl-auto: update` は**既存の制約を作り直さない**。値を移しただけでは新しい値の書き込みが
+`posts_activity_frequency_check` で弾かれる。制約の張り直しまで含めて移行する。
+
+```
+$env:PGPASSWORD = "<postgresのパスワード>"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/migrate-activity-frequency.sql
+```
+
+移行（値の付け替え）→ 制約の張り直し、の順でないと、既存行が新しい制約に違反して張り直せない。
+
+なお `seed-demo-posts.sql` の募集INSERTは `WHERE NOT EXISTS` で、既存のデモ投稿には効かない。
+一覧から選ぶ列（activity_frequency）は後段のUPDATEでも上書きするようにしてある。

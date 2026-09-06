@@ -43,24 +43,36 @@ BEGIN
   END LOOP;
 END $$;
 
--- 活動スタンスの統合。「プロとして活動中」は一覧から外すが、そのまま消すと選んでいた募集の
--- 項目が空になる（requirements 5章）。段階として一番近い「プロを目指したい」へ寄せる。
+-- 活動スタンスの統合。廃止したもの・名前を変えたものを、段階として一番近い残る選択肢へ寄せる。
+-- そのまま消すと、選んでいた募集のスタンスが空になる（requirements 5章）。
 DO $$
+DECLARE m record;
 BEGIN
-  IF EXISTS (SELECT 1 FROM stances WHERE name = 'プロとして活動中') THEN
-    INSERT INTO post_stances (post_id, stance_id)
-      SELECT ps.post_id, (SELECT id FROM stances WHERE name = 'プロを目指したい')
-        FROM post_stances ps JOIN stances t ON t.id = ps.stance_id
-       WHERE t.name = 'プロとして活動中'
-      ON CONFLICT DO NOTHING;
-    INSERT INTO user_stances (user_id, stance_id)
-      SELECT us.user_id, (SELECT id FROM stances WHERE name = 'プロを目指したい')
-        FROM user_stances us JOIN stances t ON t.id = us.stance_id
-       WHERE t.name = 'プロとして活動中'
-      ON CONFLICT DO NOTHING;
-    DELETE FROM post_stances WHERE stance_id IN (SELECT id FROM stances WHERE name = 'プロとして活動中');
-    DELETE FROM user_stances WHERE stance_id IN (SELECT id FROM stances WHERE name = 'プロとして活動中');
-  END IF;
+  FOR m IN SELECT * FROM (VALUES
+      ('プロとして活動中', 'プロを目指したい'),
+      ('初心者同士で音を出したい', '初心者同士で合わせたい')
+    ) AS t(old_name, new_name)
+  LOOP
+    CONTINUE WHEN NOT EXISTS (SELECT 1 FROM stances WHERE name = m.old_name);
+
+    IF NOT EXISTS (SELECT 1 FROM stances WHERE name = m.new_name) THEN
+      UPDATE stances SET name = m.new_name WHERE name = m.old_name;   -- 新しい行がまだ無い場合
+    ELSE
+      INSERT INTO post_stances (post_id, stance_id)
+        SELECT ps.post_id, (SELECT id FROM stances WHERE name = m.new_name)
+          FROM post_stances ps JOIN stances t ON t.id = ps.stance_id
+         WHERE t.name = m.old_name
+        ON CONFLICT DO NOTHING;
+      INSERT INTO user_stances (user_id, stance_id)
+        SELECT us.user_id, (SELECT id FROM stances WHERE name = m.new_name)
+          FROM user_stances us JOIN stances t ON t.id = us.stance_id
+         WHERE t.name = m.old_name
+        ON CONFLICT DO NOTHING;
+      DELETE FROM post_stances WHERE stance_id IN (SELECT id FROM stances WHERE name = m.old_name);
+      DELETE FROM user_stances WHERE stance_id IN (SELECT id FROM stances WHERE name = m.old_name);
+      DELETE FROM stances      WHERE name = m.old_name;
+    END IF;
+  END LOOP;
 END $$;
 
 -- 統合先の無い選択肢の削除。こちらは付け替え先が決められないので、参照が残っていれば中止する。
@@ -131,7 +143,7 @@ UPDATE genres g SET display_order = o.ord FROM ordered o WHERE o.name = g.name;
 
 WITH ordered AS (
   SELECT name, ord - 1 AS ord
-    FROM unnest(ARRAY['初心者同士で音を出したい','趣味で楽しみたい','趣味でも本格的に取り組みたい',
+    FROM unnest(ARRAY['初心者同士で合わせたい','趣味で楽しみたい','趣味でも本格的に取り組みたい',
                       'インディーズとして活動したい','プロを目指したい']) WITH ORDINALITY AS t(name, ord)
 )
 UPDATE stances s SET display_order = o.ord FROM ordered o WHERE o.name = s.name;
