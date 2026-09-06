@@ -21,5 +21,6 @@ class MailServiceTest {
         SimpleMailMessage sent = message.getValue();
         assertTrue(sent.getText().contains("https://bandlink.example/verify-email?token=verification-token"));
         assertTrue(sent.getText().contains("本登録を完了するには"));
+        assertTrue(sent.getText().contains("トークンの入力は必要ありません"));
     }
 }
