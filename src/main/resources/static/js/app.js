@@ -8,6 +8,11 @@ async function loadUser(){try{state.user=await api('/api/auth/me');}catch{state.
 function header(){
  const el=document.querySelector('#header');const here=path();
  if(state.user?.status==='SUSPENDED'){el.innerHTML='<div class="header-inner"><a class="wordmark" href="/support" aria-label="Band Link">Band Link</a></div>';return;}
+ if(state.user && !state.user.emailVerified){
+  el.innerHTML='<div class="header-inner"><span class="wordmark" aria-label="Band Link">Band Link</span><button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>';
+  el.querySelector('#verification-logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
+  return;
+ }
  el.innerHTML=`<div class="header-inner"><a class="wordmark" href="/posts" aria-label="Band Link ホーム">Band Link</a><nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の募集</a>`:''}</nav><div class="header-actions">${state.user?`<a class="icon-button" href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
  if(state.user){api('/api/notifications/unread-count').then(x=>{const d=el.querySelector('[data-unread-dot]');if(d)d.hidden=!(x?.count>0);}).catch(()=>{});}
 }
@@ -33,6 +38,11 @@ async function route(){
  await loadUser();header();
  const current=path();
  if(state.user?.status==='SUSPENDED'&&current!=='/support'){suspendedScreen();return;}
+ if(state.user && !state.user.emailVerified && current!=='/verify-email'){
+  history.replaceState(null,'','/verify-email');
+  await accountPage('/verify-email');
+  return;
+ }
  try {if(await accountPage(current))return;if(await communityPage(current))return;if(await discoveryPage(current))return;location.assign('/posts');}
  catch(error){const main=document.querySelector('#main');main.innerHTML=`<div class="page"> <div class="notice error" role="alert">${h(error.message||'ページを読み込めませんでした。')}</div><p style="margin-top:24px"><a class="button secondary" href="/posts">募集一覧へ戻る</a></p></div>`;}
 }

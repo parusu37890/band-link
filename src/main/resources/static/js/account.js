@@ -54,7 +54,8 @@ async function authPage(path){
     : register ? `すでに登録済みの方は <a href="/login">ログイン</a>`
     : verify ? ''
     : `<a href="/login">ログインへ戻る</a>`;
-  showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside"><a class="back-link" href="/posts">${icon('back')}募集を探す</a><p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite"></div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
+  const back=verify?'':`<a class="back-link" href="/posts">${icon('back')}募集を探す</a>`;
+  showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside">${back}<p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite"></div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
     let response;
