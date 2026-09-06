@@ -1,0 +1,69 @@
+- generic [active] [ref=f906e1]:
+  - link "本文へ移動" [ref=f906e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=f906e3]:
+    - generic [ref=f906e4]:
+      - link "Band Link ホーム" [ref=f906e5] [cursor=pointer]:
+        - /url: /posts
+        - text: Band Link
+      - navigation "メインナビゲーション" [ref=f906e6]:
+        - link "仲間を探す" [ref=f906e7] [cursor=pointer]:
+          - /url: /posts
+      - generic [ref=f906e8]:
+        - link "ログイン" [ref=f906e9] [cursor=pointer]:
+          - /url: /login
+        - link "新規登録" [ref=f906e10] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f906e11]:
+    - generic [ref=f906e12]:
+      - generic [ref=f906e13]:
+        - generic [ref=f906e14]:
+          - paragraph [ref=f906e15]: バンドメンバー募集・参加希望の掲示板
+          - heading "バンド仲間を、 この掲示板で探す。" [level=1] [ref=f906e16]: バンド仲間を、この掲示板で探す。
+        - generic [ref=f906e17]:
+          - paragraph [ref=f906e18]:
+            - strong [ref=f906e19]: 募集を読み込んでいます…
+            - text: 都道府県・パート・ジャンルで絞り込めます。閲覧は登録なしで、メッセージは登録後に無料で使えます。
+          - link "自分の募集を掲載する" [ref=f906e20] [cursor=pointer]:
+            - /url: /register
+      - generic [ref=f906e23]:
+        - generic [ref=f906e24]:
+          - generic [ref=f906e28]: キーワードで募集を検索
+          - textbox "キーワードで募集を検索" [ref=f906e29]:
+            - /placeholder: ジャンル・アーティスト名など
+          - button "検索" [ref=f906e30] [cursor=pointer]
+        - navigation "パートから探す" [ref=f906e31]:
+          - generic [ref=f906e32]: パートから
+          - link "ボーカル" [ref=f906e33] [cursor=pointer]:
+            - /url: /posts?partIds=1
+          - link "ギター" [ref=f906e34] [cursor=pointer]:
+            - /url: /posts?partIds=2
+          - link "ベース" [ref=f906e35] [cursor=pointer]:
+            - /url: /posts?partIds=3
+          - link "ドラム" [ref=f906e36] [cursor=pointer]:
+            - /url: /posts?partIds=4
+          - link "キーボード" [ref=f906e37] [cursor=pointer]:
+            - /url: /posts?partIds=5
+        - generic [ref=f906e38]:
+          - group "募集の種類" [ref=f906e39]:
+            - button "すべて" [pressed] [ref=f906e40] [cursor=pointer]
+            - button "メンバー募集" [ref=f906e41] [cursor=pointer]
+            - button "参加希望" [ref=f906e42] [cursor=pointer]
+          - button "絞り込み" [ref=f906e43] [cursor=pointer]
+      - generic [ref=f906e48]:
+        - status [ref=f906e49]: 募集を読み込み中…
+        - generic [ref=f906e50]: 掲載順
+      - status [ref=f906e52]: 募集を読み込んでいます…
+      - complementary [ref=f906e53]:
+        - generic [ref=f906e54]:
+          - heading "あなたのバンドにも、新しい仲間を。" [level=2] [ref=f906e55]
+          - paragraph [ref=f906e56]: 活動場所、好きな音楽、練習のペースを募集に書いてみましょう。
+        - link "募集を掲載する" [ref=f906e57] [cursor=pointer]:
+          - /url: /register
+  - contentinfo [ref=f906e58]:
+    - link "Band Link" [ref=f906e59] [cursor=pointer]:
+      - /url: /
+    - paragraph [ref=f906e60]: バンドメンバー募集・参加希望
+    - link "ヘルプ・お問い合わせ" [ref=f906e61] [cursor=pointer]:
+      - /url: /support
+    - generic [ref=f906e62]: © Band Link

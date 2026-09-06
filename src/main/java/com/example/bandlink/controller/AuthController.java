@@ -47,6 +47,10 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
+        userRepository.findByEmail(request.email()).ifPresent(user -> {
+            user.touchLogin(java.time.LocalDateTime.now());
+            userRepository.save(user);
+        });
         return currentUser(authentication);
     }
 

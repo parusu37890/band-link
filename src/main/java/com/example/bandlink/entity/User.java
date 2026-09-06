@@ -30,6 +30,8 @@ public class User {
     @Column(length = 1000) private String profileImageUrl;
     private LocalDateTime lastEditedAt;
     private LocalDateTime lastRankBoostedAt;
+    // Recorded on login so a viewer can tell whether a poster is still around before writing to them.
+    private LocalDateTime lastLoginAt;
     @Column(nullable = false) private LocalDateTime createdAt;
 
     @ManyToMany
@@ -83,6 +85,8 @@ public class User {
     public void setLastEditedAt(LocalDateTime value) { this.lastEditedAt = value; }
     public LocalDateTime getLastRankBoostedAt() { return lastRankBoostedAt; }
     public void setLastRankBoostedAt(LocalDateTime value) { this.lastRankBoostedAt = value; }
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public void touchLogin(LocalDateTime now) { this.lastLoginAt = now; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Set<Part> getParts() { return parts; }
     public Set<Genre> getGenres() { return genres; }

@@ -4,6 +4,22 @@ const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パ�
 const videoHref = value => { try { const u=new URL(value); return ['http:','https:'].includes(u.protocol)?u.href:''; } catch { return ''; } };
 const youtubeId = value => { try {const u=new URL(value); if(!['youtube.com','www.youtube.com','m.youtube.com','youtu.be'].includes(u.hostname))return ''; const id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.split('/').pop();return /^[a-zA-Z0-9_-]{11}$/.test(id||'')?id:'';}catch{return '';} };
 const names = items => (items||[]).map(x=>x.name).join('・');
+// Showing every field with 未設定 filled the screen with absences instead of the person.
+// Only filled rows render; an empty profile says so once.
+const factRows = p => [
+  ['担当パート', names(p.parts)],
+  ['好きなジャンル', names(p.genres)],
+  ['活動エリア', names(p.prefectures)],
+  ['活動スタンス', names(p.stances)],
+  ['経験年数', p.experienceYears == null ? '' : p.experienceYears + '年'],
+  ['年代', p.ageRange || ''],
+  ['最近の活動', p.activity || '']
+].filter(([, value]) => value);
+const facts = p => {
+  const rows = factRows(p);
+  if (!rows.length) return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><p class="muted">まだ登録されていません。</p></section>`;
+  return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><dl class="facts">${rows.map(([label, value]) => `<dt>${h(label)}</dt><dd>${h(value)}</dd>`).join('')}</dl></section>`;
+};
 export async function accountPage(path){
   if(path==='/login'||path==='/register'||path==='/verify-email'||path==='/password-reset'||path==='/password-reset/confirm'){await authPage(path);return true;}
   if(path==='/settings'||path==='/settings/profile'){if(requireUser()) await profileEdit();return true;}
@@ -61,7 +77,7 @@ async function profilePage(id){
         </aside>
         <article class="profile-story">
           <section class="profile-intro"><h2>自己紹介</h2><p class="body-text">${h(p.bio||'自己紹介はまだ登録されていません。')}</p></section>
-          <section class="detail-section profile-facts"><h2>音楽と活動</h2><dl class="facts"><dt>担当パート</dt><dd>${h(names(p.parts)||'未設定')}</dd><dt>好きなジャンル</dt><dd>${h(names(p.genres)||'未設定')}</dd><dt>活動エリア</dt><dd>${h(names(p.prefectures)||'未設定')}</dd><dt>活動スタンス</dt><dd>${h(names(p.stances)||'未設定')}</dd><dt>経験年数</dt><dd>${p.experienceYears==null?'未設定':h(p.experienceYears)+'年'}</dd><dt>年代</dt><dd>${h(p.ageRange||'非公開')}</dd></dl></section>
+          ${facts(p)}
           ${video?`<section class="detail-section profile-video"><h2>演奏動画</h2>${yt?`<iframe class="video" src="https://www.youtube-nocookie.com/embed/${h(yt)}" title="${h(p.username)}の演奏動画" loading="lazy" allowfullscreen></iframe>`:`<a class="row" href="${h(video)}" target="_blank" rel="noopener noreferrer">${icon('external')}演奏動画を開く</a>`}</section>`:''}
         </article>
       </div>

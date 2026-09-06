@@ -24,6 +24,14 @@ BEGIN
   ) AS v(email, bio, age, gender, years, video)
   WHERE u.email = v.email;
 
+  -- Spread last_login_at so every activity bucket (and the 'no recent sign-in' case) is visible locally.
+  UPDATE users SET last_login_at = now() - v.ago FROM (VALUES
+    ('demo01@bandlink.local', interval '2 hours'),
+    ('demo02@bandlink.local', interval '5 days'),
+    ('demo03@bandlink.local', interval '20 days'),
+    ('demo04@bandlink.local', interval '200 days')
+  ) AS v(email, ago) WHERE users.email = v.email;
+
   DELETE FROM user_parts WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');
   DELETE FROM user_genres WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');
   DELETE FROM user_stances WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');

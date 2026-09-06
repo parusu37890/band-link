@@ -1,0 +1,29 @@
+- generic [active] [ref=f907e1]:
+  - link "本文へ移動" [ref=f907e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=f907e3]:
+    - generic [ref=f907e4]:
+      - link "Band Link ホーム" [ref=f907e5] [cursor=pointer]:
+        - /url: /posts
+        - text: Band Link
+      - navigation "メインナビゲーション" [ref=f907e6]:
+        - link "仲間を探す" [ref=f907e7] [cursor=pointer]:
+          - /url: /posts
+        - link "自分の募集" [ref=f907e8] [cursor=pointer]:
+          - /url: /my/posts
+      - generic [ref=f907e9]:
+        - link "通知" [ref=f907e10] [cursor=pointer]:
+          - /url: /notifications
+        - link "メッセージ" [ref=f907e13] [cursor=pointer]:
+          - /url: /messages
+        - link "プロフィール" [ref=f907e16] [cursor=pointer]:
+          - /url: /users/3
+  - main [ref=f907e17]:
+    - status [ref=f907e18]: Band Link を読み込んでいます…
+  - contentinfo [ref=f907e19]:
+    - link "Band Link" [ref=f907e20] [cursor=pointer]:
+      - /url: /
+    - paragraph [ref=f907e21]: バンドメンバー募集・参加希望
+    - link "ヘルプ・お問い合わせ" [ref=f907e22] [cursor=pointer]:
+      - /url: /support
+    - generic [ref=f907e23]: © Band Link
