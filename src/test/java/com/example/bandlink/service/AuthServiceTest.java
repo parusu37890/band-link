@@ -26,6 +26,7 @@ class AuthServiceTest {
     @Mock PasswordEncoder passwordEncoder;
     @Mock EmailVerificationTokenRepository verificationTokens;
     @Mock PasswordResetTokenRepository resetTokens;
+    @Mock com.example.bandlink.repository.PostRepository posts;
     @Mock MailService mail;
     @InjectMocks AuthService authService;
 

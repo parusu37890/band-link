@@ -166,3 +166,17 @@ mvnw.cmd spring-boot:run
 
 本文はbase64なので、デコードしてDBのトークンと突き合わせる。確認済み：確認メール・
 再設定メールとも、本文のコードがDBのトークンと一致した。
+
+## 修正前に退会したアカウントの整理
+
+2026-09-07より前の退会は `status` を書き換えるだけで、メールアドレス・表示名・
+パスワードのハッシュ・プロフィールが残り、そのアドレスでは再登録できなかった。
+既存DBには次を一度流す（新しく作るDBには不要）。何度実行しても同じ結果になる。
+
+```
+$env:PGPASSWORD = "<postgresのパスワード>"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/scrub-withdrawn-users.sql
+```
+
+行は消さない。requirements 3章が送信済み会話に「退会済みユーザー」を残すよう定めており、
+会話の相手を指すidが要るため。残すのはidと状態だけで、本人を特定できる情報は残さない。
