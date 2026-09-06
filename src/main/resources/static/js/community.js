@@ -3,7 +3,7 @@ import { api, h, icon, avatar, state, main, showPage, notice, empty, button, toa
 
 const positiveId = value => /^[1-9]\d*$/.test(String(value ?? '')) ? String(value) : null;
 const personName = user => user?.status === 'WITHDRAWN' ? '退会済みユーザー' : (user?.username || 'ユーザー');
-const heading = (eyebrow, title, description) => `<header class="page-heading"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1><p class="muted">${description}</p></header>`;
+const heading = (title, description, action = '') => `<header class="page-heading"><div class="page-heading-copy"><h1>${h(title)}</h1><p class="muted">${h(description)}</p></div>${action}</header>`;
 const errorText = error => error?.message || '読み込めませんでした。時間をおいて、もう一度お試しください。';
 const retryMarkup = message => `${notice(message, 'error')}<button type="button" class="button secondary" data-retry>もう一度読み込む</button>`;
 
@@ -32,11 +32,14 @@ async function messagesPage(path) {
   let blocked = false;
   let disposed = false;
   let sending = false;
-  window.addEventListener('pagehide', () => { disposed = true; }, { once: true });
+  let draftContent = '';
+  let draftImage = null;
+  let previewUrl = null;
+  window.addEventListener('pagehide', () => { disposed = true; if (previewUrl) URL.revokeObjectURL(previewUrl); }, { once: true });
 
-  showPage(`<div class="page">${heading('YOUR CONVERSATIONS', 'メッセージ', 'はじめましてから、次のスタジオの約束まで。')}
+  showPage(`<div class="page messages-page">${heading('メッセージ', '気になる募集のこと、練習の日程。ここから直接話せます。')}
     <div class="chat-shell" data-chat-shell>
-      <aside class="conversation-list" aria-label="会話一覧"><div class="panel"><h2>会話</h2><p class="muted">15秒ごとに自動更新</p></div><div data-conversations aria-busy="true"><p class="panel muted" role="status">会話を読み込んでいます…</p></div></aside>
+      <aside class="conversation-list" aria-label="会話一覧"><div class="inbox-heading"><h2>会話一覧</h2><a href="/posts">仲間を探す ${icon('arrow')}</a></div><div data-conversations aria-busy="true"><p class="panel muted" role="status">会話を読み込んでいます…</p></div></aside>
       <section class="chat-pane" aria-label="メッセージ"><div data-chat-header></div><p class="chat-status muted" data-chat-status role="status" aria-live="polite"></p><div class="chat-messages" data-messages aria-label="会話の内容"><p class="muted" role="status">読み込んでいます…</p></div><div data-composer></div></section>
     </div></div>`, 'メッセージ');
 
@@ -78,21 +81,49 @@ async function messagesPage(path) {
       composer.innerHTML = `<div class="panel">${notice('メッセージを送るにはメールアドレスの確認が必要です。')}${button('メール確認へ', '/verify-email', 'secondary')}</div>`;
       return;
     }
-    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="2000" placeholder="好きな音楽や、一緒にやってみたいことから。" aria-describedby="message-help"></textarea></label><label class="button secondary small" for="message-image">画像を添付<input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><div class="row"><p class="muted" id="message-help">Enterで改行 · 2,000文字まで</p><button class="button primary" type="submit">${icon('send')}送信する</button></div><div data-form-error role="alert"></div></form>`;
+    // Keep the live form during polling, including focus, selection and attachment.
+    if (composer.querySelector('[data-message-form]')) return;
+    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="2000" placeholder="自己紹介や、募集について聞きたいことを書いてください。" aria-describedby="message-help"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div><button type="button" class="button secondary small" data-attach>画像を添付</button><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" hidden><p class="muted composer-help" id="message-help">2,000文字まで · 画像は1枚 / 5MBまで</p></div><button class="button primary" type="submit">送信する ${icon('arrow')}</button></div><div data-form-error role="alert"></div></form>`;
     const form = composer.querySelector('form');
+    const input = form.elements.content;
+    const imageInput = form.elements.image;
+    const attachment = form.querySelector('[data-attachment]');
+    input.value = draftContent;
+    input.addEventListener('input', () => { draftContent = input.value; });
+    function renderAttachment() {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = draftImage ? URL.createObjectURL(draftImage) : null;
+      attachment.hidden = !draftImage;
+      attachment.innerHTML = draftImage ? `<img class="attachment-preview" src="${h(previewUrl)}" alt="送信する画像のプレビュー"><div class="attachment-details"><strong>${h(draftImage.name)}</strong><span class="muted">${(draftImage.size / 1024 / 1024).toFixed(1)} MB</span></div><button type="button" class="button quiet small" data-remove-image>取り消す</button>` : '';
+      attachment.querySelector('[data-remove-image]')?.addEventListener('click', () => { draftImage = null; imageInput.value = ''; renderAttachment(); });
+    }
+    form.querySelector('[data-attach]').addEventListener('click', () => imageInput.click());
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        imageInput.value = '';
+        toast('JPEG・PNG・WebPの画像を、1枚5MB以内で選択してください。');
+        return;
+      }
+      draftImage = file;
+      renderAttachment();
+    });
+    renderAttachment();
     bindForm(form, async () => {
       if (sending) return;
-      const input = form.elements.content;
       const content = input.value.trim();
-      const image = form.elements.image.files?.[0];
+      const image = draftImage;
       if (!content && !image) throw new Error('メッセージ本文か画像を選択してください。');
       sending = true;
+      input.readOnly = true;
+      form.querySelectorAll('button').forEach(element => { element.disabled = true; });
       try {
         let imageUrl = null;
         if (image) { const upload = new FormData(); upload.append('file', image); imageUrl = await api('/api/messages/images', { method: 'POST', body: upload }); }
         const result = await api(`/api/messages?recipientId=${positiveId(peer.id)}`, { method: 'POST', body: { content: content || null, imageUrl } });
         // Only clear the submitted draft after the server confirms receipt.
-        input.value = ''; form.elements.image.value = '';
+        input.value = ''; imageInput.value = ''; draftContent = ''; draftImage = null; renderAttachment();
         if (!conversationId) {
           conversationId = positiveId(result.conversationId);
           recipientId = null;
@@ -102,7 +133,11 @@ async function messagesPage(path) {
         status.textContent = '送信しました。';
         await refresh(true);
         input.focus();
-      } finally { sending = false; }
+      } finally {
+        sending = false;
+        input.readOnly = false;
+        form.querySelectorAll('button').forEach(element => { element.disabled = false; });
+      }
     });
   }
 
@@ -152,7 +187,6 @@ async function messagesPage(path) {
           await api(`/api/messages/conversation/${conversationId}/read`, { method: 'PATCH' });
         }
       } else if (!recipientId) renderPeer();
-      container.querySelectorAll('[data-read-notification]').forEach(element => element.addEventListener('click', async () => { element.disabled = true; try { await api(`/api/notifications/${element.dataset.readNotification}/read`, {method:'PATCH'}); await refresh(); } catch (error) { element.disabled = false; status.textContent = errorText(error); } }));
       status.textContent = '15秒ごとに自動更新しています。';
       status.classList.remove('error');
     } catch (error) {
@@ -189,23 +223,35 @@ async function messagesPage(path) {
 }
 
 async function notificationsPage() {
-  showPage(`<div class="page">${heading('STAY IN THE LOOP', '通知', '新しいつながりからのお知らせ。')}<div class="row" style="justify-content:flex-end;margin-bottom:16px"><button type="button" class="button secondary small" data-read-all>すべて既読にする</button></div><section class="panel" aria-label="通知一覧"><div data-notifications aria-busy="true"><p role="status">通知を読み込んでいます…</p></div><p class="muted" data-notification-status role="status"></p></section></div>`, '通知');
+  showPage(`<div class="page notifications-page">${heading('通知', '届いたメッセージと、運営からのお知らせ。', '<button type="button" class="button secondary small" data-read-all disabled>すべて既読にする</button>')}<section class="notification-feed" aria-label="通知一覧"><div class="section-toolbar"><h2>お知らせ一覧</h2><span class="muted" data-unread-summary></span></div><div data-notifications aria-busy="true"><p role="status">通知を読み込んでいます…</p></div><p class="muted" data-notification-status role="status"></p></section></div>`, '通知');
   const container = main.querySelector('[data-notifications]');
   const status = main.querySelector('[data-notification-status]');
+  const readAll = main.querySelector('[data-read-all]');
+  const summary = main.querySelector('[data-unread-summary]');
   let last = '';
   let busy = false;
+  let refreshAgain = false;
+  let mutationPending = false;
+  let revision = 0;
   async function refresh() {
-    if (busy || document.hidden) return;
+    if (document.hidden) return;
+    if (busy) { refreshAgain = true; return; }
     busy = true;
+    const currentRevision = revision;
     try {
       const items = await api('/api/notifications');
+      if (currentRevision !== revision) { refreshAgain = true; return; }
       if (!Array.isArray(items)) throw new Error('通知を読み込めませんでした。');
       const fingerprint = JSON.stringify(items);
       if (fingerprint !== last) {
-        container.innerHTML = items.length ? items.map(item => `<article class="notification-item"><div>${icon(item.type === 'NEW_MESSAGE' ? 'message' : 'bell')}</div><div class="stack"><div class="row"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : ''}</div><p>${h(item.content)}</p><span class="muted">${h(time(item.createdAt))}</span>${item.type === 'NEW_MESSAGE' ? '<a href="/messages">メッセージを確認する</a>' : ''}${!item.readAt ? `<button type="button" class="button quiet small" data-read-notification="${item.id}">既読にする</button>` : ''}</div></article>`).join('') : empty('今は新しいお知らせがありません。', '仲間からのメッセージなどが、ここに届きます。', button('募集を探す', '/posts', 'secondary'));
+        container.innerHTML = items.length ? items.map(item => `<article class="notification-item${!item.readAt ? ' is-unread' : ''}"><div class="notification-copy"><div class="notification-meta"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : '<span class="muted">既読</span>'}<time datetime="${h(item.createdAt)}">${h(time(item.createdAt))}</time></div><p>${h(item.content)}</p><div class="notification-actions">${item.type === 'NEW_MESSAGE' ? `<a href="${positiveId(item.relatedId) ? `/messages/${positiveId(item.relatedId)}` : '/messages'}">メッセージを開く ${icon('arrow')}</a>` : ''}${!item.readAt && positiveId(item.id) ? `<button type="button" class="button quiet small" data-read-notification="${positiveId(item.id)}">既読にする</button>` : ''}</div></div></article>`).join('') : empty('お知らせはまだありません。', 'メッセージが届くと、ここに通知されます。', button('募集を探す', '/posts', 'secondary'));
         last = fingerprint;
       }
-      container.querySelectorAll('[data-read-notification]').forEach(element => element.addEventListener('click', async () => { element.disabled = true; try { await api(`/api/notifications/${element.dataset.readNotification}/read`, {method:'PATCH'}); await refresh(); } catch (error) { element.disabled = false; status.textContent = errorText(error); } }));
+      const unread = items.filter(item => !item.readAt).length;
+      summary.textContent = unread ? `${unread}件の未読` : 'すべて確認済み';
+      readAll.disabled = mutationPending || !unread;
+      const dot = document.querySelector('[data-unread-dot]');
+      if (dot) dot.hidden = !unread;
       status.textContent = '15秒ごとに自動更新しています。';
     } catch (error) {
       status.textContent = errorText(error);
@@ -213,21 +259,46 @@ async function notificationsPage() {
         container.innerHTML = retryMarkup('通知を読み込めませんでした。');
         container.querySelector('[data-retry]').addEventListener('click', refresh);
       }
-    } finally { busy = false; container.setAttribute('aria-busy', 'false'); }
+    } finally {
+      busy = false;
+      container.setAttribute('aria-busy', 'false');
+      if (refreshAgain) { refreshAgain = false; await refresh(); }
+    }
   }
-  main.querySelector('[data-read-all]').addEventListener('click', async () => { try { await api('/api/notifications/read-all',{method:'PATCH'}); await refresh(); toast('すべての通知を既読にしました。'); } catch(error) { toast(errorText(error)); } });
+  async function markRead(path, element, all = false) {
+    if (mutationPending) return;
+    mutationPending = true;
+    element.disabled = true;
+    readAll.disabled = true;
+    try {
+      await api(path, { method: 'PATCH' });
+      revision++;
+      if (all) toast('すべての通知を既読にしました。');
+    } catch (error) { status.textContent = errorText(error); toast(errorText(error)); }
+    finally {
+      mutationPending = false;
+      element.disabled = false;
+      await refresh();
+    }
+  }
+  // Delegate once: unchanged polling results must not add duplicate listeners.
+  container.addEventListener('click', event => {
+    const element = event.target.closest('[data-read-notification]');
+    if (element && container.contains(element)) markRead(`/api/notifications/${element.dataset.readNotification}/read`, element);
+  });
+  readAll.addEventListener('click', () => markRead('/api/notifications/read-all', readAll, true));
   await refresh();
   poll(refresh);
 }
 
 async function blocksPage() {
-  showPage(`<div class="page">${heading('YOUR BOUNDARIES', 'ブロック管理', '安心して音楽の仲間を探すために。')}<section class="panel stack">${notice('ブロック中はお互いにメッセージを送れず、ログイン中の募集一覧にもお互いの投稿が表示されません。過去の会話は残ります。')}<div data-blocks aria-busy="true"><p role="status">読み込んでいます…</p></div></section></div>`, 'ブロック管理');
+  showPage(`<div class="page blocks-page">${heading('ブロック管理', '連絡を受け取りたくない相手を管理します。', button('設定に戻る', '/settings', 'quiet'))}<section class="block-list stack">${notice('ブロック中はお互いにメッセージを送れず、ログイン中の募集一覧にもお互いの投稿が表示されません。過去の会話は残ります。')}<div data-blocks aria-busy="true"><p role="status">読み込んでいます…</p></div></section></div>`, 'ブロック管理');
   const container = main.querySelector('[data-blocks]');
   async function load() {
     try {
       const users = await api('/api/blocks');
       if (!Array.isArray(users)) throw new Error('ブロック一覧を読み込めませんでした。');
-      container.innerHTML = users.length ? users.map(user => `<article class="conversation-item">${avatar(user)}<div class="stack"><strong>${h(personName(user))}</strong><span class="muted">ブロック中</span></div><button class="button secondary" type="button" data-unblock="${positiveId(user.id)}" data-name="${h(personName(user))}">ブロックを解除</button></article>`).join('') : empty('ブロック中のユーザーはいません。', '必要なときは、相手のプロフィールからブロックできます。', button('募集を探す', '/posts', 'secondary'));
+      container.innerHTML = users.length ? users.map(user => `<article class="block-item">${avatar(user)}<div class="stack"><strong>${h(personName(user))}</strong><span class="muted">ブロック中</span></div><button class="button secondary small" type="button" data-unblock="${positiveId(user.id)}" data-name="${h(personName(user))}">ブロックを解除</button></article>`).join('') : empty('ブロック中のユーザーはいません。', '必要なときは、相手のプロフィールからブロックできます。', button('募集を探す', '/posts', 'secondary'));
       container.querySelectorAll('[data-unblock]').forEach(element => element.addEventListener('click', () => confirmAction('ブロックを解除しますか？', `${element.dataset.name}さんとのメッセージ送信が再び可能になります。相手からもブロックされている場合は送信できません。`, async () => {
         await api(`/api/blocks/${element.dataset.unblock}`, { method: 'DELETE' });
         toast('ブロックを解除しました。');
@@ -248,7 +319,7 @@ async function adminPage() {
   }
   const statuses = { PENDING: '未対応', REVIEWED: '確認済み', DISMISSED: '対応不要', ACTIONED: '対応済み' };
   const types = { POST: '募集投稿', USER: 'ユーザー', MESSAGE: 'メッセージ' };
-  showPage(`<div class="page">${heading('COMMUNITY CARE', '運営管理', '通報内容を確認し、コミュニティの安心を守る。')}<section class="panel stack"><div class="row"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><section class="panel stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="row"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form></section></div>`, '運営管理');
+  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form></aside></div></div>`, '運営管理');
   const container = main.querySelector('[data-reports]');
   const select = main.querySelector('#report-status');
   let revision = 0;
