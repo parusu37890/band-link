@@ -183,3 +183,31 @@
   .filter-toggle { flex:none; }
   .discover-tabs { margin-top:14px; }
 }
+
+/* The instrument is what a row is scanned for, so it gets a mark the eye can land on. The word
+   stays beside it — at this size a guitar and a bass differ only by the soundhole. */
+.part-icon { width:19px; height:19px; margin-right:7px; vertical-align:-4px; color:var(--accent); }
+.fit-part .part-icon { width:26px; height:26px; margin-right:10px; vertical-align:-5px; }
+.search-toggle { display:none; }
+
+@media(max-width:640px) {
+  /* The board opens on posts. The keyword field is one tap away rather than occupying the
+     first screen — it cost 110px before a single row was visible. */
+  .search-actions { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; }
+  .search-toggle { display:inline-flex; gap:8px; }
+  .search-rail form { display:block; }
+  .search-keyword { display:none; margin-bottom:10px; }
+  .search-rail.searching .search-keyword { display:block; }
+  .filter-toggle { margin-top:0; }
+  .part-icon { width:17px; height:17px; margin-right:5px; vertical-align:-3.5px; }
+}
+
+/* Chrome above the list is what pushed the first post off a phone screen. These are the gaps
+   between the heading, the two toggles, the tabs and the count — each small, four of them in a
+   row before any content. */
+@media(max-width:640px) {
+  .page.discovery-page { padding-top:16px; }
+  .board-layout { gap:12px; }
+  .discover-tabs { margin-top:0; }
+  .results-heading { margin-top:12px; margin-bottom:8px; }
+}

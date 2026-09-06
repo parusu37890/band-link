@@ -72,11 +72,12 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 .mobile-only { display: none; }
 @media (max-width: 900px) { .header-inner { gap: 24px; } .main-nav { gap: 16px; } .header-actions { gap: 8px; } }
 @media (max-width: 640px) {
-  .header-inner { min-height: 76px; flex-wrap: wrap; gap: 0 12px; padding-top: 16px; }
+  .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 12px; padding-top: 10px; }
   .wordmark { font-size: 22px; } .brand-mark { width: 24px; height: 24px; }
   .header-actions { gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
   .header-profile { max-width: 98px; } .header-actions .icon-button { width: 40px; }
-  .main-nav { order: 3; width: 100%; margin-top: 12px; gap: 24px; }
+  .main-nav { order: 3; width: 100%; margin-top: 4px; gap: 24px; }
+  .main-nav a { min-height: 40px; }
   .main-nav a { min-height: 44px; font-size: 13px; }
   .form-grid { grid-template-columns: 1fr; } .form-section > legend { font-size: 19px; }
   .site-footer { flex-wrap: wrap; gap: 18px; } .site-footer p { display: none; } .copyright { width: 100%; }
