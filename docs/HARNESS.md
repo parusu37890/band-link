@@ -11,25 +11,30 @@ requirements.md 13.4「ハーネスエンジニアリング」に対応。ここ
 
 ## ローカル起動・テスト
 
-**動作確認済み（2026-09-05、cmd.exe、`BUILD SUCCESS`確認）:**
+**実行方法確認済み（2026-09-05、cmd.exe）。テスト成功にはDBパスワードが必要:**
 
 ```
 set DB_PASSWORD=<postgresのパスワード>
 mvnw.cmd test
 ```
 
-PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。
+PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。Maven Wrapper自体は`cmd.exe /d /c "mvnw.cmd -version"`で起動確認済み。DBパスワード未設定の環境ではPostgreSQL認証エラーになり、テストは失敗する。
 
 アプリ起動（`mvnw.cmd spring-boot:run`）は本書作成時点では**未検証**。エンティティ・コントローラ実装後、実際に起動確認してから追記する。
 
 ## テストデータ準備
 
-未検証・未実装。エンティティ実装後、`data.sql`または`CommandLineRunner`によるマスタデータ（パート・ジャンル・活動スタンス・都道府県）投入方法をここに追記する。
+デモ表示用のユーザー4名・募集40件を追加するSQLを `scripts/dev/seed-demo-posts.sql` に置いている。これはローカルDB専用で、`demo01@bandlink.local`〜`demo04@bandlink.local` を識別子にしている。パスワードは4ユーザー共通で `password`。実行手順はDB接続情報を設定したPowerShellから次の通り（2026-09-06実行確認済み）。
+
+```
+$env:PGPASSWORD = "<postgresのパスワード>"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/seed-demo-posts.sql
+```
 
 ## Playwright MCPによるST
 
 `.mcp.json`に`@playwright/mcp`を追加し、Claude Code再起動後に接続確認済み（2026-09-05、`mcp__playwright__*`のツール群が利用可能になった）。
-まだ画面が無いため実際のST実行は**未検証**。募集一覧・登録・ログイン等の画面ができ次第、実際にブラウザ操作させて手順・期待結果・実結果をここに追記する。
+画面は実装済みだが、Playwright MCPによるSTは**未実行**。デモデータ投入後に募集一覧・検索・詳細・登録・ログイン等をブラウザ操作し、手順・期待結果・実結果をここに追記する。
 
 ## ログ確認（Elasticsearch/Kibana）
 

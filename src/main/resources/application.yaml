@@ -8,7 +8,17 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
+  output:
+    ansi:
+      enabled: never
+
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    org.hibernate.SQL: WARN
 
 app:
   upload-dir: uploads/profile-images

@@ -1,0 +1,25 @@
+:root {
+  color-scheme: dark;
+  --bg: #141514;
+  --surface: #1b1d1b;
+  --raised: #252825;
+  --ink: #f0f0e9;
+  --muted: #a9ada6;
+  --line: #3a3e39;
+  --accent: #a4bfff;
+  --danger: #ffb5ae;
+  --success: #c1d8b4;
+  --radius: 3px;
+  --page: 1240px;
+  --gutter: clamp(20px, 4vw, 64px);
+  --font: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Yu Gothic', Meiryo, sans-serif;
+  --mono: 'Cascadia Code', Consolas, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+}

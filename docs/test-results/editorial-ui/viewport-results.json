@@ -1,0 +1,200 @@
+{
+  "records": [
+    {
+      "name": "posts",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "一緒に鳴らす、仲間を探そう。",
+      "errors": []
+    },
+    {
+      "name": "detail",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "【デモ 01】週末の音を一緒に鳴らしませんか",
+      "errors": []
+    },
+    {
+      "name": "profile",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "夜更かしスタジオ",
+      "errors": []
+    },
+    {
+      "name": "login",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "ログイン",
+      "errors": []
+    },
+    {
+      "name": "posts",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "一緒に鳴らす、仲間を探そう。",
+      "errors": []
+    },
+    {
+      "name": "detail",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "【デモ 01】週末の音を一緒に鳴らしませんか",
+      "errors": []
+    },
+    {
+      "name": "profile",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "夜更かしスタジオ",
+      "errors": []
+    },
+    {
+      "name": "login",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "ログイン",
+      "errors": []
+    },
+    {
+      "name": "posts",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "一緒に鳴らす、仲間を探そう。",
+      "errors": []
+    },
+    {
+      "name": "detail",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "【デモ 01】週末の音を一緒に鳴らしませんか",
+      "errors": []
+    },
+    {
+      "name": "profile",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "夜更かしスタジオ",
+      "errors": []
+    },
+    {
+      "name": "login",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "ログイン",
+      "errors": []
+    },
+    {
+      "name": "editor",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "バンドの募集を掲載する",
+      "errors": []
+    },
+    {
+      "name": "settings",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "プロフィール・設定",
+      "errors": []
+    },
+    {
+      "name": "messages",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "メッセージ",
+      "errors": []
+    },
+    {
+      "name": "notifications",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "通知",
+      "errors": []
+    },
+    {
+      "name": "conversations",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "メッセージ",
+      "errors": []
+    },
+    {
+      "name": "editor",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "バンドの募集を掲載する",
+      "errors": []
+    },
+    {
+      "name": "settings",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "プロフィール・設定",
+      "errors": []
+    },
+    {
+      "name": "messages",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "メッセージ",
+      "errors": []
+    },
+    {
+      "name": "notifications",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "通知",
+      "errors": []
+    },
+    {
+      "name": "conversations",
+      "width": 820,
+      "scrollWidth": 820,
+      "h1": "メッセージ",
+      "errors": []
+    },
+    {
+      "name": "editor",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "バンドの募集を掲載する",
+      "errors": []
+    },
+    {
+      "name": "settings",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "プロフィール・設定",
+      "errors": []
+    },
+    {
+      "name": "messages",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "メッセージ",
+      "errors": []
+    },
+    {
+      "name": "notifications",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "通知",
+      "errors": []
+    },
+    {
+      "name": "conversations",
+      "width": 390,
+      "scrollWidth": 390,
+      "h1": "メッセージ",
+      "errors": []
+    },
+    {
+      "name": "pagination",
+      "count": 40,
+      "unique": 40,
+      "text": "40件の募集"
+    }
+  ],
+  "errors": []
+}

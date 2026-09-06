@@ -1,0 +1,129 @@
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice} from './ui.js';
+
+const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
+const videoHref = value => { try { const u=new URL(value); return ['http:','https:'].includes(u.protocol)?u.href:''; } catch { return ''; } };
+const youtubeId = value => { try {const u=new URL(value); if(!['youtube.com','www.youtube.com','m.youtube.com','youtu.be'].includes(u.hostname))return ''; const id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.split('/').pop();return /^[a-zA-Z0-9_-]{11}$/.test(id||'')?id:'';}catch{return '';} };
+const names = items => (items||[]).map(x=>x.name).join('・');
+export async function accountPage(path){
+  if(path==='/login'||path==='/register'||path==='/verify-email'||path==='/password-reset'||path==='/password-reset/confirm'){await authPage(path);return true;}
+  if(path==='/settings'||path==='/settings/profile'){if(requireUser()) await profileEdit();return true;}
+  if(path==='/settings/blocks') return false;
+  if(path==='/support'){await supportPage();return true;}
+  if(/^\/users\/\d+$/.test(path)){await profilePage(path.split('/')[2]);return true;}
+  return false;
+}
+async function authPage(path){
+  const requestedNext=new URLSearchParams(location.search).get('next');
+  let next='/posts';
+  try { const destination=new URL(requestedNext||'/posts',location.origin);if(destination.origin===location.origin)next=destination.pathname+destination.search+destination.hash; } catch { /* Keep the local default. */ }
+  const config={
+    '/login':['ログイン','登録したメールアドレスでログインしてください。','気になる募集が見つかったら、プロフィールからメッセージを。'],
+    '/register':['アカウントを作成','表示名とメールアドレスを登録してください。','担当パートも、好きな音楽も。プロフィールが、最初の自己紹介になります。'],
+    '/verify-email':['メールアドレスを確認','登録時に届いた確認トークンを入力してください。','メールアドレスの確認後、募集の投稿とメッセージの送信ができます。'],
+    '/password-reset':['パスワードを再設定','登録メールアドレスに再設定用の案内を送ります。','パスワードを忘れた場合は、こちらから再設定できます。'],
+    '/password-reset/confirm':['新しいパスワードを設定','届いたトークンと新しいパスワードを入力してください。','再設定後は、新しいパスワードでログインしてください。']
+  }[path];
+  const register=path==='/register', verify=path==='/verify-email', reset=path==='/password-reset', confirm=path==='/password-reset/confirm';
+  let form='';
+  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" minlength="8" required></div><button class="button primary full" type="submit">ログイン</button></form>`;
+  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label><input class="input" id="password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required><span class="hint">8文字以上で設定してください。</span></div><button class="button primary full" type="submit">アカウントを作成</button></form>`;
+  if(verify) form=`<form id="auth-form"><div class="form-field"><label for="token">確認トークン</label><input class="input" id="token" name="token" maxlength="100" required autocomplete="one-time-code" placeholder="メールに記載されたトークン"></div><button class="button primary full" type="submit">メールアドレスを確認</button></form>`;
+  if(reset) form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><button class="button primary full" type="submit">再設定メールを送る</button></form>`;
+  if(confirm) form=`<form id="auth-form"><div class="form-field"><label for="token">再設定トークン</label><input class="input" id="token" name="token" maxlength="100" required></div><div class="form-field"><label for="newPassword">新しいパスワード</label><input class="input" id="newPassword" name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div><button class="button primary full" type="submit">パスワードを更新</button></form>`;
+  showPage(`<div class="page auth-page auth-layout"><aside class="auth-aside"><a class="back-link" href="/posts">${icon('back')}募集を探す</a><p class="eyebrow">バンドメンバー募集・参加希望</p><h2>一緒に演奏する<br>相手を見つける。</h2><p>${h(config[2])}</p><div class="auth-aside-note"><span>Band Link</span><p>活動エリア、パート、好きな音楽。<br>自分に合う条件で、仲間を探せます。</p></div></aside><section class="auth-panel"><h1>${h(config[0])}</h1><p class="muted">${h(config[1])}</p><div id="auth-message" aria-live="polite"></div>${form}<div class="auth-footer">${path==='/login'?`アカウントをお持ちでない方は <a href="/register">新規登録</a><br><a href="/password-reset">パスワードを忘れた方</a>`:register?`すでに登録済みの方は <a href="/login">ログイン</a>`:`<a href="/login">ログインへ戻る</a>`}</div></section></div>`,config[0]);
+  bindForm(main.querySelector('#auth-form'),async fd=>{
+    let response;
+    if(path==='/login') response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
+    else if(register) response=await api('/api/auth/register',{method:'POST',body:{username:fd.get('username'),email:fd.get('email'),password:fd.get('password')}});
+    else if(verify){await api('/api/auth/verify-email',{method:'POST',body:{token:fd.get('token')}});main.querySelector('#auth-message').innerHTML=notice('メールアドレスを確認しました。ログインすると募集を投稿できます。','success');return;}
+    else if(reset){await api('/api/auth/password-reset/request',{method:'POST',body:{email:fd.get('email')}});main.querySelector('#auth-message').innerHTML=notice('再設定の案内を送信しました。メールをご確認ください。','success');return;}
+    else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
+    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(next);}
+  });
+}
+async function profilePage(id){
+  try {
+    const p=await api('/api/users/'+Number(id));
+    const own=state.user&&String(state.user.id)===String(p.id);
+    const video=videoHref(p.videoUrl), yt=youtubeId(p.videoUrl);
+    const contact=own?button('プロフィールを編集','/settings/profile','secondary'):button('メッセージを送る',state.user?'/messages?to='+p.id:'/login?next='+encodeURIComponent('/messages?to='+p.id));
+    showPage(`<div class="page profile-page">
+      <a class="back-link" href="/posts">${icon('back')}募集一覧へ</a>
+      <div class="profile-layout">
+        <aside class="profile-identity">
+          ${avatar(p,true)}
+          <p class="eyebrow">公開プロフィール</p>
+          <h1>${h(p.username)}</h1>
+          <p class="profile-part">${h(names(p.parts)||'パート未設定')}</p>
+          <p class="muted">${h(names(p.prefectures)||'活動エリア未設定')}</p>
+          <div class="profile-contact">${contact}${!own?'<p class="hint">募集が出ていなくても、連絡できます。</p>':''}</div>
+          ${!own&&state.user?'<button class="button quiet small" id="report-user">プロフィールを通報</button>':''}
+        </aside>
+        <article class="profile-story">
+          <section class="profile-intro"><h2>自己紹介</h2><p class="body-text">${h(p.bio||'自己紹介はまだ登録されていません。')}</p></section>
+          <section class="detail-section profile-facts"><h2>音楽と活動</h2><dl class="facts"><dt>担当パート</dt><dd>${h(names(p.parts)||'未設定')}</dd><dt>好きなジャンル</dt><dd>${h(names(p.genres)||'未設定')}</dd><dt>活動エリア</dt><dd>${h(names(p.prefectures)||'未設定')}</dd><dt>活動スタンス</dt><dd>${h(names(p.stances)||'未設定')}</dd><dt>経験年数</dt><dd>${p.experienceYears==null?'未設定':h(p.experienceYears)+'年'}</dd><dt>年代</dt><dd>${h(p.ageRange||'非公開')}</dd></dl></section>
+          ${video?`<section class="detail-section profile-video"><h2>演奏動画</h2>${yt?`<iframe class="video" src="https://www.youtube-nocookie.com/embed/${h(yt)}" title="${h(p.username)}の演奏動画" loading="lazy" allowfullscreen></iframe>`:`<a class="row" href="${h(video)}" target="_blank" rel="noopener noreferrer">${icon('external')}演奏動画を開く</a>`}</section>`:''}
+        </article>
+      </div>
+    </div>`,p.username);
+    main.querySelector('#report-user')?.addEventListener('click',()=>report('USER',id));
+  } catch(e){showPage(`<div class="page">${empty('プロフィールを表示できません。',e.message,button('募集を探す','/posts','secondary'))}</div>`,'プロフィール');}
+}
+async function profileEdit(){
+  let p,m;
+  try { [p,m]=await Promise.all([api('/api/users/me'),api('/api/masters')]); }
+  catch(e){showPage(`<div class="page">${empty('設定を読み込めませんでした',e.message,button('再読み込み','/settings/profile','secondary'))}</div>`,'プロフィール編集');return;}
+  const section=(key,label,source)=>`<div class="form-field"><span class="form-label">${label} <span class="optional">任意</span></span>${source==='prefectures'?`<select class="input" aria-label="活動エリア" name="${key}" multiple size="5">${m[source].map(x=>`<option value="${x.id}" ${p[source]?.some(y=>y.id===x.id)?'selected':''}>${h(x.name)}</option>`).join('')}</select><span class="hint">3つまで選択できます。PCではCtrlキー（Macは⌘キー）を押しながら選択。</span>`:choices(key,m[source],p[source]?.map(x=>x.id)||[])}</div>`;
+  showPage(`<div class="page settings-page">
+    <a class="back-link" href="/users/${p.id}">${icon('back')}公開プロフィールへ</a>
+    <div class="page-heading"><div><h1>プロフィール・設定</h1><p>一緒に演奏する相手へ、あなたの音楽や活動のことを伝えましょう。</p></div></div>
+    <div class="settings-layout">
+      <nav class="settings-nav" aria-label="設定メニュー"><a href="#profile-form" aria-current="page">プロフィール</a><a href="/my/posts">自分の募集</a><a href="/settings/blocks">ブロック管理</a><a href="#account-settings">アカウント</a><a href="/support">ヘルプ・お問い合わせ</a></nav>
+      <div class="settings-content">${verificationNotice()}
+        <form id="profile-form">
+          <fieldset class="form-section"><legend>プロフィール画像</legend><div class="profile-image-editor"><div id="profile-image-preview">${avatar(p,true)}</div><div class="stack"><input id="profileImage" name="profileImage" type="file" accept="image/jpeg,image/png,image/webp" hidden><div class="row"><button type="button" class="button secondary" id="choose-profile-image">画像を選ぶ</button><button type="button" class="button quiet small" id="clear-profile-selection" hidden>選択を取り消す</button></div><p class="hint" id="profile-image-name" aria-live="polite">JPEG・PNG・WebP / 5MBまで</p>${p.profileImageUrl?'<button type="button" class="button quiet small" id="remove-profile-image">現在の画像を削除</button>':''}</div></div></fieldset>
+          <fieldset class="form-section"><legend>自己紹介</legend><div class="stack"><div class="form-field"><label for="username">表示名 <span class="required">必須</span></label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required value="${h(p.username)}"></div><div class="form-field"><label for="bio">自己紹介 <span class="optional">任意</span></label><textarea class="input" id="bio" name="bio" maxlength="1000" rows="7" placeholder="好きなアーティスト、これまでの活動、これからやりたい音楽など。">${h(p.bio)}</textarea><span class="hint" data-count="bio"></span></div></div></fieldset>
+          <fieldset class="form-section"><legend>音楽と活動エリア</legend><div class="stack">${fields.map(x=>section(...x)).join('')}</div></fieldset>
+          <fieldset class="form-section"><legend>基本情報</legend><div class="stack"><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="optional">任意</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" value="${p.age??''}"><span class="hint">公開されるのは「20代」などの年代だけです。</span></div><div class="form-field"><label for="experienceYears">経験年数 <span class="optional">任意</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" value="${p.experienceYears??''}"></div></div><div class="form-field"><label for="gender">性別 <span class="optional">任意</span></label><input class="input" id="gender" name="gender" maxlength="40" value="${h(p.gender)}"></div></div></fieldset>
+          <fieldset class="form-section"><legend>演奏動画</legend><div class="form-field"><label for="videoUrl">動画のURL <span class="optional">任意</span></label><input class="input" id="videoUrl" name="videoUrl" type="url" maxlength="1000" value="${h(p.videoUrl)}" placeholder="https://youtu.be/..."><span class="hint">YouTubeはプロフィール内で再生できます。その他の動画はリンクで表示します。</span></div></fieldset>
+          <div class="sticky-actions">${button('キャンセル','/users/'+p.id,'secondary')}<button class="button primary" type="submit">変更を保存</button></div>
+        </form>
+        <section class="detail-section account-settings" id="account-settings"><h2>アカウント</h2><div class="settings-account-row"><div><h3>ログアウト</h3><p class="muted">この端末でのログインを終了します。</p></div><button class="button secondary" type="button" id="logout">ログアウト</button></div><div class="settings-account-row"><div><h3>Band Linkから退会</h3><p class="muted">プロフィールと募集は公開を終了します。送信済みメッセージは相手側に残ります。</p></div><button class="button danger" type="button" id="withdraw">退会する</button></div></section>
+      </div>
+    </div>
+  </div>`, 'プロフィール編集');
+  const form=main.querySelector('#profile-form');
+  counter(form);
+  const imageInput=form.querySelector('#profileImage');
+  const preview=form.querySelector('#profile-image-preview');
+  const fileName=form.querySelector('#profile-image-name');
+  const clearSelection=form.querySelector('#clear-profile-selection');
+  let previewUrl=null;
+  const releasePreview=()=>{if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}};
+  const resetSelection=()=>{releasePreview();imageInput.value='';preview.innerHTML=avatar(p,true);fileName.textContent='JPEG・PNG・WebP / 5MBまで';clearSelection.hidden=true;};
+  window.addEventListener('pagehide',releasePreview,{once:true});
+  form.querySelector('#choose-profile-image').onclick=()=>imageInput.click();
+  clearSelection.onclick=resetSelection;
+  imageInput.addEventListener('change',()=>{
+    const image=imageInput.files?.[0];
+    if(!image){resetSelection();return;}
+    if(image.size>5*1024*1024||!['image/jpeg','image/png','image/webp'].includes(image.type)){resetSelection();fileName.textContent='5MB以下のJPEG・PNG・WebP画像を選んでください。';return;}
+    releasePreview();previewUrl=URL.createObjectURL(image);
+    preview.innerHTML=`<span class="avatar large"><img src="${h(previewUrl)}" alt="保存するプロフィール画像のプレビュー"></span>`;
+    fileName.textContent=`${image.name} — 保存すると公開されます`;clearSelection.hidden=false;
+  });
+  bindForm(form,async fd=>{
+    const body={username:fd.get('username').trim(),bio:fd.get('bio').trim(),age:fd.get('age')?Number(fd.get('age')):null,experienceYears:fd.get('experienceYears')?Number(fd.get('experienceYears')):null,gender:fd.get('gender').trim(),videoUrl:fd.get('videoUrl').trim()||null};
+    for(const [key] of fields)body[key]=fd.getAll(key).map(Number);
+    if(body.prefectureIds.length>3)throw new Error('活動エリアは3つまで選択できます。');
+    await api('/api/users/me',{method:'PUT',body});
+    const image=fd.get('profileImage');
+    if(image instanceof File&&image.size){const upload=new FormData();upload.append('file',image);await api('/api/users/me/image',{method:'POST',body:upload});}
+    toast('プロフィールを更新しました。');location.assign('/users/'+p.id);
+  });
+  main.querySelector('#remove-profile-image')?.addEventListener('click',()=>confirmAction('プロフィール画像を削除しますか？','公開プロフィールから現在の画像を削除します。',async()=>{await api('/api/users/me/image',{method:'DELETE'});p.profileImageUrl=null;if(!imageInput.files?.length)resetSelection();main.querySelector('#remove-profile-image')?.remove();toast('プロフィール画像を削除しました。');}));
+  main.querySelector('#logout').onclick=()=>confirmAction('ログアウトしますか？','次回はメールアドレスとパスワードでログインできます。',async()=>{await api('/api/auth/logout',{method:'POST'});location.assign('/login');});
+  main.querySelector('#withdraw').onclick=()=>confirmAction('退会しますか？','プロフィールと募集は公開を終了し、アカウントを復元できません。送信済みメッセージは相手側に残ります。',async()=>{await api('/api/auth/withdraw',{method:'POST'});state.user=null;location.assign('/');});
+}
+function supportPage(){showPage(`<div class="page narrow"><div class="page-heading"><div><h1>ヘルプ・お問い合わせ</h1><p>Band Linkの使い方と、運営への連絡先。</p></div></div><div class="help-grid"><section class="panel"><h2>メールアドレスの確認</h2><p>登録後に届いた確認トークンを、メール確認画面へ入力してください。確認後に募集投稿とメッセージ送信ができます。</p></section><section class="panel"><h2>困ったときは</h2><p>不適切な募集やメッセージは、各画面の「通報」から運営へ知らせてください。緊急時はサービスの利用を中止し、運営へご連絡ください。</p></section></div></div>`,'ヘルプ・お問い合わせ');}
+
