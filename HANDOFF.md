@@ -6,10 +6,10 @@
 
 - リポジトリ：`C:\Users\parus\Desktop\band`
 - GitHub：`https://github.com/parusu37890/band-link`
-- 今回のブランチ：`feature/editorial-ui`（`feature/frontend`の`7e86041`から作成）
+- 今回の作業は`main`へマージ済み（`feature/editorial-ui`は削除済み）。過去の機能ブランチは`archive/*`タグで参照できる。
 - 目的：機能・URL・APIを維持したフロントエンド再設計。
-- mainへの直接コミット・マージはしていない。PR作成・CIは未実施。開始時に必ず`git status`と`git log -5 --oneline`で手元を確認する。
-- 今回の差分の検証・軽微な修正はこのブランチ上で継続し、新機能は別featureブランチ・PRに分ける。巨大な1ブランチへ無関係な機能を追加しない。
+- **mainへ直接コミット・pushする運用に変更した（2026-09-06）。** PRは必須ではない。pushの前にJUnitを実行し、成功を確認する。詳細は`requirements.md` 13.1。
+- 作業前に`git status`と`git log -5 --oneline`で手元を確認する。CIはmainへのpushで動くので、赤くなったら追いかけて直す。
 
 ## 先に全文読む資料
 
@@ -62,7 +62,7 @@ CSSは`src/main/resources/static/css/app.css`が入口。`tokens.css`、`base.cs
 - **不具合を1件修正**：`MessageService.send`が`Notification`を作っておらず、送信しても受信者の通知が永久に0件だった（requirements.md 7章の未実装）。修正後、未読1件・ヘッダーの未読ドット・通知一覧の表示まで確認。
 - **UI修正**：モバイル導入部を短縮し390×844pxで最初の募集カードを初期表示に入れた。会話が少ないときの入力欄上の空白を解消。通知から該当会話へ直接遷移。
 - **デモデータ**：40件の同一コピーを個別の内容に書き分け、パート・ジャンルを本文と一致させた。デモ4アカウントにプロフィールを追加（`scripts/dev/`のフィクスチャのみ。画面側に固定文言・写真は入れていない）。
-- コミット済み・`origin/feature/editorial-ui`へpush済み。**PRは未作成**（gh CLIがこの環境のPATHに無いため、Web UIでの作成が必要）。
+- コミット済み。**`main`へマージ・push済み**（PR #1・#2でCI修正、その後は直接pushの運用へ変更）。
 
 **Playwright MCPの注意**：`browser_click`ではこのアプリのフォーム送信が発火しない（オーバーレイ無し・`type=submit`・一意セレクタを確認済みでも不発）。`browser_evaluate`から`requestSubmit()`または`element.click()`を呼べば正常に動く。アプリの不具合ではないが、**クリック成功のツール出力だけを根拠に「送信できた」と記録しないこと**。
 
@@ -94,9 +94,9 @@ JUnitを必要な範囲で実行し、Playwright MCPが本当に使えるか確�
 
 APIのモック化、機能削除、認証回避で見た目だけ完成させない。必要な機能修正は作業を切り分けて独立レビューと検証を行う。
 
-### 4. GitHubへレビュー可能な状態で渡す
+### 4. mainへ直接反映する
 
-UI差分のPRを作り、検証済み／未検証を明記する。GitHub CLIがこの実行環境のPATHに無かったため、このセッションではPRを作成していない。mainへ直接コミットせず、CI・レビュー・必要なSTの状態を見て統合する。ログ基盤（Elasticsearch/Kibana）、メール配信、公開環境の完成はこのUI作業では確認していないので、関連ドキュメントと実環境を確認する。
+PRは不要。JUnitの成功を確認してから`main`へpushする。CIは`main`のpushで動くので、赤くなったら追いかけて直す（過去の失敗例：`mvnw`の実行ビット欠落、CIにDBが無くcontextLoadsが失敗）。ログ基盤（Elasticsearch/Kibana）、メール配信、公開環境の完成はこのUI作業では確認していないので、関連ドキュメントと実環境を確認する。
 
 ## ローカル起動・デモ
 

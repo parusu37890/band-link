@@ -18,4 +18,4 @@
 - 実装前にGitHubのブランチ戦略、Elasticsearch・Kibanaのログ管理、ハーネスとコンテキストの設計を行う。
 - 進行・設計、実装、独立したコードレビュー、検証の役割を分担する。
 - 単体テストはJUnit、システムテストはPlaywright MCPを使用する。別の操作ツールをPlaywright MCPと称しない。
-- featureブランチとPRで変更を管理し、mainへ直接コミットしない。
+- mainへ直接コミット・pushしてよい（2026-09-06変更）。PRは必須ではない。pushの前にJUnitを実行し、成功を確認する。
