@@ -41,3 +41,7 @@ Cladueに渡す.zip
 
 ### Local Claude Code settings ###
 .claude/settings.local.json
+
+### Browser-automation scratch (Playwright MCP traces, ad-hoc screenshots) ###
+.playwright-mcp/
+/*.png
