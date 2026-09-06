@@ -21,17 +21,17 @@ public class PostService {
     private final GenreRepository genreRepository;
     private final StanceRepository stanceRepository;
     private final PrefectureRepository prefectureRepository;
+    private final BlockRepository blockRepository;
     private final Clock clock;
-
     @org.springframework.beans.factory.annotation.Autowired
     public PostService(PostRepository posts, UserRepository users, PartRepository parts, GenreRepository genres,
-                       StanceRepository stances, PrefectureRepository prefectures) {
-        this(posts, users, parts, genres, stances, prefectures, Clock.systemDefaultZone());
+                       StanceRepository stances, PrefectureRepository prefectures, BlockRepository blocks) {
+        this(posts, users, parts, genres, stances, prefectures, blocks, Clock.systemDefaultZone());
     }
     PostService(PostRepository posts, UserRepository users, PartRepository parts, GenreRepository genres,
-                StanceRepository stances, PrefectureRepository prefectures, Clock clock) {
+                StanceRepository stances, PrefectureRepository prefectures, BlockRepository blocks, Clock clock) {
         this.postRepository = posts; this.userRepository = users; this.partRepository = parts; this.genreRepository = genres;
-        this.stanceRepository = stances; this.prefectureRepository = prefectures;
+        this.stanceRepository = stances; this.prefectureRepository = prefectures; this.blockRepository = blocks;
         this.clock = clock == null ? Clock.systemDefaultZone() : clock;
     }
 
@@ -79,6 +79,28 @@ public class PostService {
     }
 
     @Transactional
+    /**
+     * Listing for a signed-in viewer. Posts by anyone in a block relationship with them are excluded
+     * in the query (requirements 8章): blocking hides people from browsing, while the post's own URL
+     * stays reachable (docs/decisions/0004). Anonymous browsing uses {@link #search} and sees
+     * everything, which is why blocking is not an access control.
+     */
+    public List<Post> searchFor(Long viewerId, PostSearchCriteria criteria) {
+        java.util.Set<Long> hidden = blockedCounterparts(viewerId);
+        List<Post> found = search(criteria);
+        return hidden.isEmpty() ? found
+                : found.stream().filter(post -> !hidden.contains(post.getUser().getId())).toList();
+    }
+
+    /** Ids on the other side of a block, whichever direction it was made in. */
+    public java.util.Set<Long> blockedCounterparts(Long viewerId) {
+        if (viewerId == null) return java.util.Set.of();
+        return blockRepository.findByBlockerIdOrBlockedId(viewerId, viewerId).stream()
+                .map(block -> block.getBlocker().getId().equals(viewerId)
+                        ? block.getBlocked().getId() : block.getBlocker().getId())
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
     public List<Post> search(PostSearchCriteria criteria) {
         LocalDateTime now = now();
         Specification<Post> spec = (root, query, cb) -> cb.and(cb.equal(root.get("status"), PostStatus.OPEN), cb.equal(root.get("user").get("status"), UserStatus.ACTIVE));
