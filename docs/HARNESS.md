@@ -191,3 +191,19 @@ $env:PGPASSWORD = "<postgresのパスワード>"
 
 このSQLは旧仕様で残った行を互換整理するためだけに使う。新しい本人退会処理は行・会話・
 メッセージを削除するため、このSQLを実行しても新しい退会データは作られない。
+
+## 認証・会話UIの追加確認（2026-09-07）
+
+次のJUnitをローカルPostgreSQLへ接続した状態で実行し、**33件成功、失敗・エラー・スキップ0件**を確認した。
+
+```
+$env:DB_PASSWORD = "<postgresのパスワード>"
+.\mvnw.cmd -B test
+Remove-Item Env:DB_PASSWORD
+```
+
+LINE APIは`MockRestServiceServer`でトークン交換・プロフィール取得・初回アカウント作成・アクセストークン欠落を検証している。LINEの環境変数を空にした場合は`/api/auth/line/enabled`が無効になり、メールの登録・ログイン画面だけが残る。未確認ユーザーの確認メール再送がゲートで塞がれないことも`EmailVerificationGateFilterTest`で確認した。
+
+`node --check`は変更したES Modules（`account.js`、`app.js`、`community.js`、`post-editor.js`、`ui.js`）で成功し、`git diff --check`も空白エラーなしだった。8080は既存のSpring Bootプロセスが使用中で、`GET /posts`、`GET /login`、`GET /api/auth/line/enabled`（`enabled:false`）と新しいSVG・JSを応答することを確認した。8081の待受は確認できなかった。
+
+Playwright MCPのサーバーはこの実行環境に公開されていないため、指定されたPlaywright MCPによるSTは未実施。代わりにCodexのブラウザで`/login`、`/register`、`/verify-email`を表示し、中央認証フォーム、パスワード表示ボタン、確認メール再送導線（未ログイン時は表示しない）、新しいfaviconを目視・アクセシビリティツリーで確認した。実LINEチャネルを使ったOAuth往復も資格情報を使っていないため未実施。
