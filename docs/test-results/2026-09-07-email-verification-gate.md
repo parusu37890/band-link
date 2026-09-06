@@ -6,6 +6,7 @@
 - `node --check src/main/resources/static/js/account.js`：成功。
 - `git diff --check`：空白エラーなし。
 - `./mvnw.cmd -B "-Dtest=AuthServiceTest,MailServiceTest" test`：**6件成功、失敗・エラー・スキップ0件**。
+- `EmailVerificationGateFilter`：画面の直接アクセスをリダイレクトし、APIアクセスを403にするサーバー側ゲートを追加。
 
 ## 未確認
 

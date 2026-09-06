@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import com.example.bandlink.repository.UserRepository;
 
 @Configuration
 public class SecurityConfig {
@@ -16,7 +18,12 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    @Bean SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Bean EmailVerificationGateFilter emailVerificationGateFilter(UserRepository users) {
+        return new EmailVerificationGateFilter(users);
+    }
+
+    @Bean SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   EmailVerificationGateFilter emailVerificationGateFilter) throws Exception {
         http
             .csrf(org.springframework.security.config.Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
@@ -46,6 +53,7 @@ public class SecurityConfig {
                 }))
             .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login").usernameParameter("email").defaultSuccessUrl("/", true).failureUrl("/login?error"))
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login"));
+        http.addFilterBefore(emailVerificationGateFilter, AuthorizationFilter.class);
         return http.build();
     }
 }
