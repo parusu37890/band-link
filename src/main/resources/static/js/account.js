@@ -51,10 +51,10 @@ async function authPage(path){
     let response;
     if(path==='/login') response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
     else if(register) response=await api('/api/auth/register',{method:'POST',body:{username:fd.get('username'),email:fd.get('email'),password:fd.get('password')}});
-    else if(verify){await api('/api/auth/verify-email',{method:'POST',body:{token:fd.get('token')}});main.querySelector('#auth-message').innerHTML=notice('メールアドレスを確認しました。ログインすると募集を投稿できます。','success');return;}
+    else if(verify){await api('/api/auth/verify-email',{method:'POST',body:{token:fd.get('token')}});main.querySelector('#auth-message').innerHTML=notice(state.user?'メールアドレスを確認しました。募集の投稿とメッセージの送信ができます。':'メールアドレスを確認しました。ログインすると募集を投稿できます。','success');if(state.user)state.user.emailVerified=true;return;}
     else if(reset){await api('/api/auth/password-reset/request',{method:'POST',body:{email:fd.get('email')}});main.querySelector('#auth-message').innerHTML=notice('再設定の案内を送信しました。メールをご確認ください。','success');return;}
     else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
-    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(next);}
+    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register?'/verify-email':next);}
   });
 }
 async function profilePage(id){
@@ -109,7 +109,7 @@ async function profileEdit(){
     <a class="back-link" href="/users/${p.id}">${icon('back')}公開プロフィールへ</a>
     <div class="page-heading"><div><h1>プロフィール・設定</h1><p>一緒に演奏する相手へ、あなたの音楽や活動のことを伝えましょう。</p></div></div>
     <div class="settings-layout">
-      <nav class="settings-nav" aria-label="設定メニュー"><a href="#profile-form" aria-current="page">プロフィール</a><a href="/my/posts">自分の募集</a><a href="/settings/blocks">ブロック管理</a><a href="#account-settings">アカウント</a><a href="/support">ヘルプ・お問い合わせ</a></nav>
+      <nav class="settings-nav" aria-label="設定メニュー"><a href="#profile-form" aria-current="page">プロフィール</a><a href="/my/posts">自分の募集</a><a href="/settings/blocks">ブロック管理</a><a href="#account-settings">アカウント</a><a href="/support">ヘルプ</a></nav>
       <div class="settings-content">${verificationNotice()}
         <form id="profile-form">
           <fieldset class="form-section"><legend>プロフィール画像</legend><div class="profile-image-editor"><div id="profile-image-preview">${avatar(p,true)}</div><div class="stack"><input id="profileImage" name="profileImage" type="file" accept="image/jpeg,image/png,image/webp" hidden><div class="row"><button type="button" class="button secondary" id="choose-profile-image">画像を選ぶ</button><button type="button" class="button quiet small" id="clear-profile-selection" hidden>選択を取り消す</button></div><p class="hint" id="profile-image-name" aria-live="polite">JPEG・PNG・WebP / 5MBまで</p>${p.profileImageUrl?'<button type="button" class="button quiet small" id="remove-profile-image">現在の画像を削除</button>':''}</div></div></fieldset>

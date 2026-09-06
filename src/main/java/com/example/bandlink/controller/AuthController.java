@@ -33,25 +33,47 @@ public class AuthController {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Registration signs the person in. The client sets state.user from this response and sends
+     * them into the app, so without a session that was a lie: found by ST on 2026-09-06, a new
+     * account landed on the board anonymous, told neither to log in nor to verify the address it
+     * had just taken. Verification still gates posting and messaging — being signed in is what
+     * lets the app say so.
+     */
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.status(201).body(authService.register(request));
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request,
+                                                 HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        authService.register(request);
+        Authentication authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
+        touchLogin(request.email());
+        return ResponseEntity.status(201).body(currentUser(authentication));
     }
 
     @PostMapping("/login")
     public UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        Authentication authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
+        touchLogin(request.email());
+        return currentUser(authentication);
+    }
+
+    /** Establishes the session both entry points need; the session id is rotated on the way in. */
+    private Authentication startSession(String email, String password,
+                                        HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         Authentication authentication = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
+                UsernamePasswordAuthenticationToken.unauthenticated(email, password));
         if (httpRequest.getSession(false) != null) httpRequest.changeSessionId();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
-        userRepository.findByEmail(request.email()).ifPresent(user -> {
+        return authentication;
+    }
+
+    private void touchLogin(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
             user.touchLogin(java.time.LocalDateTime.now());
             userRepository.save(user);
         });
-        return currentUser(authentication);
     }
 
     @PostMapping("/logout")
