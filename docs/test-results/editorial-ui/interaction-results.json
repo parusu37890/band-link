@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Demo login through actual auth API",
+    "Post image selection preview and clear",
+    "Profile image preview cancellation preserves text draft",
+    "15-second actual polling preserves message draft, attachment and focus",
+    "Mobile 390x844 message submit fits viewport",
+    "Actual keyword API displays zero-result state",
+    "Actual part filter restored from URL",
+    "40 unique real posts; detail return restores loaded posts and scroll position",
+    "Detail backlink preserves filter query"
+  ],
+  "errors": []
+}
