@@ -14,14 +14,16 @@ function header(){
 // requirements 3章: while an account is suspended, the screen after login carries the notice and
 // where to ask about it, and nothing else. Without this the app looked normal and the suspension
 // only surfaced as a 409 on whatever the person tried to do. The support page keeps its own route
-// so the contact details stay reachable, and logout lives here because settings no longer does.
+// so it stays reachable, and logout lives here because settings no longer does. The screen used to
+// send people to a contact address that page never held (requirements 11章 lists 問い合わせ先 as
+// undecided), so it now says plainly that the channel is not open yet — see docs/decisions/0006.
 function suspendedScreen(){
  showPage(`<div class="page narrow">
    <div class="page-heading"><div><h1>アカウントの利用を停止しています</h1></div></div>
    ${notice('現在このアカウントでは、募集の掲載とメッセージの送信ができません。公開していた募集とプロフィールは非公開になっています。','error')}
-   <p class="body-text">解除の手続きは運営が行います。心当たりがない場合や解除を希望する場合は、お問い合わせ先からご連絡ください。</p>
+   <p class="body-text">解除の手続きは運営が行います。この画面から解除を申し出る方法は、まだ用意できていません。停止中にできること・できないことはヘルプにまとめています。</p>
    <div class="row" style="margin-top:28px">
-     <a class="button primary" href="/support">お問い合わせ先を見る</a>
+     <a class="button primary" href="/support">ヘルプを見る</a>
      <button type="button" class="button secondary" id="suspended-logout">ログアウト</button>
    </div>
  </div>`,'利用停止のお知らせ');

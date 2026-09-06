@@ -95,7 +95,15 @@ async function profileEdit(){
   let p,m;
   try { [p,m]=await Promise.all([api('/api/users/me'),api('/api/masters')]); }
   catch(e){showPage(`<div class="page">${empty('設定を読み込めませんでした',e.message,button('再読み込み','/settings/profile','secondary'))}</div>`,'プロフィール編集');return;}
-  const section=(key,label,source)=>`<div class="form-field"><span class="form-label">${label} <span class="optional">任意</span></span>${source==='prefectures'?`<select class="input" aria-label="活動エリア" name="${key}" multiple size="5">${m[source].map(x=>`<option value="${x.id}" ${p[source]?.some(y=>y.id===x.id)?'selected':''}>${h(x.name)}</option>`).join('')}</select><span class="hint">3つまで選択できます。PCではCtrlキー（Macは⌘キー）を押しながら選択。</span>`:choices(key,m[source],p[source]?.map(x=>x.id)||[])}</div>`;
+  // 47 prefectures do not fit the chip row the other three fields use, and the multiple-select
+  // they replaced hid the choice behind Ctrl-click — the same control the search rail dropped.
+  // Reuses the rail's checkbox list so a selection is visible in both places.
+  const section=(key,label,source)=>{
+    const selected=(p[source]||[]).map(x=>x.id);
+    const field=body=>`<div class="form-field"><span class="form-label">${label} <span class="optional">任意</span></span>${body}</div>`;
+    if(source!=='prefectures')return field(choices(key,m[source],selected));
+    return field(`<div class="filter-options prefecture-options area-options" role="group" aria-label="${label}" aria-describedby="${key}-status">${m[source].map(x=>`<label class="filter-option"><input type="checkbox" name="${key}" value="${x.id}" ${selected.includes(x.id)?'checked':''}><span>${h(x.name)}</span></label>`).join('')}</div><p class="hint" id="${key}-status" role="status"></p>`);
+  };
   showPage(`<div class="page settings-page">
     <a class="back-link" href="/users/${p.id}">${icon('back')}公開プロフィールへ</a>
     <div class="page-heading"><div><h1>プロフィール・設定</h1><p>一緒に演奏する相手へ、あなたの音楽や活動のことを伝えましょう。</p></div></div>
@@ -116,6 +124,17 @@ async function profileEdit(){
   </div>`, 'プロフィール編集');
   const form=main.querySelector('#profile-form');
   counter(form);
+  // Say how many areas are chosen while choosing. The submit handler still rejects a fourth,
+  // but being told off after pressing 保存 is a poor way to learn a limit.
+  const areaStatus=form.querySelector('#prefectureIds-status');
+  const updateAreas=()=>{
+    const chosen=[...form.querySelectorAll('[name="prefectureIds"]:checked')];
+    const names=chosen.map(x=>x.nextElementSibling.textContent).join('・');
+    areaStatus.textContent=`${chosen.length} / 3つまで${names?'　'+names:''}`;
+    areaStatus.classList.toggle('error',chosen.length>3);
+  };
+  form.querySelectorAll('[name="prefectureIds"]').forEach(el=>el.addEventListener('change',updateAreas));
+  updateAreas();
   const imageInput=form.querySelector('#profileImage');
   const preview=form.querySelector('#profile-image-preview');
   const fileName=form.querySelector('#profile-image-name');
@@ -147,5 +166,41 @@ async function profileEdit(){
   main.querySelector('#logout').onclick=()=>confirmAction('ログアウトしますか？','次回はメールアドレスとパスワードでログインできます。',async()=>{await api('/api/auth/logout',{method:'POST'});location.assign('/login');});
   main.querySelector('#withdraw').onclick=()=>confirmAction('退会しますか？','プロフィールと募集は公開を終了し、アカウントを復元できません。送信済みメッセージは相手側に残ります。',async()=>{await api('/api/auth/withdraw',{method:'POST'});state.user=null;location.assign('/');});
 }
-function supportPage(){showPage(`<div class="page narrow"><div class="page-heading"><div><h1>ヘルプ・お問い合わせ</h1><p>Band Linkの使い方と、運営への連絡先。</p></div></div><div class="help-grid"><section class="panel"><h2>メールアドレスの確認</h2><p>登録後に届いた確認トークンを、メール確認画面へ入力してください。確認後に募集投稿とメッセージ送信ができます。</p></section><section class="panel"><h2>困ったときは</h2><p>不適切な募集やメッセージは、各画面の「通報」から運営へ知らせてください。緊急時はサービスの利用を中止し、運営へご連絡ください。</p></section></div></div>`,'ヘルプ・お問い合わせ');}
+// Two symmetric cards said little and promised a contact address the page did not have —
+// the suspension screen sends people here for exactly that (requirements 5章・53行). Rewritten
+// as the situations a reader actually arrives with, each ending at the screen that resolves it.
+const helpItem = ([question, answer, link]) =>
+  `<article class="help-item"><h3>${h(question)}</h3><p>${h(answer)}</p>${link ? `<a class="help-link" href="${h(link[1])}">${h(link[0])}${icon('arrow')}</a>` : ''}</article>`;
+const helpSection = (id, title, items) =>
+  `<section class="help-section" aria-labelledby="${id}"><h2 id="${id}">${h(title)}</h2><div class="help-list">${items.map(helpItem).join('')}</div></section>`;
+
+function supportPage(){
+  showPage(`<div class="page help-page">
+    <div class="page-heading"><div><h1>ヘルプ</h1><p>つまずきやすいところと、その場で解決できる画面をまとめています。</p></div></div>
+    ${helpSection('help-start', '使いはじめる', [
+      ['募集を投稿できない、メッセージを送れない', 'メールアドレスの確認が終わっていない可能性があります。登録時に届いたトークンを確認画面へ入力すると、投稿と送信ができるようになります。閲覧と検索は確認前でもできます。', ['メールアドレスを確認する', '/verify-email']],
+      ['パスワードを忘れた', '登録したメールアドレスへ再設定用のトークンを送ります。届いたトークンと新しいパスワードを入力してください。', ['パスワードを再設定する', '/password-reset']],
+      ['プロフィールに何を書けばよいか', '担当パート・活動エリア・好きなジャンルが埋まっていると、相手が連絡するか判断できます。空の項目は相手の画面に表示されないので、書ける範囲で構いません。', ['プロフィールを編集する', '/settings/profile']],
+    ])}
+    ${helpSection('help-posts', '募集のきまり', [
+      ['公開できる募集は同時に1件', '2件目を出すには、いま公開中の募集を終了してください。終了した募集は自分の募集一覧に残り、あとから再公開できます。', ['自分の募集を見る', '/my/posts']],
+      ['投稿・編集した直後は変更できない', '投稿または編集してから12時間は、新しい募集の作成も編集もできません。画像の追加・削除・並べ替えも編集に含まれます。本文・条件・画像はまとめて保存してください。', null],
+      ['募集は30日で自動的に終了する', '公開から30日経つと掲載が終わります。再公開すると、その時点から30日に更新されます。募集の終了と再公開はいつでも操作できます。', null],
+    ])}
+    ${helpSection('help-people', '相手とのやりとり', [
+      ['やりとりしたくない相手がいる', 'ブロックすると、その相手の募集は一覧に出なくなり、メッセージの送受信も双方できなくなります。ただしログアウトすれば誰でも見られる公開情報なので、相手からプロフィールや募集を見られなくする機能ではありません。', ['ブロックを管理する', '/settings/blocks']],
+      ['不適切な募集やメッセージを見つけた', '募集・メッセージ・プロフィールの各画面にある「通報」から運営へ知らせてください。通報された本文と理由だけが運営に渡り、前後のやりとりは渡りません。', null],
+      ['相手が「退会済みユーザー」と表示される', 'その相手は退会しています。これまでのやりとりは残りますが、新しくメッセージを送ることはできません。', null],
+    ])}
+    ${helpSection('help-account', 'アカウント', [
+      ['退会すると何が残るか', 'プロフィールと募集の公開が終わります。相手の画面に残っている送信済みのメッセージはそのままで、送信者名が「退会済みユーザー」に変わります。退会は取り消せません。', ['アカウントの設定を見る', '/settings']],
+      ['アカウントが利用停止になった', '募集の掲載とメッセージの送信ができなくなり、公開していた募集とプロフィールは非公開になります。解除の手続きは運営が行います。', null],
+    ])}
+    <section class="help-contact" aria-labelledby="help-contact-title">
+      <h2 id="help-contact-title">運営への連絡</h2>
+      <p>募集・メッセージ・プロフィールの内容についての連絡は、各画面の「通報」から運営に届きます。</p>
+      <p class="hint">利用停止など、通報では扱えない件の問い合わせ先はまだ公開していません。決まりしだいこのページに掲載します。</p>
+    </section>
+  </div>`, 'ヘルプ');
+}
 

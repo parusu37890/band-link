@@ -50,3 +50,29 @@
 /* Guard actions sit together, away from the contact button they must not be confused with. */
 .profile-guard { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .profile-guard .button { padding-inline: 0; }
+
+/* Help is a list of situations, not a pair of cards: one ruled row per question, each ending at
+   the screen that resolves it. Section labels stay quiet so the questions carry the page. */
+.help-page .page-heading { margin-bottom: 48px; }
+.help-section { max-width: 760px; margin-bottom: 56px; }
+.help-section > h2 { font-size: 13px; font-weight: 500; letter-spacing: .12em; color: var(--muted); padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.help-item { padding: 28px 0; border-bottom: 1px solid var(--line); }
+.help-item h3 { font-size: 17px; font-weight: 500; margin-bottom: 12px; }
+.help-item p { color: var(--muted); line-height: 1.9; }
+.help-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 14px; color: var(--accent); }
+.help-contact { max-width: 760px; border-top: 3px solid #a9b7a0; padding-top: 28px; }
+.help-contact h2 { font-size: 20px; margin-bottom: 16px; }
+.help-contact p { color: var(--muted); line-height: 1.9; }
+.help-contact .hint { margin-top: 14px; }
+@media (max-width: 640px) {
+  .help-page .page-heading { margin-bottom: 32px; }
+  .help-section { margin-bottom: 40px; }
+  .help-item { padding: 24px 0; } .help-item h3 { font-size: 16px; }
+}
+
+/* The area picker is a scrolling control inside a form, so it takes the same visible boundary as
+   the inputs beside it (WCAG 1.4.11) instead of floating on the page like the search rail does. */
+.area-options { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 0 16px; max-height: 260px; border: 1px solid var(--control-line); padding: 8px 14px; }
+.area-options .filter-option { font-size: 14px; }
+@media (max-width: 1000px) { .area-options { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@media (max-width: 640px) { .area-options { grid-template-columns: 1fr 1fr; max-height: 240px; } }
