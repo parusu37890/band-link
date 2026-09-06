@@ -21,6 +21,21 @@ class PublicContractTest {
         assertEquals(27, mine.age()); assertEquals("private@example.com", mine.email());
     }
 
+
+    @Test void suspendedPeerIsLabelledAndRestoredWhenTheSuspensionLifts() {
+        User viewer = user(1L, "Viewer"), peer = user(2L, "Private Name");
+        peer.setProfileImageUrl("/uploads/private.jpg");
+        peer.setStatus(UserStatus.SUSPENDED);
+        Conversation conversation = new Conversation(viewer, peer, LocalDateTime.now());
+        var suspended = ConversationResponse.from(conversation, 1L).otherUser();
+        assertEquals("利用停止中ユーザー", suspended.username());
+        assertNull(suspended.profileImageUrl(), "a suspended account's photo stays hidden too");
+        // Suspension is reversible, so the label must not outlive it (docs/decisions/0001).
+        peer.setStatus(UserStatus.ACTIVE);
+        var restored = ConversationResponse.from(conversation, 1L).otherUser();
+        assertEquals("Private Name", restored.username());
+        assertEquals("/uploads/private.jpg", restored.profileImageUrl());
+    }
     @Test void conversationUsesPublicPeerAndAnonymizesWithdrawnUser() {
         User viewer = user(1L, "Viewer"), peer = user(2L, "Private Name");
         peer.setStatus(UserStatus.WITHDRAWN);
