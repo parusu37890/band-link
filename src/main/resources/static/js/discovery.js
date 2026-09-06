@@ -6,8 +6,9 @@ export function postCard(post) {
  const joining=post.type==='WANTS_TO_JOIN',own=state.user&&String(state.user.id)===String(post.userId);
  const contact=own?button('募集を管理','/my/posts','quiet small'):button('メッセージ',state.user?'/messages?to='+Number(post.userId):'/login?next='+encodeURIComponent('/messages?to='+Number(post.userId)),'secondary small');
  return `<article class="post-card" data-post-id="${Number(post.id)}">
-  <div class="post-classification"><span class="post-type ${joining?'join':''}">${joining?'参加希望':'メンバー募集'}</span><time class="post-age" datetime="${h(post.createdAt)}" title="${h(time(post.createdAt))}">投稿 ${h(relativeTime(post.createdAt))}</time></div>
-  <div class="post-content"><p class="post-roles"><span>${joining?'担当':'募集'}</span>${h(labelNames(post.parts))}</p><h2><a href="/posts/${Number(post.id)}">${h(post.title)}</a></h2><p class="post-location">${h(labelNames(post.prefectures))}${post.areaSub?' / '+h(post.areaSub):''}<span>${h(frequencyLabel(post.activityFrequency))}</span></p><p class="excerpt">${h(post.content)}</p>${chips(post.genres)}</div>
+  <a class="post-thumb" href="/users/${Number(post.userId)}" tabindex="-1" aria-hidden="true">${avatar({username:post.username,profileImageUrl:post.authorImageUrl})}</a>
+  <div class="post-classification"><time class="post-age" datetime="${h(post.createdAt)}" title="${h(time(post.createdAt))}">投稿 ${h(relativeTime(post.createdAt))}</time></div>
+  <div class="post-content"><p class="post-roles"><span>${joining?'担当':'募集'}</span>${h(labelNames(post.parts))}</p><h2><span class="post-type ${joining?'join':''}">${joining?'参加希望':'メンバー募集'}</span><a href="/posts/${Number(post.id)}">${h(post.title)}</a></h2><p class="post-location">${h(labelNames(post.prefectures))}${post.areaSub?' / '+h(post.areaSub):''}<span>${h(frequencyLabel(post.activityFrequency))}</span></p><p class="excerpt">${h(post.content)}</p>${chips(post.genres)}</div>
   <div class="post-person"><a href="/users/${Number(post.userId)}" class="person">${avatar({username:post.username,profileImageUrl:post.authorImageUrl})}<span><span class="person-name">${h(post.username)}</span>${post.authorActivity?`<span class="person-sub">${h(post.authorActivity)}</span>`:''}</span></a><div class="post-contact">${contact}<a class="read-post" href="/posts/${Number(post.id)}">詳細を読む ${icon('arrow')}</a></div></div>
  </article>`;
 }
