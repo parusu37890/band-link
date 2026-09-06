@@ -143,6 +143,7 @@ BEGIN
   -- Rebuild part/genre for demo posts so they always match the current copy.
   DELETE FROM post_parts WHERE post_id IN (SELECT id FROM posts WHERE title LIKE '【デモ %】%');
   DELETE FROM post_genres WHERE post_id IN (SELECT id FROM posts WHERE title LIKE '【デモ %】%');
+  DELETE FROM post_stances WHERE post_id IN (SELECT id FROM posts WHERE title LIKE '【デモ %】%');
   INSERT INTO post_parts (post_id, part_id)
   SELECT p.id, pa.id FROM posts p
   JOIN demo_copy d ON p.title LIKE format('【デモ %s】%%', lpad(d.n::text, 2, '0'))
@@ -153,9 +154,15 @@ BEGIN
   JOIN demo_copy d ON p.title LIKE format('【デモ %s】%%', lpad(d.n::text, 2, '0'))
   JOIN genres g ON g.name = d.genre
   ON CONFLICT DO NOTHING;
+  -- 並び順の剰余で選ぶと、廃止予定の選択肢がテーブルに残っている間はそれも拾ってしまう。
+  -- 名前で指定して、いま有効な5つだけを順番に当てる。
   INSERT INTO post_stances (post_id, stance_id)
-  SELECT p.id, (SELECT id FROM stances ORDER BY display_order, id OFFSET ((p.id % 4)) LIMIT 1)
-  FROM posts p WHERE p.title LIKE '【デモ %】%' ON CONFLICT DO NOTHING;
+  SELECT p.id, s.id
+  FROM posts p
+  JOIN LATERAL (SELECT (ARRAY['初心者同士で音を出したい','趣味で楽しみたい','趣味でも本格的に取り組みたい',
+                              'インディーズとして活動したい','プロを目指したい'])[(p.id % 5) + 1] AS name) pick ON TRUE
+  JOIN stances s ON s.name = pick.name
+  WHERE p.title LIKE '【デモ %】%' ON CONFLICT DO NOTHING;
   INSERT INTO post_prefectures (post_id, prefecture_id)
   SELECT p.id, (SELECT id FROM prefectures ORDER BY display_order, id OFFSET ((p.id % 47)) LIMIT 1)
   FROM posts p WHERE p.title LIKE '【デモ %】%' ON CONFLICT DO NOTHING;

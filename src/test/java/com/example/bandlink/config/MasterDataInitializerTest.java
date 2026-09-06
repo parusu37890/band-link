@@ -22,7 +22,7 @@ class MasterDataInitializerTest {
         when(prefectures.save(any())).thenAnswer(i -> { Prefecture v = i.getArgument(0); pr.add(v); return v; });
         var initializer = new MasterDataInitializer(parts, genres, stances, prefectures);
         initializer.run(null); initializer.run(null);
-        assertEquals(7, p.size()); assertEquals(13, g.size()); assertEquals(4, s.size()); assertEquals(47, pr.size());
+        assertEquals(7, p.size()); assertEquals(13, g.size()); assertEquals(5, s.size()); assertEquals(47, pr.size());
         assertEquals(20, p.getFirst().getDisplayOrder());
         verify(parts, times(5)).save(any()); verify(prefectures, times(47)).save(any());
     }

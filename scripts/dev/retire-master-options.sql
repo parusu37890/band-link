@@ -43,17 +43,41 @@ BEGIN
   END LOOP;
 END $$;
 
+-- 活動スタンスの統合。「プロとして活動中」は一覧から外すが、そのまま消すと選んでいた募集の
+-- 項目が空になる（requirements 5章）。段階として一番近い「プロを目指したい」へ寄せる。
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM stances WHERE name = 'プロとして活動中') THEN
+    INSERT INTO post_stances (post_id, stance_id)
+      SELECT ps.post_id, (SELECT id FROM stances WHERE name = 'プロを目指したい')
+        FROM post_stances ps JOIN stances t ON t.id = ps.stance_id
+       WHERE t.name = 'プロとして活動中'
+      ON CONFLICT DO NOTHING;
+    INSERT INTO user_stances (user_id, stance_id)
+      SELECT us.user_id, (SELECT id FROM stances WHERE name = 'プロを目指したい')
+        FROM user_stances us JOIN stances t ON t.id = us.stance_id
+       WHERE t.name = 'プロとして活動中'
+      ON CONFLICT DO NOTHING;
+    DELETE FROM post_stances WHERE stance_id IN (SELECT id FROM stances WHERE name = 'プロとして活動中');
+    DELETE FROM user_stances WHERE stance_id IN (SELECT id FROM stances WHERE name = 'プロとして活動中');
+  END IF;
+END $$;
+
 -- 統合先の無い選択肢の削除。こちらは付け替え先が決められないので、参照が残っていれば中止する。
 DO $$
 DECLARE
   retired_parts  CONSTANT text[] := ARRAY['DJ','管楽器','弦楽器','パーカッション','その他'];
   retired_genres CONSTANT text[] := ARRAY['ヒップホップ','電子音楽','その他'];
-  part_posts int; part_users int; genre_posts int; genre_users int; orphaned int;
+  retired_stances CONSTANT text[] := ARRAY['プロとして活動中'];
+  part_posts int; part_users int; genre_posts int; genre_users int;
+  stance_posts int; stance_users int; orphaned int;
 BEGIN
   SELECT count(*) INTO part_posts  FROM post_parts pp  JOIN parts p  ON p.id = pp.part_id   WHERE p.name = ANY(retired_parts);
   SELECT count(*) INTO part_users  FROM user_parts up  JOIN parts p  ON p.id = up.part_id   WHERE p.name = ANY(retired_parts);
   SELECT count(*) INTO genre_posts FROM post_genres pg JOIN genres g ON g.id = pg.genre_id  WHERE g.name = ANY(retired_genres);
   SELECT count(*) INTO genre_users FROM user_genres ug JOIN genres g ON g.id = ug.genre_id  WHERE g.name = ANY(retired_genres);
+  SELECT count(*) INTO stance_posts FROM post_stances ps JOIN stances t ON t.id = ps.stance_id WHERE t.name = ANY(retired_stances);
+  SELECT count(*) INTO stance_users FROM user_stances us JOIN stances t ON t.id = us.stance_id WHERE t.name = ANY(retired_stances);
 
   -- 募集はパート・ジャンルを1つ以上持つ必要がある（requirements 5章）。
   -- 消すと項目が空になる募集の件数も一緒に報告する。
@@ -66,20 +90,27 @@ BEGIN
       OR (EXISTS (SELECT 1 FROM post_genres pg JOIN genres g ON g.id = pg.genre_id
                    WHERE pg.post_id = po.id AND g.name = ANY(retired_genres))
           AND NOT EXISTS (SELECT 1 FROM post_genres pg JOIN genres g ON g.id = pg.genre_id
-                           WHERE pg.post_id = po.id AND NOT (g.name = ANY(retired_genres))));
+                           WHERE pg.post_id = po.id AND NOT (g.name = ANY(retired_genres))))
+      OR (EXISTS (SELECT 1 FROM post_stances ps JOIN stances t ON t.id = ps.stance_id
+                   WHERE ps.post_id = po.id AND t.name = ANY(retired_stances))
+          AND NOT EXISTS (SELECT 1 FROM post_stances ps JOIN stances t ON t.id = ps.stance_id
+                           WHERE ps.post_id = po.id AND NOT (t.name = ANY(retired_stances))));
 
-  IF part_posts + part_users + genre_posts + genre_users > 0 THEN
+  IF part_posts + part_users + genre_posts + genre_users + stance_posts + stance_users > 0 THEN
     RAISE EXCEPTION
       '廃止する選択肢がまだ参照されています（パート: 募集 % 件・プロフィール % 件、ジャンル: 募集 % 件・プロフィール % 件、'
-      'うち消すと項目が空になる募集 % 件）。seed-demo-posts.sql を流すか、該当データを振り直してから再実行してください。',
-      part_posts, part_users, genre_posts, genre_users, orphaned;
+      '活動スタンス: 募集 % 件・プロフィール % 件、うち消すと項目が空になる募集 % 件）。'
+      'seed-demo-posts.sql を流すか、該当データを振り直してから再実行してください。',
+      part_posts, part_users, genre_posts, genre_users, stance_posts, stance_users, orphaned;
   END IF;
 
-  DELETE FROM parts  WHERE name = ANY(retired_parts);
-  DELETE FROM genres WHERE name = ANY(retired_genres);
+  DELETE FROM parts   WHERE name = ANY(retired_parts);
+  DELETE FROM genres  WHERE name = ANY(retired_genres);
+  DELETE FROM stances WHERE name = ANY(retired_stances);
 
   RAISE NOTICE 'パート: %',   (SELECT string_agg(name, ', ' ORDER BY display_order) FROM parts);
   RAISE NOTICE 'ジャンル: %', (SELECT string_agg(name, ', ' ORDER BY display_order) FROM genres);
+  RAISE NOTICE '活動スタンス: %', (SELECT string_agg(name, ', ' ORDER BY display_order) FROM stances);
 END $$;
 
 -- 並び順。MasterDataInitializer は新規作成時にしか display_order を入れないため、統合で
@@ -97,5 +128,12 @@ WITH ordered AS (
                       'ジャズ','ブルース','ファンク／ソウル','R&B','フォーク／カントリー','クラシック']) WITH ORDINALITY AS t(name, ord)
 )
 UPDATE genres g SET display_order = o.ord FROM ordered o WHERE o.name = g.name;
+
+WITH ordered AS (
+  SELECT name, ord - 1 AS ord
+    FROM unnest(ARRAY['初心者同士で音を出したい','趣味で楽しみたい','趣味でも本格的に取り組みたい',
+                      'インディーズとして活動したい','プロを目指したい']) WITH ORDINALITY AS t(name, ord)
+)
+UPDATE stances s SET display_order = o.ord FROM ordered o WHERE o.name = s.name;
 
 COMMIT;
