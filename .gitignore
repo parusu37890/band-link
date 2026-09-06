@@ -48,3 +48,8 @@ Cladueに渡す.zip
 
 ### Application log output (tailed by Filebeat, not committed) ###
 logs/
+
+# Build/run logs written beside the project, not part of it.
+*.log
+logs/
+.playwright-mcp/
