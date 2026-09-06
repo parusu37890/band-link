@@ -51,7 +51,20 @@ CSSは`src/main/resources/static/css/app.css`が入口。`tokens.css`、`base.cs
 - 5個のJSを`node --check`。`git diff --check`。
 - 独立レビューを実施し、指摘修正後に再レビュー。
 
-証跡：`docs/test-results/2026-09-06-editorial-ui.md`と同階層の`editorial-ui/`。これはEdgeとローカルPlaywrightライブラリによる表示・操作確認。**JUnit・正式なPlaywright MCPのSTは未実行**。別ツールの結果をPlaywright MCPのST成功と呼ばない。
+証跡：`docs/test-results/2026-09-06-editorial-ui.md`と同階層の`editorial-ui/`。これはEdgeとローカルPlaywrightライブラリによる表示・操作確認。
+
+## 追加で確認・修正したこと（2026-09-06 後半、記録：`docs/test-results/2026-09-06-real-data.md`）
+
+上記の時点で未実行だったJUnitとPlaywright MCPを実施した。Playwright MCPは`.mcp.json`経由で接続済み。
+
+- **JUnit実行：15件成功**（失敗・エラー・スキップ0）。
+- **メッセージ送信を実施**（前回は未送信）。会話作成・保存・受信側表示まで確認。
+- **不具合を1件修正**：`MessageService.send`が`Notification`を作っておらず、送信しても受信者の通知が永久に0件だった（requirements.md 7章の未実装）。修正後、未読1件・ヘッダーの未読ドット・通知一覧の表示まで確認。
+- **UI修正**：モバイル導入部を短縮し390×844pxで最初の募集カードを初期表示に入れた。会話が少ないときの入力欄上の空白を解消。通知から該当会話へ直接遷移。
+- **デモデータ**：40件の同一コピーを個別の内容に書き分け、パート・ジャンルを本文と一致させた。デモ4アカウントにプロフィールを追加（`scripts/dev/`のフィクスチャのみ。画面側に固定文言・写真は入れていない）。
+- コミット済み・`origin/feature/editorial-ui`へpush済み。**PRは未作成**（gh CLIがこの環境のPATHに無いため、Web UIでの作成が必要）。
+
+**Playwright MCPの注意**：`browser_click`ではこのアプリのフォーム送信が発火しない（オーバーレイ無し・`type=submit`・一意セレクタを確認済みでも不発）。`browser_evaluate`から`requestSubmit()`または`element.click()`を呼べば正常に動く。アプリの不具合ではないが、**クリック成功のツール出力だけを根拠に「送信できた」と記録しないこと**。
 
 ## Claudeが次に進めること（優先順）
 
