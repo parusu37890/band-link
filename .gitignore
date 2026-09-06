@@ -45,3 +45,6 @@ Cladueに渡す.zip
 ### Browser-automation scratch (Playwright MCP traces, ad-hoc screenshots) ###
 .playwright-mcp/
 /*.png
+
+### Application log output (tailed by Filebeat, not committed) ###
+logs/

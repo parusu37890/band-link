@@ -17,6 +17,16 @@ logging:
   structured:
     format:
       console: ecs
+      # The collector tails this file rather than the app pushing to Elasticsearch directly:
+      # if Elasticsearch is down the app keeps writing and the collector catches up later
+      # (requirements 13.3 asks for the failure behaviour to be decided).
+      file: ecs
+  file:
+    name: logs/band-link.ecs.json
+  logback:
+    rollingpolicy:
+      max-file-size: 20MB
+      max-history: 7
   level:
     org.hibernate.SQL: WARN
 

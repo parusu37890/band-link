@@ -1,0 +1,56 @@
+# Local log stack for Band Link (requirements 13.3).
+#
+# The app writes ECS JSON to logs/band-link.ecs.json; Filebeat tails that file and ships it to
+# Elasticsearch. The app never talks to Elasticsearch itself, so the stack can be down, restarted
+# or absent without affecting the running application — Filebeat resumes from where it stopped.
+#
+# Local development only. Security is switched off and the ports are published on localhost, which
+# is safe on a developer machine and is NOT a configuration to deploy anywhere shared.
+name: band-link-logging
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    environment:
+      # A single node with a small heap: this stores one developer's logs, not production traffic.
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.3
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "127.0.0.1:5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.15.3
+    # Filebeat refuses a config file that is writable by anyone else, which a Windows bind mount is.
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    user: root
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ../../logs:/logs:ro
+      - filebeat-data:/usr/share/filebeat/data
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+volumes:
+  es-data:
+  filebeat-data:

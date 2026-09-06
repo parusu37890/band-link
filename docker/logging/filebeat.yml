@@ -1,0 +1,33 @@
+# Tails the application's ECS JSON log and forwards it unchanged.
+#
+# The app already emits ECS (Spring Boot's logging.structured.format), so Filebeat parses the line
+# and lifts the fields to the top level rather than re-shaping them. Nothing here adds request
+# bodies, headers or cookies — requirements 13.3 keeps those out of the log entirely, and the way to
+# honour that is to never write them in the first place, not to filter them here.
+filebeat.inputs:
+  - type: filestream
+    id: band-link-app-log
+    enabled: true
+    paths:
+      - /logs/band-link.ecs.json
+    parsers:
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+          add_error_key: true
+          expand_keys: true
+
+processors:
+  # Host and container metadata say nothing useful when everything runs on one laptop.
+  - drop_fields:
+      fields: ["agent", "ecs.version", "input", "log.offset", "host"]
+      ignore_missing: true
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+setup.kibana:
+  host: "kibana:5601"
+
+# Index lifecycle is left at Filebeat's default daily indices. Retention is not configured:
+# see docs/logging.md for how long to keep them and the command to drop old ones.

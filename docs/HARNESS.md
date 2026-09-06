@@ -38,8 +38,14 @@ $env:PGPASSWORD = "<postgresのパスワード>"
 
 ## ログ確認（Elasticsearch/Kibana）
 
-Docker未導入のため未着手。導入後、Kibanaでのログ確認手順をここに追記する。
+構成・起動手順・Kibanaでの検索方法は [docs/logging.md](logging.md) にまとめた。
+
+アプリはECS形式のJSONをファイルへ書き、Filebeatがそれを追跡してElasticsearchへ送る。
+リクエストごとに処理名・リクエストID・結果・所要時間が1行残る（requirements 13.3）。
+
+**Docker未導入のため、スタックの起動と送信は未検証。** アプリ側のログ出力のみ確認済み。
 
 ## CI
 
-未着手。GitHub Actions等でのJUnit自動実行は今後の設計事項。
+GitHub Actions（`.github/workflows/ci.yml`）で `main` と `feature/**`・`fix/**` へのpush、および `main` 宛のPRごとに `./mvnw -B clean test` を実行する。
+PostgreSQLのサービスコンテナを同時に起動しており、DBに接続するテストもRunner上で通る。2026-09-06時点で成功。
