@@ -26,8 +26,8 @@ class AuthServiceTest {
     @Mock PasswordEncoder passwordEncoder;
     @Mock EmailVerificationTokenRepository verificationTokens;
     @Mock PasswordResetTokenRepository resetTokens;
-    @Mock com.example.bandlink.repository.PostRepository posts;
     @Mock MailService mail;
+    @Mock AccountDeletionService accountDeletion;
     @InjectMocks AuthService authService;
 
     @Test
@@ -76,5 +76,16 @@ class AuthServiceTest {
         assertThrows(AuthService.InvalidTokenException.class,
                 () -> authService.confirmPasswordReset("reset-token", "new-password"));
         verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    void withdrawalDeletesTheAccountData() {
+        User user = new User("Haruki", "a@example.com", "hash");
+        when(userRepository.findById(42L)).thenReturn(Optional.of(user));
+
+        authService.withdraw(42L);
+
+        verify(accountDeletion).deleteUserData(42L);
+        verify(userRepository, never()).save(any());
     }
 }

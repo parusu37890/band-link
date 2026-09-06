@@ -138,7 +138,7 @@ async function profileEdit(){
           <fieldset class="form-section"><legend>演奏動画</legend><div class="form-field"><label for="videoUrl">動画のURL <span class="optional">任意</span></label><input class="input" id="videoUrl" name="videoUrl" type="url" maxlength="1000" value="${h(p.videoUrl)}" placeholder="https://youtu.be/..."><span class="hint">YouTubeはプロフィール内で再生できます。その他の動画はリンクで表示します。</span></div></fieldset>
           <div class="sticky-actions">${button('キャンセル','/users/'+p.id,'secondary')}<button class="button primary" type="submit">変更を保存</button></div>
         </form>
-        <section class="detail-section account-settings" id="account-settings"><h2>アカウント</h2><div class="settings-account-row"><div><h3>ログアウト</h3><p class="muted">この端末でのログインを終了します。</p></div><button class="button secondary" type="button" id="logout">ログアウト</button></div><div class="settings-account-row"><div><h3>Band Linkから退会</h3><p class="muted">プロフィールと募集は公開を終了します。送信済みメッセージは相手側に残ります。</p></div><button class="button danger" type="button" id="withdraw">退会する</button></div></section>
+        <section class="detail-section account-settings" id="account-settings"><h2>アカウント</h2><div class="settings-account-row"><div><h3>ログアウト</h3><p class="muted">この端末でのログインを終了します。</p></div><button class="button secondary" type="button" id="logout">ログアウト</button></div><div class="settings-account-row"><div><h3>Band Linkから退会</h3><p class="muted">プロフィール、募集、会話、メッセージを削除します。同じメールアドレスで再登録できます。</p></div><button class="button danger" type="button" id="withdraw">退会する</button></div></section>
       </div>
     </div>
   </div>`, 'プロフィール編集');
@@ -184,7 +184,7 @@ async function profileEdit(){
   });
   main.querySelector('#remove-profile-image')?.addEventListener('click',()=>confirmAction('プロフィール画像を削除しますか？','公開プロフィールから現在の画像を削除します。',async()=>{await api('/api/users/me/image',{method:'DELETE'});p.profileImageUrl=null;if(!imageInput.files?.length)resetSelection();main.querySelector('#remove-profile-image')?.remove();toast('プロフィール画像を削除しました。');}));
   main.querySelector('#logout').onclick=()=>confirmAction('ログアウトしますか？','次回はメールアドレスとパスワードでログインできます。',async()=>{await api('/api/auth/logout',{method:'POST'});location.assign('/login');});
-  main.querySelector('#withdraw').onclick=()=>confirmAction('退会しますか？','プロフィールと募集は公開を終了し、アカウントを復元できません。送信済みメッセージは相手側に残ります。',async()=>{await api('/api/auth/withdraw',{method:'POST'});state.user=null;location.assign('/');});
+  main.querySelector('#withdraw').onclick=()=>confirmAction('退会しますか？','プロフィール、募集、会話、メッセージを削除します。削除後は元に戻せません。同じメールアドレスで再登録できます。',async()=>{await api('/api/auth/withdraw',{method:'POST'});state.user=null;location.assign('/');});
 }
 // Two symmetric cards said little and promised a contact address the page did not have —
 // the suspension screen sends people here for exactly that (requirements 5章・53行). Rewritten
@@ -198,7 +198,7 @@ function supportPage(){
   showPage(`<div class="page help-page">
     <div class="page-heading"><div><h1>ヘルプ</h1><p>つまずきやすいところと、その場で解決できる画面をまとめています。</p></div></div>
     ${helpSection('help-start', '使いはじめる', [
-      ['募集を投稿できない、メッセージを送れない', 'メールアドレスの確認が終わっていない可能性があります。登録時に届いたトークンを確認画面へ入力すると、投稿と送信ができるようになります。閲覧と検索は確認前でもできます。', ['メールアドレスを確認する', '/verify-email']],
+      ['募集を投稿できない、メッセージを送れない', 'メールアドレスの確認が終わっていない可能性があります。登録時のメール内リンクを開くと、投稿と送信ができるようになります。閲覧と検索は確認前でもできます。', ['メールアドレスを確認する', '/verify-email']],
       ['パスワードを忘れた', '登録したメールアドレスへ再設定用のトークンを送ります。届いたトークンと新しいパスワードを入力してください。', ['パスワードを再設定する', '/password-reset']],
       ['プロフィールに何を書けばよいか', '担当パート・活動エリア・好きなジャンルが埋まっていると、相手が連絡するか判断できます。空の項目は相手の画面に表示されないので、書ける範囲で構いません。', ['プロフィールを編集する', '/settings/profile']],
     ])}
@@ -210,10 +210,10 @@ function supportPage(){
     ${helpSection('help-people', '相手とのやりとり', [
       ['やりとりしたくない相手がいる', 'ブロックすると、お互いの募集が相手の一覧に出なくなり、メッセージの送受信も双方できなくなります。過去の会話は残ります。ただし公開情報はログアウトすれば誰でも見られるため、相手に見られなくする機能ではありません。', ['ブロックを管理する', '/settings/blocks']],
       ['不適切な募集やメッセージを見つけた', '募集・メッセージ・プロフィールの各画面にある「通報」から運営へ知らせてください。通報された本文と理由だけが運営に渡り、前後のやりとりは渡りません。', null],
-      ['相手が「退会済みユーザー」と表示される', 'その相手は退会しています。これまでのやりとりは残りますが、新しくメッセージを送ることはできません。', null],
+      ['相手が「利用停止中ユーザー」と表示される', 'その相手は運営によって一時的に利用停止になっています。これまでのやりとりは残りますが、新しくメッセージを送ることはできません。', null],
     ])}
     ${helpSection('help-account', 'アカウント', [
-      ['退会すると何が残るか', 'プロフィールと募集の公開が終わります。相手の画面に残っている送信済みのメッセージはそのままで、送信者名が「退会済みユーザー」に変わります。退会は取り消せません。', ['アカウントの設定を見る', '/settings']],
+      ['退会すると何が残るか', 'プロフィール、募集、会話、メッセージは削除されます。退会後は同じメールアドレスで再登録できます。退会は取り消せません。', ['アカウントの設定を見る', '/settings']],
       ['アカウントが利用停止になった', '募集の掲載とメッセージの送信ができなくなり、公開していた募集とプロフィールは非公開になります。解除の手続きは運営が行います。', null],
     ])}
     <section class="help-contact" aria-labelledby="help-contact-title">
