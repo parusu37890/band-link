@@ -24,6 +24,10 @@ BEGIN
   ) AS v(email, bio, age, gender, years, video)
   WHERE u.email = v.email;
 
+  -- demo01 is the operator account so the admin screen (reports, suspensions) can be exercised locally.
+  UPDATE users SET role = 'ADMIN' WHERE email = 'demo01@bandlink.local';
+  UPDATE users SET role = 'USER' WHERE email IN ('demo02@bandlink.local','demo03@bandlink.local','demo04@bandlink.local');
+
   -- Spread last_login_at so every activity bucket (and the 'no recent sign-in' case) is visible locally.
   UPDATE users SET last_login_at = now() - v.ago FROM (VALUES
     ('demo01@bandlink.local', interval '2 hours'),

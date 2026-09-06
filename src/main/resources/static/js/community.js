@@ -312,6 +312,20 @@ async function blocksPage() {
   await load();
 }
 
+// requirements 8章: a moderator sees the reported message and nothing else from the thread.
+// The snapshot is taken when the report is filed, so what is shown here is what was reported,
+// even if the message was edited or deleted since.
+function snapshot(item) {
+  const hasText = item.contentSnapshot && item.contentSnapshot.trim();
+  const image = /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(item.imageSnapshot || '') ? item.imageSnapshot : null;
+  if (!hasText && !image) {
+    return `<div class="report-snapshot"><h4>通報されたメッセージ</h4><p class="muted">記録が残っていません。通報より前に投稿されたメッセージの可能性があります。</p></div>`;
+  }
+  return `<div class="report-snapshot"><h4>通報されたメッセージ</h4>
+    ${hasText ? `<p class="message-text">${h(item.contentSnapshot)}</p>` : ''}
+    ${image ? `<img class="message-image" src="${h(image)}" alt="通報されたメッセージの画像" loading="lazy">` : ''}
+    <p class="hint">通報時点の内容です。前後の会話は表示されません。</p></div>`;
+}
 async function adminPage() {
   if (state.user.role !== 'ADMIN') {
     showPage(`<div class="page">${empty('運営メンバー専用のページです。', 'このページを表示する権限がありません。', button('募集を探す', '/posts', 'secondary'))}</div>`, 'アクセスできません');
@@ -334,7 +348,7 @@ async function adminPage() {
       container.innerHTML = items.length ? items.map(item => {
         const id = positiveId(item.id);
         const target = positiveId(item.targetId);
-        return `<article class="report-card panel stack"><div class="row"><h3>${h(types[item.targetType] || '対象')}への通報 <span class="muted">#${id}</span></h3><span class="badge">${h(statuses[item.status] || item.status)}</span></div><p class="muted">対象ID ${target} · ${h(time(item.createdAt))}</p><div><h4>通報理由</h4><p class="message-text">${h(item.reason)}</p></div>${item.targetType === 'MESSAGE' ? '<p class="muted">この一覧には通報理由が表示されます。</p>' : ''}<div class="row">${item.targetType === 'POST' ? `${button('募集を確認', `/posts/${target}`, 'secondary')}<button type="button" class="button danger" data-remove-post="${target}">募集を非公開にする</button>` : ''}${item.targetType === 'USER' ? `${button('プロフィールを確認', `/users/${target}`, 'secondary')}<button type="button" class="button danger" data-suspend="${target}">利用を停止する</button>` : ''}</div><form class="row" data-report-form="${id}"><label class="form-field" for="report-status-${id}">対応状況<select class="input" name="status" id="report-status-${id}">${Object.entries(statuses).map(([value, label]) => `<option value="${value}"${item.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></label><button type="submit" class="button secondary">状態を保存</button><div data-form-error role="alert"></div></form></article>`;
+        return `<article class="report-card panel stack"><div class="row"><h3>${h(types[item.targetType] || '対象')}への通報 <span class="muted">#${id}</span></h3><span class="badge">${h(statuses[item.status] || item.status)}</span></div><p class="muted">対象ID ${target} · ${h(time(item.createdAt))}</p><div><h4>通報理由</h4><p class="message-text">${h(item.reason)}</p></div>${item.targetType === 'MESSAGE' ? snapshot(item) : ''}<div class="row">${item.targetType === 'POST' ? `${button('募集を確認', `/posts/${target}`, 'secondary')}<button type="button" class="button danger" data-remove-post="${target}">募集を非公開にする</button>` : ''}${item.targetType === 'USER' ? `${button('プロフィールを確認', `/users/${target}`, 'secondary')}<button type="button" class="button danger" data-suspend="${target}">利用を停止する</button>` : ''}</div><form class="row" data-report-form="${id}"><label class="form-field" for="report-status-${id}">対応状況<select class="input" name="status" id="report-status-${id}">${Object.entries(statuses).map(([value, label]) => `<option value="${value}"${item.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></label><button type="submit" class="button secondary">状態を保存</button><div data-form-error role="alert"></div></form></article>`;
       }).join('') : empty('この状況の通報はありません。', '新しい通報や、別の対応状況を確認できます。');
       container.querySelectorAll('[data-report-form]').forEach(form => bindForm(form, async () => {
         await api(`/api/admin/reports/${form.dataset.reportForm}?status=${form.elements.status.value}`, { method: 'PATCH' });

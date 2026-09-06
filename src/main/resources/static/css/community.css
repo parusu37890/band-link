@@ -66,3 +66,9 @@
   .composer { padding: 14px; }.composer-help { display: none; }.composer-toolbar { gap: 8px; }.composer-toolbar .button { padding: 10px; }
   .notification-meta time { margin-left: 0; }.notification-item { padding-block: 24px; }
 }
+
+/* The reported message is quoted apart from the report itself, so the two are not confused. */
+.report-snapshot { border-left: 3px solid #71534e; padding: 4px 0 4px 18px; margin-top: 4px; }
+.report-snapshot h4 { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+.report-snapshot .message-text { font-size: 14px; }
+.report-snapshot .hint { margin-top: 10px; }

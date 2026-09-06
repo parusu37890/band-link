@@ -18,13 +18,24 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/messages")
 public class MessageController {
-    private final MessageService service; private final UserRepository users; private final MessageRepository messages; private final ImageStorageService storage;
-    public MessageController(MessageService service, UserRepository users, MessageRepository messages, ImageStorageService storage) { this.service=service; this.users=users; this.messages=messages; this.storage=storage; }
+    private final MessageService service; private final UserRepository users; private final MessageRepository messages; private final ImageStorageService storage; private final com.example.bandlink.repository.ReportRepository reports;
+    public MessageController(MessageService service, UserRepository users, MessageRepository messages, ImageStorageService storage, com.example.bandlink.repository.ReportRepository reports) { this.service=service; this.users=users; this.messages=messages; this.storage=storage; this.reports=reports; }
     @PostMapping public MessageResponse send(Authentication a,@RequestParam Long recipientId,@Valid @RequestBody MessageRequests.Send r) { return MessageResponse.from(service.send(current(a),recipientId,r)); }
     @GetMapping("/conversation/{id}") public List<MessageResponse> list(Authentication a,@PathVariable Long id) { return service.messages(current(a),id).stream().map(MessageResponse::from).toList(); }
     @PatchMapping("/conversation/{id}/read") public void read(Authentication a,@PathVariable Long id) { service.markRead(current(a),id); }
     @GetMapping("/conversations") public List<ConversationResponse> conversations(Authentication a) { Long viewer=current(a); return service.conversations(viewer).stream().map(c->ConversationResponse.from(c,viewer)).toList(); }
     @PostMapping("/images") public String uploadImage(Authentication a,@RequestParam MultipartFile file) { Long id=current(a); service.requireVerified(id); String uploaded=storage.store(file); return "/api/messages/images/"+uploaded.substring(uploaded.lastIndexOf('/')+1); }
-    @GetMapping("/images/{name}") public ResponseEntity<Resource> image(Authentication a,@PathVariable String name) { Long id=current(a); Message m=messages.findFirstByImageUrl("/api/messages/images/"+name).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND)); if(!m.getConversation().includes(id))throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN); String type=name.endsWith(".png")?"image/png":name.endsWith(".webp")?"image/webp":"image/jpeg"; return ResponseEntity.ok().contentType(MediaType.parseMediaType(type)).body(storage.load(name)); }
+    @GetMapping("/images/{name}") public ResponseEntity<Resource> image(Authentication a,@PathVariable String name) { Long id=current(a); Message m=messages.findFirstByImageUrl("/api/messages/images/"+name).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND)); if(!m.getConversation().includes(id)&&!moderatingReportedImage(a,"/api/messages/images/"+name))throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN); String type=name.endsWith(".png")?"image/png":name.endsWith(".webp")?"image/webp":"image/jpeg"; return ResponseEntity.ok().contentType(MediaType.parseMediaType(type)).body(storage.load(name)); }
     private Long current(Authentication a){return users.findByEmail(a.getName()).orElseThrow().getId();}
+
+    /**
+     * A moderator handling a report has to see the image that was reported, but should not gain
+     * access to conversation images generally. Access is granted only for an image a report
+     * actually points at (requirements 8章), and only to an ADMIN.
+     */
+    private boolean moderatingReportedImage(Authentication authentication, String imageUrl) {
+        boolean admin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(granted -> "ROLE_ADMIN".equals(granted.getAuthority()));
+        return admin && reports.existsByImageSnapshot(imageUrl);
+    }
 }
