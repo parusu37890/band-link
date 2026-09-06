@@ -56,7 +56,7 @@
 .post-thumb { grid-area:thumb; display:block; align-self:start; }
 .post-thumb .avatar { width:56px; height:56px; border-radius:4px; font-size:20px; }
 .post-classification { grid-area:when; align-self:baseline; }
-.post-type { font-size:12px; color:var(--accent); display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+.post-type { font-size:13px; font-weight:500; color:var(--accent); display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
 .post-type::before { content:''; width:3px; height:11px; background:currentColor; flex:none; } .post-type.join { color:var(--accent-alt); }
 .post-age { font-size:12px; color:var(--muted); }
 
@@ -86,25 +86,27 @@
 .relax-search { display:grid; margin-bottom:24px; max-width:480px; } .relax-search a { min-height:48px; border-top:1px solid var(--line); padding:12px 0; display:flex; align-items:center; justify-content:space-between; font-size:14px; }
 .detail-layout { display:grid; grid-template-columns:minmax(0,1fr) 282px; gap:64px; }
 .detail-article { min-width:0; }
-.detail-topline { display:flex; align-items:center; gap:24px; color:var(--muted); font-size:12px; flex-wrap:wrap; }
-.detail-title { margin:18px 0 28px; font-size:clamp(26px,2.8vw,38px); font-weight:600; overflow-wrap:anywhere; }
+.detail-topline { display:flex; align-items:center; gap:24px; color:var(--muted); font-size:12.5px; flex-wrap:wrap; }
+.detail-title { margin:16px 0 26px; font-size:clamp(23px,2vw,27px); line-height:1.5; font-weight:600; overflow-wrap:anywhere; }
 .fit-summary { border-top:2px solid var(--ink); border-bottom:1px solid var(--line); padding:24px 0; }
-.fit-summary h2 { font-size:12px; color:var(--muted); font-weight:400; margin-bottom:8px; }
-.fit-part p { font-size:26px; font-weight:600; line-height:1.5; }
+.fit-summary h2 { font-size:13px; color:var(--muted); font-weight:500; margin-bottom:8px; }
+.fit-part p { font-size:21px; font-weight:600; line-height:1.5; }
 .fit-practical { display:grid; grid-template-columns:1.5fr 1fr; gap:24px; margin-top:24px; }
-.fit-practical p { font-size:18px; font-weight:500; } .fit-practical span { display:block; color:var(--muted); font-size:14px; margin-top:4px; }
+.fit-practical p { font-size:16px; font-weight:500; } .fit-practical span { display:block; color:var(--muted); font-size:13px; margin-top:4px; }
 .detail-section { padding-top:28px; margin-top:32px; border-top:1px solid var(--line); }
-.detail-section h2 { font-size:18px; font-weight:600; margin-bottom:20px; }
+.detail-section h2 { font-size:17px; font-weight:600; margin-bottom:20px; }
 .recruitment-story { border:0; padding-top:0; } .recruitment-story .body-text { font-size:16px; line-height:2; }
-.condition-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; } .condition-columns h3 { font-size:12px; font-weight:400; color:var(--muted); margin-bottom:8px; } .condition-columns p { font-size:15px; }
+.condition-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; } .condition-columns h3 { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; } .condition-columns p { font-size:14px; }
 .facts { margin:0; display:grid; grid-template-columns:104px minmax(0,1fr); gap:18px 24px; font-size:14px; } .facts dt { color:var(--muted); } .facts dd { margin:0; overflow-wrap:anywhere; }
 .sidebar { position:sticky; top:28px; align-self:start; border-top:1px solid var(--line); padding-top:22px; }
 .author-contact > h2 { font-size:13px; font-weight:400; color:var(--muted); margin-bottom:18px; }
 .detail-person { display:flex; gap:16px; align-items:center; } .detail-person .avatar.large { width:64px; height:64px; font-size:24px; }
-.detail-person strong { display:block; font-size:19px; font-weight:600; overflow-wrap:anywhere; } .detail-person small { display:block; margin-top:8px; font-size:12px; color:var(--muted); }
+.detail-person strong { display:block; font-size:16px; font-weight:600; overflow-wrap:anywhere; } .detail-person small { display:block; margin-top:8px; font-size:12.5px; color:var(--muted); }
 .author-excerpt { margin:22px 0 12px; line-height:1.9; font-size:14px; color:var(--muted); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; overflow:hidden; overflow-wrap:anywhere; }
 .author-message { margin-top:22px; padding-top:22px; border-top:1px solid var(--line); } .author-message .button { width:100%; } .author-message p { color:var(--muted); font-size:12px; margin-top:12px; }
-.detail-record { margin-top:32px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; justify-content:space-between; }
+.read-post { display:inline-flex; align-items:center; gap:10px; font-size:14px; color:var(--accent); }
+.read-post .icon { width:16px; }
+.detail-record { margin-top:32px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; justify-content:space-between; }
 .post-image-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .post-image-grid img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; } .post-image-grid a:first-child:last-child { grid-column:1/-1; }
 .own-posts-page > .stack > .panel { background:none; border-width:1px 0 0; padding-inline:0; }
 @media(max-width:1099px) {
@@ -130,8 +132,8 @@
  #filters { padding:16px; } .search-group .filter-options { grid-template-columns:1fr 1fr; } .filter-option { min-height:44px; font-size:13px; }
  .filter-actions { grid-template-columns:1fr; } .board-layout { gap:20px; }
  .active-filter { padding:6px 8px; } .active-filter small { font-size:11px; }
- .detail-layout { grid-template-columns:1fr; gap:32px; } .detail-title { font-size:26px; }
- .fit-practical { grid-template-columns:1fr; gap:20px; } .fit-part p { font-size:23px; }
+ .detail-layout { grid-template-columns:1fr; gap:32px; } .detail-title { font-size:23px; }
+ .fit-practical { grid-template-columns:1fr; gap:20px; } .fit-part p { font-size:20px; }
  .condition-columns { grid-template-columns:1fr; gap:20px; } .sidebar { position:static; }
  .facts { grid-template-columns:82px minmax(0,1fr); gap:18px 14px; }
  .search-empty h2 { font-size:21px; } .search-empty .row { align-items:flex-start; flex-direction:column; }
@@ -161,7 +163,9 @@
   .post-card { grid-template-columns:60px minmax(0,1fr) auto; padding:11px 0; }
   .post-thumb .avatar { width:46px; height:46px; font-size:16px; border-radius:4px; }
   .post-classification, .post-person { line-height:1.45; }
-  .post-type { font-size:11px; } .post-age { font-size:10.5px; }
+  /* Scoped to the row: unscoped this also shrank the badge on the detail page, where it is
+     the label saying which side the post is on. */
+  .post-card .post-type { font-size:11px; } .post-card .post-age { font-size:10.5px; }
   .post-card h2 {
     font-size:14.5px; line-height:1.45; margin:0 0 1px;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
