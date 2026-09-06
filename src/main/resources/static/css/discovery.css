@@ -7,6 +7,7 @@
 .discovery-note { padding-left: 24px; border-left: 1px solid var(--line); }
 .discovery-note p { color: var(--muted); font-size: 14px; line-height: 1.95; }
 .discovery-note strong { display: block; color: var(--ink); font-weight: 500; margin-bottom: 6px; }
+.intro-detail { display: block; }
 .discovery-note a { display: inline-flex; align-items: center; gap: 24px; min-height: 44px; margin-top: 12px; font-size: 14px; }
 .search-bar { display: flex; align-items: center; gap: 16px; padding: 8px 8px 8px 20px; background: var(--raised); border: 1px solid #4e574a; border-radius: 3px; }
 .search-bar input { min-width: 0; flex: 1; border: 0; padding: 10px 0; color: var(--ink); background: transparent; font-size: 16px; }
@@ -55,7 +56,7 @@
 @media (max-width: 640px) {
   /* Discovery is the point of this screen, so the mobile intro stays short enough
      to leave the first recruitment card visible on a 390x844 viewport. */
-  .discovery-intro { display: block; padding: 0 0 18px; } .discovery-intro h1 { font-size: 27px; line-height: 1.35; } .discovery-note { margin-top: 14px; padding-left: 0; border: 0; } .discovery-note p { display: none; } .discovery-note a { margin-top: 0; } .discovery-intro .eyebrow { font-size: 11px; gap: 12px; margin-bottom: 12px; }
+  .discovery-intro { display: block; padding: 0 0 18px; } .discovery-intro h1 { font-size: 27px; line-height: 1.35; } .discovery-note { margin-top: 14px; padding-left: 0; border: 0; } .discovery-note .intro-detail { display: none; } .discovery-note a { margin-top: 0; } .discovery-intro .eyebrow { font-size: 11px; gap: 12px; margin-bottom: 12px; }
   .search-bar { padding-left: 12px; gap: 10px; } .search-bar input { font-size: 16px; } .search-bar .button { padding-inline: 14px; }
   .quick-parts { gap: 0 16px; margin-bottom: 16px; } .quick-parts > span { width: 100%; } .quick-parts a { min-height: 44px; }
   .tabs { gap: 18px; } .tab { font-size: 13px; } .discover-tabs { gap: 10px; } .filter-toggle { padding: 10px; font-size: 12px; } .filter-toggle .icon { display: none; }
