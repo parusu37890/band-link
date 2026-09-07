@@ -28,7 +28,8 @@
    already carries the poster beside it, so neither the toggle nor the gutter picture belongs here. */
 .search-toggle { display:none; }
 .board-results { min-width:0; }
-.discover-tabs { border-bottom:1px solid var(--line); }
+/* The strip carries no rule of its own: the active tab is marked by its underline, its weight
+   and its colour, and the first row of the list draws a border-top just below it. */
 .tabs { display:flex; gap:28px; } .tab { min-height:48px; padding:0 0 12px; border:0; border-bottom:2px solid transparent; background:none; color:var(--muted); font-size:14px; }
 .tab[aria-pressed=true] { border-color:var(--ink); color:var(--ink); font-weight:600; }
 .applied-conditions { padding-top:18px; } .applied-conditions > p { font-size:12px; color:var(--muted); }
