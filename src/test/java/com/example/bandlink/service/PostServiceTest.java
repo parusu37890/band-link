@@ -95,6 +95,23 @@ class PostServiceTest {
         assertEquals(3, service.search(null).size());
     }
 
+    @Test
+    void listingCanBeSortedByPosterLoginActivity() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneOffset.UTC);
+        PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
+        User olderLogin = identified(10L, "Older");
+        olderLogin.touchLogin(LocalDateTime.now(clock).minusDays(6));
+        User newerLogin = identified(11L, "Newer");
+        newerLogin.touchLogin(LocalDateTime.now(clock).minusHours(2));
+        Post older = openPost(olderLogin, clock);
+        Post newer = openPost(newerLogin, clock);
+        when(posts.findAll(ArgumentMatchers.<org.springframework.data.jpa.domain.Specification<Post>>any(),
+                any(org.springframework.data.domain.Sort.class))).thenReturn(List.of(older, newer));
+
+        assertEquals(List.of(newer, older), service.searchFor(null, null, "login"));
+        assertEquals(List.of(older, newer), service.searchFor(null, null, "recent"));
+    }
+
     private User identified(Long id, String name) {
         User user = new User(name, name + "@example.com", "hash");
         try {

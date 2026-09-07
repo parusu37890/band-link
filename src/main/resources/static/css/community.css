@@ -40,6 +40,9 @@
 .composer-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .composer-toolbar > .button.primary { margin-left: auto; } .composer-help { font-size: 12px; color: var(--muted); }
 .composer-attachment { display: flex; align-items: center; gap: 16px; }
+.composer-file { position: relative; display: inline-flex; }
+.composer-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); }
+.composer-file-input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 4px; }
 .attachment-preview { width: 70px; height: 56px; object-fit: cover; }
 .attachment-details { min-width: 0; flex: 1; font-size: 12px; overflow-wrap: anywhere; }
 .mobile-back { display: none; }

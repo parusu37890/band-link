@@ -207,3 +207,9 @@ LINE APIは`MockRestServiceServer`でトークン交換・プロフィール取�
 `node --check`は変更したES Modules（`account.js`、`app.js`、`community.js`、`post-editor.js`、`ui.js`）で成功し、`git diff --check`も空白エラーなしだった。8080は既存のSpring Bootプロセスが使用中で、`GET /posts`、`GET /login`、`GET /api/auth/line/enabled`（`enabled:false`）と新しいSVG・JSを応答することを確認した。8081の待受は確認できなかった。
 
 Playwright MCPのサーバーはこの実行環境に公開されていないため、指定されたPlaywright MCPによるSTは未実施。代わりにCodexのブラウザで`/login`、`/register`、`/verify-email`を表示し、中央認証フォーム、パスワード表示ボタン、確認メール再送導線（未ログイン時は表示しない）、新しいfaviconを目視・アクセシビリティツリーで確認した。実LINEチャネルを使ったOAuth往復も資格情報を使っていないため未実施。
+
+## 検索順・会話画像の追加検証（2026-09-08）
+
+`PostServiceTest`を含むJUnit 37件が成功した。`community.js`と`recruitment-search.js`の`node --check`、`git diff --check`も成功。8080の最新ビルドで、ログイン順セレクター、活動区分の表示、検索欄のフォーカス、プロフィール背景をブラウザ確認した。画像ファイルを選択して本文なしのメッセージを送信し、会話へ「メッセージ画像」が表示されることまで確認した。画像アップロードAPIは`text/plain`を明示し、JSONとして誤解析されないようAcceptヘッダーを合わせている。
+
+Playwright MCP、8081、Safari、実機、スクリーンリーダー、第三者アカウントでの画像403、実LINE OAuth、Elasticsearch/Kibanaは引き続き未検証である。

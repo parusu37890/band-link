@@ -158,7 +158,7 @@ async function messagesPage(path) {
     }
     // Keep the live form during polling, including focus, selection and attachment.
     if (composer.querySelector('[data-message-form]')) return;
-    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="1000" placeholder="自己紹介や、募集について聞きたいことを書いてください。"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div><button type="button" class="button secondary small" data-attach>画像を添付</button><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" hidden></div><button class="button primary" type="submit">送信する ${icon('arrow')}</button></div><div data-form-error role="alert"></div></form>`;
+    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="1000" placeholder="自己紹介や、募集について聞きたいことを書いてください。"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div class="composer-file"><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" class="composer-file-input"><label class="button secondary small" for="message-image">画像を添付</label></div><button class="button primary" type="submit">送信する ${icon('arrow')}</button></div><div data-form-error role="alert"></div></form>`;
     const form = composer.querySelector('form');
     const input = form.elements.content;
     const imageInput = form.elements.image;
@@ -172,13 +172,13 @@ async function messagesPage(path) {
       attachment.innerHTML = draftImage ? `<img class="attachment-preview" src="${h(previewUrl)}" alt="送信する画像のプレビュー"><div class="attachment-details"><strong>${h(draftImage.name)}</strong><span class="muted">${(draftImage.size / 1024 / 1024).toFixed(1)} MB</span></div><button type="button" class="button quiet small" data-remove-image>取り消す</button>` : '';
       attachment.querySelector('[data-remove-image]')?.addEventListener('click', () => { draftImage = null; imageInput.value = ''; renderAttachment(); });
     }
-    form.querySelector('[data-attach]').addEventListener('click', () => imageInput.click());
     imageInput.addEventListener('change', () => {
       const file = imageInput.files?.[0];
       if (!file) return;
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
         imageInput.value = '';
-        toast('JPEG・PNG・WebPの画像を、1枚5MB以内で選択してください。');
+        attachment.hidden = false;
+        attachment.innerHTML = notice('JPEG・PNG・WebPの画像を、1枚5MB以内で選択してください。', 'error');
         return;
       }
       draftImage = file;
@@ -195,7 +195,7 @@ async function messagesPage(path) {
       form.querySelectorAll('button').forEach(element => { element.disabled = true; });
       try {
         let imageUrl = null;
-        if (image) { const upload = new FormData(); upload.append('file', image); imageUrl = await api('/api/messages/images', { method: 'POST', body: upload }); }
+        if (image) { const upload = new FormData(); upload.append('file', image); imageUrl = await api('/api/messages/images', { method: 'POST', headers: { Accept: 'text/plain' }, body: upload }); }
         const result = await api(`/api/messages?recipientId=${positiveId(peer.id)}`, { method: 'POST', body: { content: content || null, imageUrl } });
         // Only clear the submitted draft after the server confirms receipt.
         input.value = ''; imageInput.value = ''; draftContent = ''; draftImage = null; renderAttachment();

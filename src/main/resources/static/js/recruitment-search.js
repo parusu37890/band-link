@@ -25,14 +25,15 @@ export async function listing(renderCard){
    </form></aside>
    <section class="board-results" aria-label="募集一覧"><div class="discover-tabs"><div class="tabs" role="group" aria-label="募集の種類">${[['','すべて'],...Object.entries(typeLabels)].map(([value,title])=>`<button type="button" class="tab" data-type="${value}" aria-pressed="${(params.get('type')||'')===value}">${title}</button>`).join('')}</div>${button('募集を掲載する',state.user?'/posts/new':'/register')}</div>
     ${applied.length?`<div class="applied-conditions"><p>検索中の条件</p><div class="active-filters">${applied.map(x=>`<a class="active-filter" href="${h(removeUrl(params,x.key,x.value))}" aria-label="${h(x.title+'：'+x.label)}を外して検索"><span><small>${h(x.title)}</small>${h(x.label)}</span>${icon('close')}</a>`).join('')}<a class="clear-search" href="/posts">すべて解除</a></div></div>`:''}
-    <div class="results-heading"><strong id="result-count" role="status">募集を読み込み中…</strong><span>新しい掲載順</span></div>
+    <div class="results-heading"><strong id="result-count" role="status">募集を読み込み中…</strong><label class="sort-control"><span class="sr-only">募集の並び順</span><select id="post-sort" aria-label="募集の並び順"><option value="recent" ${params.get('sort')!=='login'?'selected':''}>新しい掲載順</option><option value="login" ${params.get('sort')==='login'?'selected':''}>投稿者のログイン順</option></select></label></div>
     <div id="results" class="post-grid" aria-busy="true"></div><div class="load-more" id="load-sentinel"><p id="page-status" class="hint" role="status"></p><button class="button secondary" id="load-more" hidden>さらに表示</button></div>
    </section>
   </div></div>`,'バンドメンバー募集');
  const form=main.querySelector('#search-form');let type=params.get('type')||'';
- const search=()=>{const fd=new FormData(form);const next=new URLSearchParams();for(const key of ['keyword',...keys.map(x=>x[0])]){const list=fd.getAll(key).map(v=>String(v).trim()).filter(Boolean);if(list.length)next.set(key,list.join(','));}if(type)next.set('type',type);navigate('/posts'+(next.size?'?'+next:''));};
+ const search=()=>{const fd=new FormData(form);const next=new URLSearchParams();for(const key of ['keyword',...keys.map(x=>x[0])]){const list=fd.getAll(key).map(v=>String(v).trim()).filter(Boolean);if(list.length)next.set(key,list.join(','));}const sort=main.querySelector('#post-sort')?.value;if(sort&&sort!=='recent')next.set('sort',sort);if(type)next.set('type',type);navigate('/posts'+(next.size?'?'+next:''));};
  form.addEventListener('submit',event=>{event.preventDefault();search();});
  main.querySelectorAll('[data-type]').forEach(el=>el.onclick=()=>{type=el.dataset.type;search();});
+ main.querySelector('#post-sort').addEventListener('change',event=>{const next=new URLSearchParams(location.search);if(event.target.value==='login')next.set('sort','login');else next.delete('sort');next.delete('cursor');navigate('/posts'+(next.size?'?'+next:''));});
  // On a phone the keyword field opened above the posts, pushing the first row off the screen.
  // It sits behind this toggle instead; the field is always present for desktop and for assistive
  // tech, and .searching is what reveals it under the mobile rules.

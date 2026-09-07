@@ -86,10 +86,24 @@ public class PostService {
      * everything, which is why blocking is not an access control.
      */
     public List<Post> searchFor(Long viewerId, PostSearchCriteria criteria) {
+        return searchFor(viewerId, criteria, "recent");
+    }
+
+    /**
+     * Search with a user-visible order. The default keeps the established rank order; the login
+     * order is intentionally a secondary choice so older listings remain discoverable.
+     */
+    @Transactional
+    public List<Post> searchFor(Long viewerId, PostSearchCriteria criteria, String sort) {
         java.util.Set<Long> hidden = blockedCounterparts(viewerId);
         List<Post> found = search(criteria);
-        return hidden.isEmpty() ? found
+        List<Post> visible = hidden.isEmpty() ? found
                 : found.stream().filter(post -> !hidden.contains(post.getUser().getId())).toList();
+        if (!"login".equalsIgnoreCase(sort)) return visible;
+        return visible.stream().sorted(java.util.Comparator
+                .comparing((Post post) -> post.getUser().getLastLoginAt(), java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder()))
+                .thenComparing(Post::getRankUpdatedAt, java.util.Comparator.reverseOrder()))
+                .toList();
     }
 
     /** Ids on the other side of a block, whichever direction it was made in. */

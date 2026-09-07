@@ -7,6 +7,8 @@
 .profile-part { font-size: 16px; margin-bottom: 12px; }
 .profile-contact { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
 .profile-contact .button { width: 100%; }
+.profile-page, .profile-identity, .profile-story, .profile-intro, .profile-facts, .profile-video,
+.profile-media-list, .profile-media-item { background: var(--bg); }
 .profile-story { min-width: 0; }
 .profile-intro { padding-top: 24px; border-top: 1px solid var(--line); }
 .profile-intro h2 { margin-bottom: 24px; font-size: 18px; }
@@ -15,7 +17,7 @@
 /* One 16/9 box no longer fits: a SoundCloud player is a 166px strip, a Spotify album twice that,
    and a TikTok is taller than it is wide. Each provider states its own aspect-ratio or height as an
    inline style, so the shared rule only carries the frame. */
-.media-frame { display: block; width: 100%; border: 1px solid var(--line); border-radius: 2px; }
+.media-frame { display: block; width: 100%; border: 1px solid var(--line); border-radius: 2px; background: var(--bg); }
 .profile-media-list { display: grid; gap: 28px; }
 .profile-media-item { border-top: 1px solid var(--line); padding-top: 18px; min-width: 0; }
 .profile-media-item h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }

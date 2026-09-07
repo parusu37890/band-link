@@ -53,10 +53,11 @@ public class PostController {
                                    @RequestParam(required = false) java.util.Set<Long> stanceIds,
                                    @RequestParam(required = false) java.util.Set<AgeRange> ageRanges,
                                    @RequestParam(required = false) java.util.Set<ActivityFrequency> activityFrequency,
+                                   @RequestParam(defaultValue = "recent") String sort,
                                    Authentication authentication) {
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
         if (authentication != null && authentication.isAuthenticated()) userRepository.findByEmail(authentication.getName()).ifPresent(u -> searchHistoryService.record(u.getId(), criteria));
-        return postService.searchFor(viewerId(authentication), criteria).stream().map(PostResponse::from).toList();
+        return postService.searchFor(viewerId(authentication), criteria, sort).stream().map(PostResponse::from).toList();
     }
 
 
@@ -74,11 +75,12 @@ public class PostController {
                                  @RequestParam(required=false) java.util.Set<AgeRange> ageRanges,
                                  @RequestParam(required=false) java.util.Set<ActivityFrequency> activityFrequency,
                                  @RequestParam(required=false) com.example.bandlink.entity.PostType type,
+                                 @RequestParam(defaultValue="recent") String sort,
                                  @RequestParam(required=false) String cursor,
                                  @RequestParam(defaultValue="12") int limit, Authentication authentication) {
         if (limit < 1 || limit > 50) limit = 12;
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
-        List<PostResponse> all = postService.searchFor(viewerId(authentication), criteria).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
+        List<PostResponse> all = postService.searchFor(viewerId(authentication), criteria, sort).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
         int offset = 0;
         if (cursor != null && cursor.matches("[0-9]+")) offset = Math.min(Integer.parseInt(cursor), all.size());
         int end = Math.min(offset + limit, all.size());
