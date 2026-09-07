@@ -20,7 +20,7 @@
 .filter-options { display:grid; grid-template-columns:1fr; margin-top:12px; }
 .prefecture-options { max-height:224px; overflow:auto; overscroll-behavior:contain; grid-template-columns:1fr 1fr; gap:0 8px; padding:4px; }
 .filter-option { display:flex; align-items:flex-start; gap:9px; min-height:36px; padding:7px 0; cursor:pointer; font-size:13px; line-height:1.6; }
-.filter-option input { appearance:auto; width:16px; height:16px; accent-color:var(--accent); flex:none; margin:2px 0 0; }
+.filter-option input { appearance:auto; width:16px; height:16px; accent-color:var(--focus); flex:none; margin:2px 0 0; }
 .filter-option:has(input:checked) { color:var(--ink); font-weight:600; } .filter-option:not(:has(input:checked)) { color:var(--muted); }
 .filter-actions { border-top:1px solid var(--line); padding-top:16px; display:grid; gap:10px; }
 .filter-actions p { font-size:12px; color:var(--muted); } .filter-toggle { display:none; }

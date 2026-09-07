@@ -95,7 +95,7 @@ async function messagesPage(path) {
 
   showPage(`<div class="page messages-page">${heading('メッセージ')}
     <div class="chat-shell" data-chat-shell>
-      <aside class="conversation-list" aria-label="会話一覧"><div class="inbox-heading"><h2>会話一覧</h2><label class="form-field conversation-search" for="conversation-search">相手の名前で探す<input class="input" type="search" id="conversation-search" autocomplete="off"></label></div><div data-conversations aria-busy="true"><p class="panel muted" role="status">会話を読み込んでいます…</p></div><div class="collection-more"><p class="muted" data-conversation-count role="status"></p><button type="button" class="button secondary small" data-more-conversations hidden>続きを表示</button></div></aside>
+      <aside class="conversation-list" aria-label="会話一覧"><div data-conversations aria-busy="true"><p class="panel muted" role="status">会話を読み込んでいます…</p></div><div class="collection-more"><p class="muted" data-conversation-count role="status"></p><button type="button" class="button secondary small" data-more-conversations hidden>続きを表示</button></div></aside>
       <section class="chat-pane" aria-label="メッセージ"><div data-chat-header></div><p class="chat-status muted" data-chat-status role="status" aria-live="polite"></p><div class="message-update" data-message-updates hidden><button type="button" class="button secondary small" data-latest-messages>最新のメッセージへ</button></div><div class="chat-messages" data-messages aria-label="会話の内容" tabindex="0"><p class="muted" role="status">読み込んでいます…</p></div><div data-composer></div></section>
     </div></div>`, 'メッセージ');
 
@@ -105,16 +105,14 @@ async function messagesPage(path) {
   const messages = main.querySelector('[data-messages]');
   const composer = main.querySelector('[data-composer]');
   const status = main.querySelector('[data-chat-status]');
-  const conversationSearch = main.querySelector('#conversation-search');
   const conversationMore = main.querySelector('[data-more-conversations]');
   const conversationCount = main.querySelector('[data-conversation-count]');
   const messageUpdates = main.querySelector('[data-message-updates]');
 
   function renderList() {
-    const query = conversationSearch.value.trim().normalize('NFKC').toLocaleLowerCase('ja');
-    const matches = conversations.filter(item => personName(item.otherUser).normalize('NFKC').toLocaleLowerCase('ja').includes(query));
+    const matches = conversations;
     const visible = matches.slice(0, conversationLimit);
-    const fingerprint = JSON.stringify([visible, matches.length, query]);
+    const fingerprint = JSON.stringify([visible, matches.length]);
     if (lastListState === fingerprint) return;
     lastListState = fingerprint;
     list.setAttribute('aria-busy', 'false');
@@ -124,13 +122,13 @@ async function messagesPage(path) {
       const other = conversation.otherUser;
       return `<a class="conversation-item${id === conversationId ? ' active' : ''}" href="/messages/${id}"${id === conversationId ? ' aria-current="page"' : ''}>${avatar(other)}<span class="stack"><strong>${h(personName(other))}</strong><span class="muted">${h(time(conversation.lastMessageAt))}</span></span></a>`;
     };
+    shell.classList.toggle('is-empty', matches.length === 0);
     if (visible.length) reconcileRows(list, visible, markup);
-    else list.innerHTML = query ? '<div class="panel"><p>その名前の会話はありません。</p></div>' : empty('まだ会話がありません');
+    else list.innerHTML = '';
     conversationCount.textContent = matches.length ? `${visible.length} / ${matches.length}件` : '';
     conversationMore.hidden = visible.length >= matches.length;
     conversationMore.textContent = `続きを${Math.min(15, matches.length - visible.length)}件表示`;
   }
-  conversationSearch.addEventListener('input', () => { conversationLimit = 15; renderList(); });
   conversationMore.addEventListener('click', () => {
     const previous = list.children.length;
     conversationLimit += 15;
@@ -142,7 +140,9 @@ async function messagesPage(path) {
     if (!peer) {
       header.innerHTML = '';
       composer.innerHTML = '';
-      messages.innerHTML = conversations.length ? empty('会話を選んで、続きを話す') : empty('まだ会話がありません');
+      messages.innerHTML = conversations.length
+        ? empty('会話を選んで、続きを話す')
+        : empty('まだ会話がありません', '募集や公開プロフィールから送ったメッセージと、受け取った返信がここに並びます。', button('募集を探す', '/posts', 'secondary'));
       return;
     }
     shell.classList.add('has-conversation');
@@ -246,7 +246,7 @@ async function messagesPage(path) {
       return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl) ? `<img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy">` : ''}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
     };
     if (visible.length) reconcileRows(rows, visible, markup);
-    else rows.innerHTML = empty('まだ会話がありません');
+    else rows.innerHTML = empty('まだメッセージがありません', '下の欄から最初のメッセージを送れます。');
     if (initial || nearBottom || scrollToLatest) messages.scrollTop = messages.scrollHeight;
     else {
       const nextAnchor = anchorId ? messages.querySelector(`[data-message-id="${anchorId}"]`) : null;
@@ -323,7 +323,7 @@ async function messagesPage(path) {
     if (recipientId) {
       if (recipientId === String(state.user.id)) throw new Error('自分自身にメッセージは送信できません。');
       peer = await api(`/api/users/${recipientId}`);
-      messages.innerHTML = empty('まだ会話がありません');
+      messages.innerHTML = empty('会話をはじめる', '自己紹介や、募集について聞きたいことを書いてみましょう。');
     }
     // Do not silently treat a failed block lookup as an unblocked relationship.
     const blocks = await api('/api/blocks');
