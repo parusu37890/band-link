@@ -30,6 +30,8 @@
 .board-results { min-width:0; }
 /* The strip carries no rule of its own: the active tab is marked by its underline, its weight
    and its colour, and the first row of the list draws a border-top just below it. */
+.discover-tabs { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+.discover-tabs > .button { flex:none; }
 .tabs { display:flex; gap:28px; } .tab { min-height:48px; padding:0 0 12px; border:0; border-bottom:2px solid transparent; background:none; color:var(--muted); font-size:14px; }
 .tab[aria-pressed=true] { border-color:var(--ink); color:var(--ink); font-weight:600; }
 .applied-conditions { padding-top:18px; } .applied-conditions > p { font-size:12px; color:var(--muted); }
@@ -158,6 +160,7 @@
  .board-heading { align-items:flex-start; padding-bottom:20px; margin-bottom:20px; flex-wrap:wrap; gap:16px; }
  .board-heading h1 { font-size:25px; } .board-heading p { font-size:13px; } .board-heading > .button { width:auto; }
  .search-keyword { display:block; } .search-keyword > label { margin-bottom:8px; font-size:12px; } .search-bar input { font-size:16px; }
+ .discover-tabs { align-items:center; } .discover-tabs > .button { min-height:40px; padding:8px 14px; font-size:13px; }
  .tabs { gap:22px; } .tab { font-size:13px; }
  #filters { padding:16px; } .search-group .filter-options { grid-template-columns:1fr 1fr; } .filter-option { min-height:44px; font-size:13px; }
  .filter-actions { grid-template-columns:1fr; } .board-layout { gap:20px; }
