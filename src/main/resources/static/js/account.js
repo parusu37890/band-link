@@ -44,10 +44,19 @@ async function authPage(path){
   const verificationToken=verify?new URLSearchParams(location.search).get('token'):'';
   const lineError=new URLSearchParams(location.search).get('lineError');
   const lineEnabled=path==='/login'||register ? await api('/api/auth/line/enabled').then(value=>Boolean(value?.enabled)).catch(()=>false) : false;
+  const registrationMasters=register ? await api('/api/masters').catch(()=>null) : null;
+  const registrationField=(key,label,source)=>{
+    if(!registrationMasters)return '';
+    const body=source==='prefectures'
+      ? `<details class="editor-area-options"><summary>都道府県を選ぶ</summary><div class="editor-choices">${registrationMasters[source].map(x=>`<label class="editor-choice"><input type="checkbox" name="${key}" value="${x.id}"><span>${h(x.name)}</span></label>`).join('')}</div></details>`
+      : choices(key,registrationMasters[source]);
+    return `<fieldset class="form-section registration-choice"><legend>${label} <span class="required">必須</span></legend>${body}</fieldset>`;
+  };
+  const registrationFields=registrationMasters?fields.map(([key,label,source])=>registrationField(key,label,source)).join(''):'';
   let form='';
   const passwordField=(id,autocomplete)=>`<div class="password-field"><input class="input" id="${id}" name="${id==='newPassword'?'newPassword':'password'}" type="password" autocomplete="${autocomplete}" minlength="8" maxlength="128" required><button type="button" class="password-toggle" data-password-toggle="${id}" aria-label="パスワードを表示">${icon('eye')}</button></div>`;
   if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','current-password')}</div><button class="button primary full" type="submit">ログイン</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでログイン</a>`:''}`;
-  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><button class="button primary full" type="submit">アカウントを作成</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでアカウントを作成</a>`:''}`;
+  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><fieldset class="form-section"><legend>基本情報</legend><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男" required><span>男</span></label><label class="chip-select"><input type="radio" name="gender" value="女"><span>女</span></label></div></div></fieldset>${registrationFields}<button class="button primary full" type="submit">アカウントを作成</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでアカウントを作成</a>`:''}`;
   if(verify) form=verificationToken
     ? `<div class="verify-link-state"><p class="muted">メール内のリンクを確認しています…</p></div>`
     : `<div class="verify-waiting"><p>登録時に送信した確認メールを開き、本文のリンクをタップしてください。</p><p class="hint">メールが見つからない場合は、迷惑メールフォルダも確認してください。</p>${state.user&&!state.user.emailVerified?'<button type="button" class="button secondary full" id="resend-verification">確認メールを再送する</button>':''}</div>`;
@@ -64,7 +73,13 @@ async function authPage(path){
   if(authForm) bindForm(authForm,async fd=>{
     let response;
     if(path==='/login') response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
-    else if(register) response=await api('/api/auth/register',{method:'POST',body:{username:fd.get('username'),email:fd.get('email'),password:fd.get('password')}});
+    else if(register){
+      const body={username:fd.get('username'),email:fd.get('email'),password:fd.get('password'),age:Number(fd.get('age')),experienceYears:Number(fd.get('experienceYears')),gender:fd.get('gender'),partIds:fd.getAll('partIds').map(Number),genreIds:fd.getAll('genreIds').map(Number),stanceIds:fd.getAll('stanceIds').map(Number),prefectureIds:fd.getAll('prefectureIds').map(Number)};
+      const labels={partIds:'担当パート',genreIds:'好きなジャンル',stanceIds:'活動スタンス',prefectureIds:'活動エリア'};
+      for(const [key,label] of Object.entries(labels))if(!body[key].length)throw new Error(`${label}を1つ以上選択してください。`);
+      if(body.prefectureIds.length>3)throw new Error('活動エリアは3つまで選択できます。');
+      response=await api('/api/auth/register',{method:'POST',body});
+    }
     else if(reset){await api('/api/auth/password-reset/request',{method:'POST',body:{email:fd.get('email')}});main.querySelector('#auth-message').innerHTML=notice('再設定の案内を送信しました。メールをご確認ください。','success');return;}
     else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
     if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register?'/verify-email':next);}

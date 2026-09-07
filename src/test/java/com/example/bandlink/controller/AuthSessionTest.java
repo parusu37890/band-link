@@ -36,7 +36,7 @@ class AuthSessionTest {
     }
 
     private String body(String email) {
-        return "{\"username\":\"セッション検証\",\"email\":\"" + email + "\",\"password\":\"stpass1234\"}";
+        return "{\"username\":\"セッション検証\",\"email\":\"" + email + "\",\"password\":\"stpass1234\",\"age\":28,\"experienceYears\":5,\"gender\":\"男\",\"partIds\":[1],\"genreIds\":[1],\"stanceIds\":[1],\"prefectureIds\":[1]}";
     }
 
     @Test
