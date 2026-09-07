@@ -57,8 +57,8 @@
 .post-thumb { grid-area:thumb; display:block; align-self:start; }
 .post-thumb .avatar { width:56px; height:56px; border-radius:4px; font-size:20px; }
 .post-classification { grid-area:when; align-self:baseline; }
-.post-type { font-size:13px; font-weight:500; color:var(--accent); display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
-.post-type::before { content:''; width:3px; height:11px; background:currentColor; flex:none; } .post-type.join { color:var(--accent-alt); }
+.post-type { font-size:13px; font-weight:600; color:var(--mark-wanted); display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+.post-type::before { content:''; width:3px; height:11px; background:currentColor; flex:none; } .post-type.join { color:var(--mark-join); }
 .post-age { font-size:13px; color:var(--muted); }
 
 .post-content { grid-area:body; display:flex; flex-wrap:wrap; align-items:baseline; gap:0 12px; min-width:0; }
@@ -97,11 +97,9 @@
 .post-person .person-name { display:inline; font-size:13px; font-weight:400; color:var(--muted); }
 .post-person .person-sub { display:inline; font-size:13px; margin-left:10px; }
 .post-person .person-age { display:inline; font-size:13px; color:var(--muted); margin-left:8px; }
-/* The dot no longer carries the state alone — it is written beside it. Which frees the colour from
-   the 4.5:1 text needs: the apple green fill is only 2.22:1, so --online-line rings it at 4.58:1 and
-   that boundary is what WCAG 1.4.11 asks for. The words are --muted like every label on this line. */
+/* The label remains text for accessibility; the dot is only a compact visual cue. */
 .post-person .person-online { display:inline-flex; align-items:center; gap:6px; margin-left:10px; font-size:13px; color:var(--muted); }
-.post-person .online-dot { box-sizing:border-box; width:10px; height:10px; border-radius:50%; background:var(--online); border:1px solid var(--online-line); flex:none; }
+.post-person .online-dot { width:9px; height:9px; border-radius:50%; background:var(--online); flex:none; }
 .post-contact { display:none; }
 /* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
 .post-card h2 a::after { content:''; position:absolute; inset:0; }
