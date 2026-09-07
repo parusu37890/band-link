@@ -34,7 +34,8 @@ BEGIN
          password_hash = '(withdrawn)',
          username = '退会済みユーザー',
          bio = NULL, age = NULL, gender = NULL, experience_years = NULL,
-         video_url = NULL, profile_image_url = NULL, email_verified_at = NULL
+         video_url = NULL, youtube_url = NULL, tiktok_url = NULL, soundcloud_url = NULL,
+         spotify_url = NULL, apple_music_url = NULL, profile_image_url = NULL, email_verified_at = NULL
    WHERE status = 'WITHDRAWN'
      AND email NOT LIKE 'withdrawn+%@invalid';   -- 既に処理済みの行は触らない
   GET DIAGNOSTICS scrubbed = ROW_COUNT;

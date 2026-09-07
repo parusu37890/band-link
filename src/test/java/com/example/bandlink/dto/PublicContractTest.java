@@ -13,12 +13,23 @@ class PublicContractTest {
     @Test void publicProfileExposesAgeButNeverEmailOrPassword() {
         User user = user(1L, "Haruki");
         user.setAge(27); user.setBio("ギターを弾いています");
+        user.setYoutubeUrl("https://youtu.be/abcdefghijk");
+        user.setTiktokUrl("https://www.tiktok.com/@band/video/123");
+        user.setSoundcloudUrl("https://soundcloud.com/band/demo");
+        user.setSpotifyUrl("https://open.spotify.com/track/0123456789012345678901");
+        user.setAppleMusicUrl("https://music.apple.com/jp/song/demo/123");
         var json = mapper.readTree(mapper.writeValueAsString(ProfileResponse.from(user)));
         assertEquals("27歳", json.get("ageRange").asString());
         assertFalse(json.has("age")); assertFalse(json.has("email")); assertFalse(json.has("passwordHash"));
         assertEquals("ギターを弾いています", json.get("bio").asString());
+        assertEquals("https://youtu.be/abcdefghijk", json.get("youtubeUrl").asString());
+        assertEquals("https://www.tiktok.com/@band/video/123", json.get("tiktokUrl").asString());
+        assertEquals("https://soundcloud.com/band/demo", json.get("soundcloudUrl").asString());
+        assertEquals("https://open.spotify.com/track/0123456789012345678901", json.get("spotifyUrl").asString());
+        assertEquals("https://music.apple.com/jp/song/demo/123", json.get("appleMusicUrl").asString());
         var mine = MyProfileResponse.from(user);
         assertEquals(27, mine.age()); assertEquals("private@example.com", mine.email());
+        assertEquals("https://youtu.be/abcdefghijk", mine.youtubeUrl());
     }
 
 

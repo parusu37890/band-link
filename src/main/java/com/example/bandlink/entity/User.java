@@ -27,6 +27,11 @@ public class User {
     @Column(columnDefinition = "text") private String bio;
     private Integer experienceYears;
     @Column(length = 1000) private String videoUrl;
+    @Column(length = 1000) private String youtubeUrl;
+    @Column(length = 1000) private String tiktokUrl;
+    @Column(length = 1000) private String soundcloudUrl;
+    @Column(length = 1000) private String spotifyUrl;
+    @Column(length = 1000) private String appleMusicUrl;
     @Column(length = 1000) private String profileImageUrl;
     private LocalDateTime lastEditedAt;
     private LocalDateTime lastRankBoostedAt;
@@ -82,6 +87,16 @@ public class User {
     public void setExperienceYears(Integer experienceYears) { this.experienceYears = experienceYears; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public String getYoutubeUrl() { return youtubeUrl; }
+    public void setYoutubeUrl(String value) { this.youtubeUrl = value; }
+    public String getTiktokUrl() { return tiktokUrl; }
+    public void setTiktokUrl(String value) { this.tiktokUrl = value; }
+    public String getSoundcloudUrl() { return soundcloudUrl; }
+    public void setSoundcloudUrl(String value) { this.soundcloudUrl = value; }
+    public String getSpotifyUrl() { return spotifyUrl; }
+    public void setSpotifyUrl(String value) { this.spotifyUrl = value; }
+    public String getAppleMusicUrl() { return appleMusicUrl; }
+    public void setAppleMusicUrl(String value) { this.appleMusicUrl = value; }
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public LocalDateTime getLastEditedAt() { return lastEditedAt; }

@@ -171,3 +171,11 @@ PRは不要。JUnitの成功を確認してから`main`へpushする。CIは`mai
 - メッセージ／通知の説明文と空状態の余分な導線を削除。会話履歴なしは「まだ会話がありません」、通知なしは「まだ通知はありません」。
 
 検証結果は `docs/test-results/2026-09-07-line-login-ui.md` と `docs/HARNESS.md` に記載。JUnitは33件成功。Playwright MCP、実LINE OAuth、Safari・実機・スクリーンリーダー、8081、Elasticsearch/Kibanaは未検証のまま。8080は既存プロセスが待受し、`/login`・`/register`・`/verify-email`をCodexブラウザで確認済み。
+
+## 2026-09-08 演奏動画・音源URLの個別登録と募集詳細背景
+
+- `User`、公開プロフィール／自分のプロフィールDTO、プロフィール更新APIにYouTube・TikTok・SoundCloud・Spotify・Apple MusicのURL欄を追加。既存の`videoUrl`は互換用に保持し、退会データのスクラブ対象にも追加した。
+- プロフィール編集はサービスごとの入力欄を表示し、公開プロフィールはサービス名ごとの埋め込みまたは外部リンクを表示する。`media-embed.js`の既存URL検証と埋め込み生成を利用し、ユーザー入力をそのままiframeの`src`に渡さない。
+- 募集詳細の各主要ブロックにページ背景トークンを明示し、部分的に異なるグレーが混ざらないようにした。罫線による区切りは維持する。
+
+この変更はDBの既存データを移行せず、Hibernateの更新で新しいnullable列を追加する。新URL欄の保存と詳細表示をローカルブラウザで確認し、JUnit・構文チェック・差分チェックを再実行する。

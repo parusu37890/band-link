@@ -16,6 +16,10 @@
    and a TikTok is taller than it is wide. Each provider states its own aspect-ratio or height as an
    inline style, so the shared rule only carries the frame. */
 .media-frame { display: block; width: 100%; border: 1px solid var(--line); border-radius: 2px; }
+.profile-media-list { display: grid; gap: 28px; }
+.profile-media-item { border-top: 1px solid var(--line); padding-top: 18px; min-width: 0; }
+.profile-media-item h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.profile-media-item .media-frame { margin-top: 2px; }
 /* The link stays under every embed: it is the way out to the app, and the only thing shown at all
    when the URL is from a service we do not embed. */
 .media-link { margin-top: 12px; font-size: 14px; }
