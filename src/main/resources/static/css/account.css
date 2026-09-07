@@ -12,7 +12,13 @@
 .profile-intro h2 { margin-bottom: 24px; font-size: 18px; }
 .profile-intro .body-text { font-size: 19px; line-height: 2; }
 .profile-facts { margin-top: 40px; }
-.video { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--line); border-radius: 2px; }
+/* One 16/9 box no longer fits: a SoundCloud player is a 166px strip, a Spotify album twice that,
+   and a TikTok is taller than it is wide. Each provider states its own aspect-ratio or height as an
+   inline style, so the shared rule only carries the frame. */
+.media-frame { display: block; width: 100%; border: 1px solid var(--line); border-radius: 2px; }
+/* The link stays under every embed: it is the way out to the app, and the only thing shown at all
+   when the URL is from a service we do not embed. */
+.media-link { margin-top: 12px; font-size: 14px; }
 .settings-layout { display: grid; grid-template-columns: 210px minmax(0,1fr); gap: 64px; }
 .settings-nav { display: flex; flex-direction: column; align-self: start; position: sticky; top: 28px; border-top: 1px solid var(--line); }
 .settings-nav a { display: block; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }

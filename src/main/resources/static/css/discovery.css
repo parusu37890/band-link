@@ -71,9 +71,9 @@
 .post-mark {
   flex:none; width:20px; height:20px; margin-right:9px; vertical-align:-3px; border-radius:3px;
   display:inline-flex; align-items:center; justify-content:center;
-  background:var(--accent); color:var(--surface); font-size:12px; font-weight:600; line-height:1;
+  background:var(--mark-wanted); color:var(--surface); font-size:12px; font-weight:600; line-height:1;
 }
-.post-mark.join { background:var(--accent-alt); }
+.post-mark.join { background:var(--mark-join); }
 .post-card h2 a:hover { text-decoration:underline; text-underline-offset:4px; }
 .post-roles { order:2; font-size:14px; font-weight:600; line-height:1.7; }
 .post-roles > span { font-size:13px; font-weight:400; color:var(--muted); margin-right:8px; }
@@ -97,11 +97,11 @@
 .post-person .person-name { display:inline; font-size:13px; font-weight:400; color:var(--muted); }
 .post-person .person-sub { display:inline; font-size:13px; margin-left:10px; }
 .post-person .person-age { display:inline; font-size:13px; color:var(--muted); margin-left:8px; }
-/* The dot no longer carries the state alone — it is read out and it is written. Which frees the
-   colour from the 4.5:1 that text needs: --online is 3.81:1 on the canvas, over the 3:1 WCAG 1.4.11
-   asks of a mark, and the words beside it are --muted like every other label on this line. */
+/* The dot no longer carries the state alone — it is written beside it. Which frees the colour from
+   the 4.5:1 text needs: the apple green fill is only 2.22:1, so --online-line rings it at 4.58:1 and
+   that boundary is what WCAG 1.4.11 asks for. The words are --muted like every label on this line. */
 .post-person .person-online { display:inline-flex; align-items:center; gap:6px; margin-left:10px; font-size:13px; color:var(--muted); }
-.post-person .online-dot { width:9px; height:9px; border-radius:50%; background:var(--online); flex:none; }
+.post-person .online-dot { box-sizing:border-box; width:10px; height:10px; border-radius:50%; background:var(--online); border:1px solid var(--online-line); flex:none; }
 .post-contact { display:none; }
 /* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
 .post-card h2 a::after { content:''; position:absolute; inset:0; }
@@ -213,7 +213,7 @@
      オンライン中 says the rest — so it is the one that goes, the same call the frequency got above. */
   .post-person .person-sub { display:none; }
   .post-person .person-age { margin-left:6px; }
-  .post-person .person-online { margin-left:7px; gap:5px; font-size:11.5px; } .post-person .online-dot { width:7px; height:7px; }
+  .post-person .person-online { margin-left:7px; gap:5px; font-size:11.5px; } .post-person .online-dot { width:8px; height:8px; }
   .post-person .person-sub { margin-left:8px; }
 
   .discover-tabs { margin-top:14px; }

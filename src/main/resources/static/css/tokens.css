@@ -27,10 +27,17 @@
   --danger-line: #b07668;    /* 3.48:1 on --bg — danger control boundary */
   --danger-bg: #fbeeec;      /* --danger on it is 6.48:1 */
   --success: #3f6b3a;        /* 5.80:1 on --bg */
-  /* The presence dot is a graphical object, not text: WCAG 1.4.11 asks 3:1 of it, not 4.5:1.
-     --success is tuned for readable text and lands so dark that an 8px dot of it reads as black,
-     which is the opposite of what a green light is for. */
-  --online: #2f8f46;         /* 3.81:1 on --bg */
+  /* Presence. A true apple green is far too light to carry a 9px dot on its own — #8db600 is only
+     2.22:1 on the canvas — but WCAG 1.4.11 asks that the mark be discernible, not that the fill be
+     dark. So the fill is the apple green and a ring does the work: --online-line is 4.58:1, well
+     over the 3:1 required, which lets the dot keep the colour and still be seen. */
+  --online: #8db600;         /* 青りんご — dot fill */
+  --online-line: #5f7a12;    /* 4.58:1 on --bg — the ring that makes it discernible */
+  /* The 募 and 参 marks are filled blocks, and a fill reads far heavier than the same colour as
+     text: --accent and --accent-alt at 6.7:1 sat on the row like ink stamps. These are lighter,
+     still holding the 4.5:1 their white letter needs. --accent stays as it is for text. */
+  --mark-wanted: #55794b;    /* white on it is 4.97:1 */
+  --mark-join: #a55a33;      /* white on it is 5.11:1 */
   --success-bg: #edf3ea;     /* --success on it is 5.51:1 */
   --notice-bg: #eaf0f6;
   --notice-line: #4a6f96;

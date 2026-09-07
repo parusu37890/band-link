@@ -1,8 +1,8 @@
+import {mediaHref,mediaEmbed,mediaProvider,mediaServices} from './media-embed.js';
 import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice} from './ui.js';
 
 const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
-const videoHref = value => { try { const u=new URL(value); return ['http:','https:'].includes(u.protocol)?u.href:''; } catch { return ''; } };
-const youtubeId = value => { try {const u=new URL(value); if(!['youtube.com','www.youtube.com','m.youtube.com','youtu.be'].includes(u.hostname))return ''; const id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.split('/').pop();return /^[a-zA-Z0-9_-]{11}$/.test(id||'')?id:'';}catch{return '';} };
+
 const names = items => (items||[]).map(x=>x.name).join('・');
 // Showing every field with 未設定 filled the screen with absences instead of the person.
 // Only filled rows render; an empty profile says so once.
@@ -101,7 +101,7 @@ async function profilePage(id){
   try {
     const p=await api('/api/users/'+Number(id));
     const own=state.user&&String(state.user.id)===String(p.id);
-    const video=videoHref(p.videoUrl), yt=youtubeId(p.videoUrl);
+    const media=mediaHref(p.videoUrl), embed=mediaEmbed(p.videoUrl), service=mediaProvider(p.videoUrl);
     const contact=own?button('プロフィールを編集','/settings/profile','secondary'):button('メッセージを送る',state.user?'/messages?to='+p.id:'/login?next='+encodeURIComponent('/messages?to='+p.id));
     showPage(`<div class="page profile-page">
       <a class="back-link" href="/posts">${icon('back')}募集一覧へ</a>
@@ -117,7 +117,7 @@ async function profilePage(id){
         <article class="profile-story">
           <section class="profile-intro"><h2>自己紹介</h2><p class="body-text">${h(p.bio||'自己紹介はまだ登録されていません。')}</p></section>
           ${facts(p)}
-          ${video?`<section class="detail-section profile-video"><h2>演奏動画</h2>${yt?`<iframe class="video" src="https://www.youtube-nocookie.com/embed/${h(yt)}" title="${h(p.username)}の演奏動画" loading="lazy" allowfullscreen></iframe>`:`<a class="row" href="${h(video)}" target="_blank" rel="noopener noreferrer">${icon('external')}演奏動画を開く</a>`}</section>`:''}
+          ${media?`<section class="detail-section profile-video"><h2>演奏動画・音源</h2>${embed?`<iframe class="media-frame" style="${embed.ratio?`aspect-ratio:${embed.ratio}`:`height:${Number(embed.height)}px`}${embed.width?`;max-width:${Number(embed.width)}px`:''}" src="${h(embed.src)}" title="${h(p.username)}の${h(embed.name)}" loading="lazy" allow="encrypted-media; fullscreen; clipboard-write" allowfullscreen></iframe>`:''}<a class="row media-link" href="${h(media)}" target="_blank" rel="noopener noreferrer">${icon('external')}${service?h(service)+'で開く':'リンクを開く'}</a></section>`:''}
         </article>
       </div>
     </div>`,p.username);
@@ -155,7 +155,7 @@ async function profileEdit(){
           <fieldset class="form-section"><legend>自己紹介</legend><div class="stack"><div class="form-field"><label for="username">表示名 <span class="required">必須</span></label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required value="${h(p.username)}"></div><div class="form-field"><label for="bio">自己紹介 <span class="optional">任意</span></label><textarea class="input" id="bio" name="bio" maxlength="1000" rows="7" placeholder="好きなアーティスト、これまでの活動、これからやりたい音楽など。">${h(p.bio)}</textarea><span class="hint" data-count="bio"></span></div></div></fieldset>
           <fieldset class="form-section"><legend>音楽と活動エリア</legend><div class="stack">${fields.map(x=>section(...x)).join('')}</div></fieldset>
           <fieldset class="form-section"><legend>基本情報</legend><div class="stack"><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="optional">任意</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" value="${p.age??''}"><span class="hint">公開されるのは「20代」などの年代だけです。</span></div><div class="form-field"><label for="experienceYears">経験年数 <span class="optional">任意</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" value="${p.experienceYears??''}"></div></div><div class="form-field"><label for="gender">性別 <span class="optional">任意</span></label><input class="input" id="gender" name="gender" maxlength="40" value="${h(p.gender)}"></div></div></fieldset>
-          <fieldset class="form-section"><legend>演奏動画</legend><div class="form-field"><label for="videoUrl">動画のURL <span class="optional">任意</span></label><input class="input" id="videoUrl" name="videoUrl" type="url" maxlength="1000" value="${h(p.videoUrl)}" placeholder="https://youtu.be/..."><span class="hint">YouTubeはプロフィール内で再生できます。その他の動画はリンクで表示します。</span></div></fieldset>
+          <fieldset class="form-section"><legend>演奏動画・音源</legend><div class="form-field"><label for="videoUrl">動画・音源のURL <span class="optional">任意</span></label><input class="input" id="videoUrl" name="videoUrl" type="url" maxlength="1000" value="${h(p.videoUrl)}" placeholder="https://youtu.be/..."><span class="hint">${mediaServices.join('・')}はプロフィール内でそのまま再生できます。ほかのURLはリンクとして表示します。</span></div></fieldset>
           <div class="sticky-actions">${button('キャンセル','/users/'+p.id,'secondary')}<button class="button primary" type="submit">変更を保存</button></div>
         </form>
         <section class="detail-section account-settings" id="account-settings"><h2>アカウント</h2><div class="settings-account-row"><div><h3>ログアウト</h3><p class="muted">この端末でのログインを終了します。</p></div><button class="button secondary" type="button" id="logout">ログアウト</button></div><div class="settings-account-row"><div><h3>Band Linkから退会</h3><p class="muted">プロフィール、募集、会話、メッセージを削除します。同じメールアドレスで再登録できます。</p></div><button class="button danger" type="button" id="withdraw">退会する</button></div></section>
