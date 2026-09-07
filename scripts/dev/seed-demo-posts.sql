@@ -40,22 +40,29 @@ BEGIN
   DELETE FROM user_genres WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');
   DELETE FROM user_stances WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');
   DELETE FROM user_prefectures WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');
+  -- These four profiles were written before the master lists changed, so 作詞作曲 and
+  -- 初心者同士で合わせたい existed but no demo profile carried them — the two options added last
+  -- could not be seen anywhere except on posts. Every part and every stance now appears at least
+  -- once, and each choice is one the profile text already supports.
   INSERT INTO user_parts (user_id, part_id)
   SELECT u.id, p.id FROM (VALUES
-    ('demo01@bandlink.local','ギター'),('demo02@bandlink.local','ベース'),
+    ('demo01@bandlink.local','ギター'),('demo01@bandlink.local','ボーカル'),
+    ('demo02@bandlink.local','ベース'),('demo02@bandlink.local','作詞作曲'),
     ('demo03@bandlink.local','ドラム'),('demo04@bandlink.local','キーボード')
   ) AS v(email, part) JOIN users u ON u.email = v.email JOIN parts p ON p.name = v.part ON CONFLICT DO NOTHING;
   INSERT INTO user_genres (user_id, genre_id)
   SELECT u.id, g.id FROM (VALUES
-    ('demo01@bandlink.local','邦ロック'),('demo01@bandlink.local','ハードロック／メタル'),
-    ('demo02@bandlink.local','洋ロック'),('demo02@bandlink.local','ポップス'),
-    ('demo03@bandlink.local','ブルース'),('demo03@bandlink.local','ジャズ'),
-    ('demo04@bandlink.local','ポップス')
+    ('demo01@bandlink.local','邦ロック'),('demo01@bandlink.local','ハードロック／メタル'),('demo01@bandlink.local','パンク／メロコア'),
+    ('demo02@bandlink.local','洋ロック'),('demo02@bandlink.local','ポップス'),('demo02@bandlink.local','R&B'),('demo02@bandlink.local','ボカロ'),
+    ('demo03@bandlink.local','ブルース'),('demo03@bandlink.local','ジャズ'),('demo03@bandlink.local','ファンク／ソウル'),
+    ('demo04@bandlink.local','ポップス'),('demo04@bandlink.local','クラシック'),('demo04@bandlink.local','フォーク／カントリー'),('demo04@bandlink.local','アニソン')
   ) AS v(email, genre) JOIN users u ON u.email = v.email JOIN genres g ON g.name = v.genre ON CONFLICT DO NOTHING;
   INSERT INTO user_stances (user_id, stance_id)
   SELECT u.id, s.id FROM (VALUES
-    ('demo01@bandlink.local','趣味でも本格的に取り組みたい'),('demo02@bandlink.local','プロを目指したい'),
-    ('demo03@bandlink.local','趣味で楽しみたい'),('demo04@bandlink.local','趣味で楽しみたい')
+    ('demo01@bandlink.local','趣味でも本格的に取り組みたい'),
+    ('demo02@bandlink.local','プロを目指したい'),('demo02@bandlink.local','インディーズとして活動したい'),
+    ('demo03@bandlink.local','趣味で楽しみたい'),
+    ('demo04@bandlink.local','趣味で楽しみたい'),('demo04@bandlink.local','初心者同士で合わせたい')
   ) AS v(email, stance) JOIN users u ON u.email = v.email JOIN stances s ON s.name = v.stance ON CONFLICT DO NOTHING;
   INSERT INTO user_prefectures (user_id, prefecture_id)
   SELECT u.id, pr.id FROM (VALUES

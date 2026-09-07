@@ -106,8 +106,16 @@
 .detail-section { padding-top:28px; margin-top:32px; border-top:1px solid var(--line); }
 .detail-section h2 { font-size:17px; font-weight:600; margin-bottom:20px; }
 .recruitment-story { border:0; padding-top:0; } .recruitment-story .body-text { font-size:16px; line-height:2; }
-.condition-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; } .condition-columns h3 { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; } .condition-columns p { font-size:14px; }
-.facts { margin:0; display:grid; grid-template-columns:104px minmax(0,1fr); gap:18px 24px; font-size:14px; } .facts dt { color:var(--muted); } .facts dd { margin:0; overflow-wrap:anywhere; }
+/* Same correction as .facts: the heading is the label, so the answer under it gets the size. */
+.condition-columns { display:grid; grid-template-columns:1fr 1fr; gap:28px 24px; } .condition-columns h3 { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; } .condition-columns p, .condition-columns .chip { font-size:16px; }
+/* Label and value were both 14px and told apart only by colour, so seven rows of the facts that
+   matter most — the part, the genres, the stance — read as one block of fine print. The value is
+   the content: it gets the size, the label drops to 13px, and a hairline per row makes the pair
+   read as a table. Equal line boxes keep the two baselines on the same line. */
+.facts { margin:0; display:grid; grid-template-columns:132px minmax(0,1fr); gap:0; }
+.facts dt { color:var(--muted); font-size:13px; line-height:26px; padding:13px 0; border-top:1px solid var(--line); }
+/* No column gap: the two cells carry one border each, and they have to touch to read as one rule. */
+.facts dd { margin:0; font-size:16px; line-height:26px; padding:13px 0 13px 28px; border-top:1px solid var(--line); overflow-wrap:anywhere; }
 .sidebar { position:sticky; top:28px; align-self:start; border-top:1px solid var(--line); padding-top:22px; }
 .author-contact > h2 { font-size:13px; font-weight:400; color:var(--muted); margin-bottom:18px; }
 .detail-person { display:flex; gap:16px; align-items:center; } .detail-person .avatar.large { width:64px; height:64px; font-size:24px; }
@@ -145,7 +153,7 @@
  .detail-layout { grid-template-columns:1fr; gap:32px; } .detail-title { font-size:23px; }
  .fit-practical { grid-template-columns:1fr; gap:20px; } .fit-part p { font-size:20px; }
  .condition-columns { grid-template-columns:1fr; gap:20px; } .sidebar { position:static; }
- .facts { grid-template-columns:82px minmax(0,1fr); gap:18px 14px; }
+ .facts { grid-template-columns:96px minmax(0,1fr); } .facts dd { font-size:15px; padding-left:16px; }
  .search-empty h2 { font-size:21px; } .search-empty .row { align-items:flex-start; flex-direction:column; }
 }
 
