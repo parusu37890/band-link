@@ -147,10 +147,17 @@ public class AuthController {
             User user = lineLogin.login(code);
             startLineSession(user, request, response);
             response.sendRedirect(user.getStatus() == com.example.bandlink.entity.UserStatus.SUSPENDED
-                    ? "/support" : user.isEmailVerified() ? "/posts" : "/verify-email");
+                    ? "/support" : user.isEmailVerified() ? (profileComplete(user) ? "/posts" : "/settings/profile") : "/verify-email");
         } catch (LineLoginService.LineLoginException e) {
             response.sendRedirect("/login?lineError=failed");
         }
+    }
+
+    private boolean profileComplete(User user) {
+        return user.getAge() != null && user.getExperienceYears() != null
+                && ("男".equals(user.getGender()) || "女".equals(user.getGender()))
+                && !user.getParts().isEmpty() && !user.getGenres().isEmpty()
+                && !user.getStances().isEmpty() && !user.getPrefectures().isEmpty();
     }
 
     @PostMapping("/verify-email")
