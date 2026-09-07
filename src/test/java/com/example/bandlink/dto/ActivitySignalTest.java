@@ -18,6 +18,17 @@ class ActivitySignalTest {
         assertNull(ActivitySignal.of(null));
     }
 
+    @Test void onlineReadsPresenceNotSignInTime() {
+        LocalDateTime now = LocalDateTime.now();
+        assertTrue(ActivitySignal.isOnline(now.minusSeconds(30)));
+        assertTrue(ActivitySignal.isOnline(now.minusMinutes(4)));
+        assertFalse(ActivitySignal.isOnline(now.minusMinutes(6)));
+        assertFalse(ActivitySignal.isOnline(now.minusDays(1)));
+        // Never seen, and a clock that ran backwards, both read as away rather than as present.
+        assertFalse(ActivitySignal.isOnline(null));
+        assertFalse(ActivitySignal.isOnline(now.plusHours(1)));
+    }
+
     @Test void neverLeaksTheExactTimestamp() {
         String label = ActivitySignal.of(LocalDateTime.of(2026, 3, 4, 5, 6));
         assertTrue(label == null || java.util.List.of("3日以内にログイン", "1週間以内にログイン", "1か月以内にログイン").contains(label),

@@ -32,6 +32,9 @@ public class User {
     private LocalDateTime lastRankBoostedAt;
     // Recorded on login so a viewer can tell whether a poster is still around before writing to them.
     private LocalDateTime lastLoginAt;
+    // Touched while a signed-in account is using the site. lastLoginAt only moves at sign-in, so it
+    // says nothing about whether someone is here now; presence needs its own timestamp.
+    private LocalDateTime lastSeenAt;
     @Column(nullable = false) private LocalDateTime createdAt;
 
     @ManyToMany
@@ -87,6 +90,8 @@ public class User {
     public void setLastRankBoostedAt(LocalDateTime value) { this.lastRankBoostedAt = value; }
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
     public void touchLogin(LocalDateTime now) { this.lastLoginAt = now; }
+    public LocalDateTime getLastSeenAt() { return lastSeenAt; }
+    public void touchSeen(LocalDateTime now) { this.lastSeenAt = now; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Set<Part> getParts() { return parts; }
     public Set<Genre> getGenres() { return genres; }

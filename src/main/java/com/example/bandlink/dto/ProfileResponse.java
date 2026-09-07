@@ -8,7 +8,7 @@ public record ProfileResponse(Long id, String username, String bio, String gende
         List<MasterOption> genres, List<MasterOption> stances, List<MasterOption> prefectures) {
     public static ProfileResponse from(User u) {
         return new ProfileResponse(u.getId(), u.getUsername(), u.getBio(), u.getGender(),
-                u.getAge() == null ? null : (u.getAge() / 10 * 10) + "代", u.getExperienceYears(),
+                AgeBand.of(u.getAge()), u.getExperienceYears(),
                 u.getVideoUrl(), u.getProfileImageUrl(), ActivitySignal.of(u.getLastLoginAt()),
                 u.getParts().stream().map(p -> new MasterOption(p.getId(), p.getName())).toList(),
                 u.getGenres().stream().map(p -> new MasterOption(p.getId(), p.getName())).toList(),

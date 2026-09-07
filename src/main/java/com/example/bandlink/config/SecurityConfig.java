@@ -22,8 +22,13 @@ public class SecurityConfig {
         return new EmailVerificationGateFilter(users);
     }
 
+    @Bean LastSeenFilter lastSeenFilter(UserRepository users) {
+        return new LastSeenFilter(users);
+    }
+
     @Bean SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   EmailVerificationGateFilter emailVerificationGateFilter) throws Exception {
+                                                   EmailVerificationGateFilter emailVerificationGateFilter,
+                                                   LastSeenFilter lastSeenFilter) throws Exception {
         http
             .csrf(org.springframework.security.config.Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
@@ -54,6 +59,8 @@ public class SecurityConfig {
             .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login").usernameParameter("email").defaultSuccessUrl("/", true).failureUrl("/login?error"))
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login"));
         http.addFilterBefore(emailVerificationGateFilter, AuthorizationFilter.class);
+        // After the gate: an account still stuck on the verification screen is not "here" on the board.
+        http.addFilterAfter(lastSeenFilter, AuthorizationFilter.class);
         return http.build();
     }
 }

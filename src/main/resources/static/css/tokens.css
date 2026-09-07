@@ -26,6 +26,10 @@
   --danger-line: #b07668;    /* 3.35:1 on --bg — danger control boundary */
   --danger-bg: #fbeeec;      /* --danger on it is 6.48:1 */
   --success: #3f6b3a;        /* 5.60:1 on --bg */
+  /* The presence dot is a graphical object, not text: WCAG 1.4.11 asks 3:1 of it, not 4.5:1.
+     --success is tuned for readable text and lands so dark that an 8px dot of it reads as black,
+     which is the opposite of what a green light is for. */
+  --online: #2f8f46;         /* 3.68:1 on --bg */
   --success-bg: #edf3ea;     /* --success on it is 5.51:1 */
   --notice-bg: #eaf0f6;
   --notice-line: #4a6f96;

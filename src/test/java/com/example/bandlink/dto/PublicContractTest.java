@@ -69,6 +69,41 @@ class PublicContractTest {
         assertEquals("/uploads/haruki.jpg", PostResponse.from(post).authorImageUrl());
     }
 
+    @Test void listingShowsTheDecadeAndPresenceButNeverTheExactAgeOrTimestamp() {
+        User poster = user(2L, "Haruki");
+        poster.setAge(27);
+        poster.touchSeen(LocalDateTime.now().minusMinutes(1));
+        Post post = new Post(poster, PostType.MEMBER_WANTED, "ギター募集", "本文", "中野",
+                ActivityFrequency.WEEKLY_1, LocalDateTime.now());
+
+        var json = mapper.readTree(mapper.writeValueAsString(PostResponse.from(post)));
+        assertEquals("20代", json.get("authorAgeRange").asString(),
+                "the board says the decade, the same as the profile page");
+        assertTrue(json.get("authorOnline").asBoolean());
+        // The row carries no exact age and no last-seen time, only what it renders.
+        assertFalse(mapper.writeValueAsString(PostResponse.from(post)).contains("27"));
+        assertFalse(json.has("authorLastSeenAt"));
+
+        poster.touchSeen(LocalDateTime.now().minusHours(2));
+        assertFalse(PostResponse.from(post).authorOnline());
+
+        // A suspended account may still hold a session; presence must not keep announcing it while
+        // the rest of the row hides them.
+        poster.touchSeen(LocalDateTime.now());
+        poster.setStatus(UserStatus.SUSPENDED);
+        assertFalse(PostResponse.from(post).authorOnline());
+        poster.setStatus(UserStatus.ACTIVE);
+        assertTrue(PostResponse.from(post).authorOnline());
+    }
+
+    @Test void ageBandRoundsDownToTheDecadeAndPassesNullThrough() {
+        assertEquals("20代", AgeBand.of(20));
+        assertEquals("20代", AgeBand.of(29));
+        assertEquals("30代", AgeBand.of(30));
+        assertEquals("10代", AgeBand.of(18));
+        assertNull(AgeBand.of(null));
+    }
+
     private User user(Long id, String name) {
         User user = new User(name, "private@example.com", "secret-hash");
         ReflectionTestUtils.setField(user, "id", id);

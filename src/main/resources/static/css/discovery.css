@@ -89,6 +89,10 @@
 .post-person .avatar { display:none; }
 .post-person .person-name { display:inline; font-size:13px; font-weight:400; color:var(--muted); }
 .post-person .person-sub { display:inline; font-size:13px; margin-left:10px; }
+.post-person .person-age { display:inline; font-size:13px; color:var(--muted); margin-left:8px; }
+/* --online is 3.68:1 on the canvas, over the 3:1 WCAG 1.4.11 asks of a mark that carries meaning
+   on its own. The word is on the sr-only span and the tooltip, so the colour is not the only teller. */
+.post-person .person-online { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--online); margin-left:10px; vertical-align:0; }
 .post-contact { display:none; }
 /* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
 .post-card h2 a::after { content:''; position:absolute; inset:0; }
@@ -193,7 +197,8 @@
   .post-roles > span { font-size:11.5px; margin-right:5px; }
   .post-location { font-size:11.5px; line-height:1.45; }
   .post-location > span { display:none; }
-  .post-person .person-name, .post-person .person-sub { font-size:11.5px; }
+  .post-person .person-name, .post-person .person-sub, .post-person .person-age { font-size:11.5px; }
+  .post-person .person-age { margin-left:6px; } .post-person .person-online { margin-left:7px; width:7px; height:7px; }
   .post-person .person-sub { margin-left:8px; }
 
   .discover-tabs { margin-top:14px; }
