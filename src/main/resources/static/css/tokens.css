@@ -9,7 +9,10 @@
   --surface: #ffffff;        /* panels, inputs, anything meant to be read on */
   --raised: #eceae2;         /* quiet fill: active rows, hovers, file buttons */
   --ink: #1b1d19;            /* 15.29:1 on --bg */
-  --muted: #63675e;          /* 5.20:1 on --bg, 4.80:1 on --raised */
+  /* Secondary text. At 5.20:1 this read as washed out against the 15.29:1 title beside it,
+     and worst at the sizes it is actually used — 12px on the board, 10.5px on a phone. OURSOUNDS
+     runs its listing meta at 8.59:1 for the same 12px, which is why theirs stays readable. */
+  --muted: #464a41;          /* 8.16:1 on --bg, 7.53:1 on --raised, 9.07:1 on --surface */
   --line: #d8d6cc;           /* hairline separators — decorative, not a control boundary */
   /* Borders that carry a control boundary need 3:1 against the page (WCAG 1.4.11).
      --line is a quiet separator and sits below that, so form controls use this instead. */
