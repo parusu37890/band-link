@@ -82,17 +82,26 @@
 /* The body and the genres belong to the post, not to the decision to open it. */
 .post-card .excerpt, .post-content .chips { display:none; }
 
-.post-person { grid-area:who; display:flex; align-items:baseline; min-width:0; padding:0; border:0; }
+/* The who and when cells sit in adjacent grid columns with no column gap, so a long person line
+   ran right up against the timestamp — measured at a 2px overlap on a phone. The gap belongs here
+   rather than on the grid, which would have widened the picture gutter along with it. */
+.post-person { grid-area:who; display:flex; align-items:baseline; min-width:0; padding:0 16px 0 0; border:0; }
 .post-person .person { align-items:baseline; gap:0; min-width:0; position:relative; z-index:1; }
-/* .person is a flex container, so the clipping belongs on the text wrapper inside it. */
-.post-person .person > span:last-child { display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Clipping the whole line cut whichever part came last, and on a phone that was the state: two of
+   the four online rows lost the words they exist to show. The line is a flex row instead, so only
+   the name gives way — it is the one part repeated on the profile a tap away. */
+.post-person .person > span:last-child { display:flex; align-items:baseline; min-width:0; }
+.post-person .person-name { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.post-person .person-age, .post-person .person-sub, .post-person .person-online { flex:none; white-space:nowrap; }
 .post-person .avatar { display:none; }
 .post-person .person-name { display:inline; font-size:13px; font-weight:400; color:var(--muted); }
 .post-person .person-sub { display:inline; font-size:13px; margin-left:10px; }
 .post-person .person-age { display:inline; font-size:13px; color:var(--muted); margin-left:8px; }
-/* --online is 3.68:1 on the canvas, over the 3:1 WCAG 1.4.11 asks of a mark that carries meaning
-   on its own. The word is on the sr-only span and the tooltip, so the colour is not the only teller. */
-.post-person .person-online { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--online); margin-left:10px; vertical-align:0; }
+/* The dot no longer carries the state alone — it is read out and it is written. Which frees the
+   colour from the 4.5:1 that text needs: --online is 3.81:1 on the canvas, over the 3:1 WCAG 1.4.11
+   asks of a mark, and the words beside it are --muted like every other label on this line. */
+.post-person .person-online { display:inline-flex; align-items:center; gap:6px; margin-left:10px; font-size:13px; color:var(--muted); }
+.post-person .online-dot { width:9px; height:9px; border-radius:50%; background:var(--online); flex:none; }
 .post-contact { display:none; }
 /* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
 .post-card h2 a::after { content:''; position:absolute; inset:0; }
@@ -184,6 +193,7 @@
   .tab { padding-block:10px; }
 
   .post-card { grid-template-columns:60px minmax(0,1fr) auto; padding:11px 0; }
+  .post-person { padding-right:12px; }
   .post-thumb .avatar { width:46px; height:46px; font-size:16px; border-radius:4px; }
   .post-classification, .post-person { line-height:1.45; }
   /* Scoped to the row: unscoped this also shrank the badge on the detail page, where it is
@@ -198,7 +208,12 @@
   .post-location { font-size:11.5px; line-height:1.45; }
   .post-location > span { display:none; }
   .post-person .person-name, .post-person .person-sub, .post-person .person-age { font-size:11.5px; }
-  .post-person .person-age { margin-left:6px; } .post-person .person-online { margin-left:7px; width:7px; height:7px; }
+  /* The line has to hold the name, the age, the state and the posting date inside about 190px.
+     The login bucket is the weakest of them — 投稿N日前 already says how fresh the row is, and
+     オンライン中 says the rest — so it is the one that goes, the same call the frequency got above. */
+  .post-person .person-sub { display:none; }
+  .post-person .person-age { margin-left:6px; }
+  .post-person .person-online { margin-left:7px; gap:5px; font-size:11.5px; } .post-person .online-dot { width:7px; height:7px; }
   .post-person .person-sub { margin-left:8px; }
 
   .discover-tabs { margin-top:14px; }

@@ -1,39 +1,36 @@
-/* Light, on white. The canvas started at #f4f3ee and went to #faf9f5, which measured as a change
-   and did not look like one: 95.8 to 97.9 in L*, about two points, across a flat area with nothing
-   beside it to compare against. There was no room left for a smaller step to read, so the canvas is
-   white. --surface is now the same colour, which costs nothing: every panel, input, dialog and chip
-   on the canvas already carried its own border, so the fill was never what separated them. The sage the dark theme carried stays as the accent, darkened to a moss that
+/* Light. The canvas is warm paper, a little lighter than it first was. It went #f4f3ee → #faf9f5
+   (too small a step to see) → #ffffff (white, and too much) → here: L* 95.8, 97.9, 100.0, 97.2.
+   White is kept for the surfaces that sit on it, which is where reading actually happens. The sage the dark theme carried stays as the accent, darkened to a moss that
    holds up as link text. Every value below was measured, not guessed; the ratios are noted where
    a rule depends on them. */
 :root {
   color-scheme: light;
-  --bg: #ffffff;             /* page canvas */
-  --surface: #ffffff;        /* panels, inputs, anything meant to be read on — level with the
-                                canvas now; these are told apart by their borders, not their fill */
-  --raised: #f2f0e9;         /* quiet fill: active rows, hovers, file buttons — 1.14:1 on white.
-                                Kept warm: it is the only thing marking a hovered or active row */
-  --ink: #1b1d19;            /* 16.98:1 on --bg */
+  --bg: #f8f7f3;             /* page canvas — warm paper, 1.07:1 against the white on it */
+  --surface: #ffffff;        /* panels, inputs, anything meant to be read on */
+  --raised: #f0eee6;         /* quiet fill: active rows, hovers, file buttons — 1.08:1 on --bg,
+                                the step it has always had, so a hovered row still reads */
+  --ink: #1b1d19;            /* 15.84:1 on --bg */
   /* Secondary text. At 5.20:1 this read as washed out against the 15.29:1 title beside it,
      and worst at the sizes it is actually used — 12px on the board, 10.5px on a phone. OURSOUNDS
      runs its listing meta at 8.59:1 for the same 12px, which is why theirs stays readable. */
-  --muted: #464a41;          /* 9.07:1 on --bg, 7.95:1 on --raised */
+  --muted: #464a41;          /* 8.46:1 on --bg, 7.80:1 on --raised, 9.07:1 on --surface */
   --line: #d8d6cc;           /* hairline separators — decorative, not a control boundary */
   /* Borders that carry a control boundary need 3:1 against the page (WCAG 1.4.11).
      --line is a quiet separator and sits below that, so form controls use this instead. */
-  --control-line: #7f8577;   /* 3.80:1 on --bg, 3.33:1 on --raised */
-  --accent: #45643c;         /* 6.69:1 on --bg — moss, the dark theme's sage brought to light */
+  --control-line: #7f8577;   /* 3.55:1 on --bg, 3.27:1 on --raised */
+  --accent: #45643c;         /* 6.24:1 on --bg — moss, the dark theme's sage brought to light */
   --focus: #2e6fd8;          /* blue focus and selection state */
-  --accent-alt: #8a4a2a;    /* 6.79:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
-  --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 10.80:1 */
+  --accent-alt: #8a4a2a;    /* 6.33:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
+  --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 10.08:1 */
   --rule: #45643c;           /* the 3px rule that opens a profile, an auth panel, a contact block */
-  --danger: #9c3025;         /* 7.33:1 on --bg */
-  --danger-line: #b07668;    /* 3.73:1 on --bg — danger control boundary */
+  --danger: #9c3025;         /* 6.84:1 on --bg */
+  --danger-line: #b07668;    /* 3.48:1 on --bg — danger control boundary */
   --danger-bg: #fbeeec;      /* --danger on it is 6.48:1 */
-  --success: #3f6b3a;        /* 6.22:1 on --bg */
+  --success: #3f6b3a;        /* 5.80:1 on --bg */
   /* The presence dot is a graphical object, not text: WCAG 1.4.11 asks 3:1 of it, not 4.5:1.
      --success is tuned for readable text and lands so dark that an 8px dot of it reads as black,
      which is the opposite of what a green light is for. */
-  --online: #2f8f46;         /* 4.09:1 on --bg */
+  --online: #2f8f46;         /* 3.81:1 on --bg */
   --success-bg: #edf3ea;     /* --success on it is 5.51:1 */
   --notice-bg: #eaf0f6;
   --notice-line: #4a6f96;
