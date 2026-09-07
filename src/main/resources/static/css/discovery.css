@@ -62,7 +62,17 @@
 
 .post-content { grid-area:body; display:flex; flex-wrap:wrap; align-items:baseline; gap:0 12px; min-width:0; }
 .post-card h2 { order:1; width:100%; font-size:17px; line-height:1.5; font-weight:600; margin:0 0 3px; overflow-wrap:anywhere; }
-.post-card h2 .post-type { margin-right:10px; vertical-align:1px; }
+/* OURSOUNDS keeps a fixed 19px chip here, which is why every title on their page starts at the
+   same x. Spelling the side out cost 85px for メンバー募集 and 60px for 参加希望: it stole the front
+   of the title line — worst on a phone, where the title had 250px to work with — and left the
+   column of titles zigzagging by 25px. The word stays on the link for screen readers and in the
+   tooltip, and the colour still separates the two sides. */
+.post-mark {
+  flex:none; width:20px; height:20px; margin-right:9px; vertical-align:-3px; border-radius:3px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--accent); color:var(--surface); font-size:12px; font-weight:600; line-height:1;
+}
+.post-mark.join { background:var(--accent-alt); }
 .post-card h2 a:hover { text-decoration:underline; text-underline-offset:4px; }
 .post-roles { order:2; font-size:13.5px; font-weight:600; line-height:1.7; }
 .post-roles > span { font-size:12px; font-weight:400; color:var(--muted); margin-right:8px; }
@@ -165,7 +175,7 @@
   .post-classification, .post-person { line-height:1.45; }
   /* Scoped to the row: unscoped this also shrank the badge on the detail page, where it is
      the label saying which side the post is on. */
-  .post-card .post-type { font-size:11px; } .post-card .post-age { font-size:10.5px; }
+  .post-card .post-mark { width:18px; height:18px; margin-right:8px; font-size:11px; vertical-align:-3px; } .post-card .post-age { font-size:10.5px; }
   .post-card h2 {
     font-size:14.5px; line-height:1.45; margin:0 0 1px;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
