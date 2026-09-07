@@ -12,7 +12,8 @@ const factRows = p => [
   ['活動エリア', names(p.prefectures)],
   ['活動スタンス', names(p.stances)],
   ['経験年数', p.experienceYears == null ? '' : p.experienceYears + '年'],
-  ['年代', p.ageRange || ''],
+  ['年齢', p.ageRange || ''],
+  ['性別', p.gender || ''],
   ['最近の活動', p.activity || '']
 ].filter(([, value]) => value);
 const facts = p => {
@@ -140,7 +141,7 @@ async function profileEdit(){
   // behaves the same in both places and a long form is not made longer by 47 open checkboxes.
   const section=(key,label,source)=>{
     const selected=(p[source]||[]).map(x=>x.id);
-    const field=body=>`<div class="form-field"><span class="form-label">${label} <span class="optional">任意</span></span>${body}</div>`;
+    const field=body=>`<div class="form-field"><span class="form-label">${label} <span class="required">必須</span></span>${body}</div>`;
     if(source!=='prefectures')return field(choices(key,m[source],selected));
     return field(`<p class="editor-selection-status" id="${key}-status" aria-live="polite"></p><details class="editor-area-options"><summary>都道府県を選ぶ・変更する</summary><div class="editor-choices">${m[source].map(x=>`<label class="editor-choice"><input type="checkbox" name="${key}" value="${x.id}" ${selected.includes(x.id)?'checked':''}><span>${h(x.name)}</span></label>`).join('')}</div></details>`);
   };
@@ -154,7 +155,7 @@ async function profileEdit(){
           <fieldset class="form-section"><legend>プロフィール画像</legend><div class="profile-image-editor"><div id="profile-image-preview">${avatar(p,true)}</div><div class="stack"><input id="profileImage" name="profileImage" type="file" accept="image/jpeg,image/png,image/webp" hidden><div class="row"><button type="button" class="button secondary" id="choose-profile-image">画像を選ぶ</button><button type="button" class="button quiet small" id="clear-profile-selection" hidden>選択を取り消す</button></div><p class="hint" id="profile-image-name" aria-live="polite">JPEG・PNG・WebP / 5MBまで</p>${p.profileImageUrl?'<button type="button" class="button quiet small" id="remove-profile-image">現在の画像を削除</button>':''}</div></div></fieldset>
           <fieldset class="form-section"><legend>自己紹介</legend><div class="stack"><div class="form-field"><label for="username">表示名 <span class="required">必須</span></label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required value="${h(p.username)}"></div><div class="form-field"><label for="bio">自己紹介 <span class="optional">任意</span></label><textarea class="input" id="bio" name="bio" maxlength="1000" rows="7" placeholder="好きなアーティスト、これまでの活動、これからやりたい音楽など。">${h(p.bio)}</textarea><span class="hint" data-count="bio"></span></div></div></fieldset>
           <fieldset class="form-section"><legend>音楽と活動エリア</legend><div class="stack">${fields.map(x=>section(...x)).join('')}</div></fieldset>
-          <fieldset class="form-section"><legend>基本情報</legend><div class="stack"><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="optional">任意</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" value="${p.age??''}"><span class="hint">公開されるのは「20代」などの年代だけです。</span></div><div class="form-field"><label for="experienceYears">経験年数 <span class="optional">任意</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" value="${p.experienceYears??''}"></div></div><div class="form-field"><label for="gender">性別 <span class="optional">任意</span></label><input class="input" id="gender" name="gender" maxlength="40" value="${h(p.gender)}"></div></div></fieldset>
+          <fieldset class="form-section"><legend>基本情報</legend><div class="stack"><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" value="${p.age??''}" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" value="${p.experienceYears??''}" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男" ${p.gender==='男'?'checked':''} required><span>男</span></label><label class="chip-select"><input type="radio" name="gender" value="女" ${p.gender==='女'?'checked':''}><span>女</span></label></div></div></div></fieldset>
           <fieldset class="form-section"><legend>演奏動画・音源</legend><div class="form-field"><label for="videoUrl">動画・音源のURL <span class="optional">任意</span></label><input class="input" id="videoUrl" name="videoUrl" type="url" maxlength="1000" value="${h(p.videoUrl)}" placeholder="https://youtu.be/..."><span class="hint">${mediaServices.join('・')}はプロフィール内でそのまま再生できます。ほかのURLはリンクとして表示します。</span></div></fieldset>
           <div class="sticky-actions">${button('キャンセル','/users/'+p.id,'secondary')}<button class="button primary" type="submit">変更を保存</button></div>
         </form>
@@ -194,8 +195,13 @@ async function profileEdit(){
     fileName.textContent=`${image.name} — 保存すると公開されます`;clearSelection.hidden=false;
   });
   bindForm(form,async fd=>{
-    const body={username:fd.get('username').trim(),bio:fd.get('bio').trim(),age:fd.get('age')?Number(fd.get('age')):null,experienceYears:fd.get('experienceYears')?Number(fd.get('experienceYears')):null,gender:fd.get('gender').trim(),videoUrl:fd.get('videoUrl').trim()||null};
+    const body={username:fd.get('username').trim(),bio:fd.get('bio').trim(),age:fd.get('age')?Number(fd.get('age')):null,experienceYears:fd.get('experienceYears')?Number(fd.get('experienceYears')):null,gender:fd.get('gender')||null,videoUrl:fd.get('videoUrl').trim()||null};
     for(const [key] of fields)body[key]=fd.getAll(key).map(Number);
+    if(!body.age && body.age!==0)throw new Error('年齢を入力してください。');
+    if(!body.experienceYears && body.experienceYears!==0)throw new Error('経験年数を入力してください。');
+    if(!body.gender)throw new Error('性別を選択してください。');
+    const requiredLabels={partIds:'担当パート',genreIds:'好きなジャンル',stanceIds:'活動スタンス',prefectureIds:'活動エリア'};
+    for(const [key,label] of Object.entries(requiredLabels))if(!body[key].length)throw new Error(`${label}を1つ以上選択してください。`);
     if(body.prefectureIds.length>3)throw new Error('活動エリアは3つまで選択できます。');
     await api('/api/users/me',{method:'PUT',body});
     const image=fd.get('profileImage');

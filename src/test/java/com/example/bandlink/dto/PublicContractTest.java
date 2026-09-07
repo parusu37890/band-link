@@ -10,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class PublicContractTest {
     private final JsonMapper mapper = JsonMapper.builder().build();
 
-    @Test void publicProfileExposesDecadeButNeverEmailPasswordOrExactAge() {
+    @Test void publicProfileExposesAgeButNeverEmailOrPassword() {
         User user = user(1L, "Haruki");
         user.setAge(27); user.setBio("ギターを弾いています");
         var json = mapper.readTree(mapper.writeValueAsString(ProfileResponse.from(user)));
-        assertEquals("20代", json.get("ageRange").asString());
+        assertEquals("27歳", json.get("ageRange").asString());
         assertFalse(json.has("age")); assertFalse(json.has("email")); assertFalse(json.has("passwordHash"));
         assertEquals("ギターを弾いています", json.get("bio").asString());
         var mine = MyProfileResponse.from(user);
@@ -69,7 +69,7 @@ class PublicContractTest {
         assertEquals("/uploads/haruki.jpg", PostResponse.from(post).authorImageUrl());
     }
 
-    @Test void listingShowsTheDecadeAndPresenceButNeverTheExactAgeOrTimestamp() {
+    @Test void listingShowsTheExactAgeAndPresenceButNeverTheLastSeenTimestamp() {
         User poster = user(2L, "Haruki");
         poster.setAge(27);
         poster.touchSeen(LocalDateTime.now().minusMinutes(1));
@@ -77,11 +77,10 @@ class PublicContractTest {
                 ActivityFrequency.WEEKLY_1, LocalDateTime.now());
 
         var json = mapper.readTree(mapper.writeValueAsString(PostResponse.from(post)));
-        assertEquals("20代", json.get("authorAgeRange").asString(),
-                "the board says the decade, the same as the profile page");
+        assertEquals("27歳", json.get("authorAgeRange").asString(),
+                "the board shows the entered age, the same as the profile page");
         assertTrue(json.get("authorOnline").asBoolean());
-        // The row carries no exact age and no last-seen time, only what it renders.
-        assertFalse(mapper.writeValueAsString(PostResponse.from(post)).contains("27"));
+        // The row carries no last-seen timestamp, only the display value.
         assertFalse(json.has("authorLastSeenAt"));
 
         poster.touchSeen(LocalDateTime.now().minusHours(2));
@@ -96,11 +95,11 @@ class PublicContractTest {
         assertTrue(PostResponse.from(post).authorOnline());
     }
 
-    @Test void ageBandRoundsDownToTheDecadeAndPassesNullThrough() {
-        assertEquals("20代", AgeBand.of(20));
-        assertEquals("20代", AgeBand.of(29));
-        assertEquals("30代", AgeBand.of(30));
-        assertEquals("10代", AgeBand.of(18));
+    @Test void ageDisplayKeepsTheEnteredYearsAndPassesNullThrough() {
+        assertEquals("20歳", AgeBand.of(20));
+        assertEquals("29歳", AgeBand.of(29));
+        assertEquals("30歳", AgeBand.of(30));
+        assertEquals("18歳", AgeBand.of(18));
         assertNull(AgeBand.of(null));
     }
 
