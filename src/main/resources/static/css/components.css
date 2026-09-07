@@ -41,6 +41,20 @@
 .chip-select input:checked + span { background: var(--surface); border-color: var(--focus); color: var(--ink); }
 .chip-select input:checked + span::before { background: var(--focus); border-color: var(--focus); box-shadow: inset 0 0 0 4px var(--surface); }
 .chip-select input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 3px; }
+/* Native checkboxes and radios draw their unchecked ring in Chrome's own #767676, which is darker
+   than anything else on this light page and reads as black beside the --control-line boundary every
+   other control uses. Drawn here instead: white while unselected, --focus once selected. The tick is
+   the one literal colour outside tokens.css — it is white on the blue fill by construction. */
+.filter-option input, .editor-choice input {
+  appearance: none; -webkit-appearance: none;
+  border: 1px solid var(--control-line); background: var(--surface) no-repeat center; cursor: pointer;
+}
+.filter-option input[type=radio], .editor-choice input[type=radio] { border-radius: 50%; }
+.filter-option input[type=checkbox], .editor-choice input[type=checkbox] { border-radius: 2px; }
+.filter-option input:checked, .editor-choice input:checked { background-color: var(--focus); border-color: var(--focus); }
+.filter-option input[type=radio]:checked, .editor-choice input[type=radio]:checked { box-shadow: inset 0 0 0 3px var(--surface); }
+.filter-option input[type=checkbox]:checked, .editor-choice input[type=checkbox]:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.4l3.1 3.1 5.9-5.9'/%3E%3C/svg%3E"); background-size: 100%; }
+.filter-option input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .badge { display: inline-flex; font-size: 12px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 2px; }
 .form-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .form-field > label, .form-label { font-size: 14px; font-weight: 600; }
