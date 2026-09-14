@@ -25,6 +25,8 @@ public class ApiExceptionHandler {
     ResponseEntity<Error> duplicate(RuntimeException e) { return response(HttpStatus.CONFLICT, "EMAIL_ALREADY_USED", e.getMessage()); }
     @ExceptionHandler(AuthService.InvalidTokenException.class)
     ResponseEntity<Error> token(RuntimeException e) { return response(HttpStatus.BAD_REQUEST, "INVALID_TOKEN", e.getMessage()); }
+    @ExceptionHandler(AuthService.TooManyAttemptsException.class)
+    ResponseEntity<Error> tooManyAttempts(RuntimeException e) { return response(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS", e.getMessage()); }
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<Error> auth(Exception e) { return response(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "メールアドレスとパスワードを確認してください。"); }
     @ExceptionHandler(AccessDeniedException.class)

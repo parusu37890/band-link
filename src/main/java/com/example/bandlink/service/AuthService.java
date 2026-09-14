@@ -147,4 +147,9 @@ public class AuthService {
     public static class EmailAlreadyUsedException extends RuntimeException {
         public EmailAlreadyUsedException() { super("このメールアドレスは既に登録されています"); }
     }
+
+    /** SEC-013: raised by AuthController.login() when LoginAttemptService reports a lockout. */
+    public static class TooManyAttemptsException extends RuntimeException {
+        public TooManyAttemptsException() { super("試行回数が多すぎます。しばらくしてからもう一度お試しください。"); }
+    }
 }

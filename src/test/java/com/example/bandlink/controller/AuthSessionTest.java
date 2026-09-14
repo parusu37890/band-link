@@ -74,4 +74,43 @@ class AuthSessionTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email));
     }
+
+    /**
+     * SEC-013 (PW-H): confirmed live against the running app that /api/auth/login had no
+     * brute-force protection whatsoever - LoginAttemptServiceTest pins the counting/lockout logic
+     * itself with a fake clock; this confirms AuthController actually wires it in over MockMvc.
+     * Does not wait out the real 15-minute lockout window here (the bean run under Spring uses the
+     * real system clock) - that expiry behaviour is what the fake-clock unit test already covers.
+     */
+    @Test
+    void repeatedWrongPasswordsLockTheAccountOutWithoutAffectingOthers() throws Exception {
+        String email = uniqueEmail();
+        mvc.perform(post("/api/auth/register").session(new MockHttpSession()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(body(email)))
+                .andExpect(status().isCreated());
+
+        for (int i = 0; i < com.example.bandlink.service.LoginAttemptService.MAX_ATTEMPTS; i++) {
+            mvc.perform(post("/api/auth/login").session(new MockHttpSession()).with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"" + email + "\",\"password\":\"wrong-password-" + i + "\"}"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        // Even the correct password is now rejected - locked, not merely still wrong.
+        mvc.perform(post("/api/auth/login").session(new MockHttpSession()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"password\":\"stpass1234\"}"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("TOO_MANY_ATTEMPTS"));
+
+        // A different, unrelated account is entirely unaffected by the first one's lockout.
+        String otherEmail = uniqueEmail();
+        mvc.perform(post("/api/auth/register").session(new MockHttpSession()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(body(otherEmail)))
+                .andExpect(status().isCreated());
+        mvc.perform(post("/api/auth/login").session(new MockHttpSession()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + otherEmail + "\",\"password\":\"stpass1234\"}"))
+                .andExpect(status().isOk());
+    }
 }

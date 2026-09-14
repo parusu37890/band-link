@@ -7,6 +7,7 @@ import com.example.bandlink.entity.User;
 import com.example.bandlink.repository.UserRepository;
 import com.example.bandlink.service.AuthService;
 import com.example.bandlink.service.LineLoginService;
+import com.example.bandlink.service.LoginAttemptService;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,14 +34,16 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final LineLoginService lineLogin;
+    private final LoginAttemptService loginAttempts;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public AuthController(AuthService authService, AuthenticationManager authenticationManager, UserRepository userRepository,
-                          LineLoginService lineLogin) {
+                          LineLoginService lineLogin, LoginAttemptService loginAttempts) {
         this.authService = authService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.lineLogin = lineLogin;
+        this.loginAttempts = loginAttempts;
     }
 
     /**
@@ -67,7 +70,22 @@ public class AuthController {
         // UsernameNotFoundException for a missing user, which Spring Security's default
         // hideUserNotFoundExceptions=true converts to the same BadCredentialsException as a
         // wrong password, so both land on ApiExceptionHandler's single generic message.
-        Authentication authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
+        //
+        // SEC-013: found via Playwright MCP that this endpoint had no brute-force protection at
+        // all - repeated wrong-password attempts against the same account all came back
+        // identically with no delay or lockout. loginAttempts is keyed by the raw email attempted
+        // (not by whether it resolves to a real account), so this lockout check adds no signal
+        // beyond the comment above: a nonexistent address locks out on the same schedule as a
+        // real one.
+        if (loginAttempts.isLocked(request.email())) throw new AuthService.TooManyAttemptsException();
+        Authentication authentication;
+        try {
+            authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            loginAttempts.recordFailure(request.email());
+            throw e;
+        }
+        loginAttempts.recordSuccess(request.email());
         touchLogin(request.email());
         return currentUser(authentication);
     }
