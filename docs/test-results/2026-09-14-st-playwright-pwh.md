@@ -1,8 +1,10 @@
-# ST（Playwright MCP）— 2026-09-14 PW-H（SEC-001..018: 権限・攻撃入力）※途中まで
+# ST（Playwright MCP）— 2026-09-14 PW-H（SEC-001..018: 権限・攻撃入力）
 
 `docs/test-plan/playwright-mcp-spec.md` のバッチ定義 PW-H に対応。公式 `@playwright/mcp`（`mcp__playwright__*`）のブラウザセッションから`fetch()`で直接APIを叩く手法（このセッションを通じて確立した手法）を中心に、一部は独立したPowerShellセッション（別cookie jar）でクロスセッション条件を検証した。PW-G（`bdb95c3`/`1c9dc65`）の続き。
 
-**状態: SEC-001〜SEC-012まで実施・記録済み。バグ3件発見・修正済み（`8258e29`、`8a19da3`）。SEC-013〜SEC-018とPW-I（NFT-002、007..012）は次回セッションで実施。下部の「引き継ぎ」を参照。**
+**状態: SEC-001〜SEC-018まで完了。バグ・ギャップ計6件発見・修正済み（`8258e29`、`8a19da3`、`b981036`、`5146849`、`8b5dc95`）。PW-I（NFT-002、007..012）は部分的に実施——下部の「引き継ぎ」を参照。**
+
+SEC-013〜018は、いったん「別ツール（Codex）へ引き継ぎ」で区切った後、(a) このセッション自身がユーザーから続行を指示されて再開した分（SEC-013〜016）と、(b) 同時並行でCodexが独立に着手していた分（SEC-013・014・015・017、PW-I一部）の**2系統が重複して発生**した。後から気づき、両者の実装を突き合わせて検証・統合している（詳細は各項目参照）。
 
 ユーザーからの明示的な指示（本セッションが過去に発見・修正した2件の実認可バグ — DM画像の静的リソース漏洩とログインのuser enumeration — を踏まえ、PW-Hは特に念入りに）を受け、すべてのケースで実際に攻撃・境界入力を送信し、レスポンスとDBを照合する方式を徹底した。
 
@@ -26,6 +28,12 @@ PW-A〜Gと同一の`band_link_release_test`。テスト中に発見した認可
 | SEC-010 DM画像の/uploads公開URL迂回防止 | PASS（SEC-001・SEC-006と合わせて確認） | `/uploads/messages/**`がdenyAllで匿名・他人問わず403になること（SEC-001）、認可された`/api/messages/images/{name}`ルートが参加者・通報対応の管理者以外に403を返すこと（SEC-006）を確認。独立したケースとしての追加検証は行っていない |
 | SEC-011 feedback添付の公開範囲 | PASS（**バグ1件発見・修正**） | 詳細下記。問い合わせ・機能要望の添付画像が誰でも閲覧できる公開URLに保存されていた |
 | SEC-012 multipart偽MIME・二重拡張子・polyglot・切断 | PASS（**バグ1件発見・修正**） | 詳細下記。JPEGの検証がSOIマーカー3byteのみで、任意のゴミバイト列を「JPEG」として受理していた。偽MIME（PNG拡張子だがPHPコード本文）、二重拡張子、PNGの切断は既存の検証で正しく拒否されることを確認済み |
+| SEC-013 login・reset・verifyの列挙と総当たり耐性 | PASS（**ギャップ発見・修正**） | 詳細下記。総当たり対策が一切存在しなかった。アカウント単位のロックアウトと、IPアドレス単位のレート制限の二層で対応 |
+| SEC-014 session cookie属性とlogout無効化 | PASS（**ギャップ発見・修正**） | 詳細下記。`Set-Cookie`に`SameSite`が明示されていなかった。logout後の旧sessionでのAPI呼び出しは元々401だったことを確認済み（修正不要） |
+| SEC-015 不正JSON・未知enum・巨大数・重複parameterの安全な400化 | PASS | 壊れたJSON・存在しないenum値・`Long`範囲超過・同一parameter複数指定を`/api/posts`・`/api/auth/login`・`/api/reports`・`/api/users/me`・path paramへ送信し、いずれも500ではなく400になることを確認（Spring既定のBean Validation/型変換で既に安全側だった）。重複scalar parameterについては既定動作を上書きする専用フィルタ（`DuplicateParameterFilter`）を追加し、意図を明示的なコードとして固定した（詳細下記） |
+| SEC-016 第三者による任意message通報の拒否 | PASS | `ReportService.create()`が非参加者によるMESSAGE通報を403 `AccessDeniedException`で拒否することを確認。U23（third-party）で会話940002宛のmessageを通報しようとして403、通報件数（6件）が変化しないことをDBで確認 |
+| SEC-017 request IDへの改行・長大値でのlog注入防止 | PASS（**ギャップ発見・修正**） | 詳細下記。`X-Request-Id`ヘッダの値を無検証でログ・レスポンスへ反映していた |
+| SEC-018 password・token・mail本文・画像pathのログ非出力 | PASS | ログイン・パスワード再設定・画像操作一式を実行した後、`app-run.log`（ECS JSON）をpassword-body/token-body/email-body/workspace-physical-pathの4観点でgrepし、一致0件を確認 |
 
 ## 発見した不具合（修正済み）
 
@@ -53,14 +61,42 @@ PW-A〜Gと同一の`band_link_release_test`。テスト中に発見した認可
 - 検証: 同じゴミデータの再送で400 `INVALID_INPUT`になり、ディスクに新規ファイルが作られないことを確認。既存の合成テストfixture（`ReleaseCaseMatrixJUnitTest`、`scripts/test/java`配下のharnessアダプタ）がいずれも3byteのみのSOI限定fixtureだったため、EOIを含む形に更新
 - 回帰テスト: `ReleaseImageUnitTest.codeUt024_jpegWithoutAnEoiMarkerIsRejectedEvenWithACorrectSoiHeader`、`.codeUt025_realisticJpegWithScanDataAndEoiMarkerIsAccepted`
 
+### 4. ログイン・パスワード再設定・メール確認に総当たり対策が一切なかった（コミット`b981036`、`8b5dc95`）
+
+- 発見の経緯: 実際に同一アカウントへ15回連続でパスワード間違いの`POST /api/auth/login`を送信し、すべて55〜65msで同一の401が返ることを確認。所要時間・応答内容のどちらにも遅延やロックアウトの兆候がなく、`src/main/java/`全体を`RateLimit|Bucket4j|attempts|lockout|throttle`で検索しても総当たり対策のコードが一切存在しないことを確認した
+- 修正（二層構成）:
+  1. `LoginAttemptService`（`b981036`）: アカウント（正規化したメールアドレス）単位の失敗カウンタ。5回連続失敗で15分間ロックし、429 `TOO_MANY_ATTEMPTS`を返す。実在しないメールアドレスでも同じスケジュールでロックされるため、`AuthController.login()`が既に持つ「メールアドレスの登録有無を漏らさない」保証をそのまま維持する
+  2. `AuthRateLimitFilter`（`8b5dc95`、Codexが並行して独立に実装）: リモートアドレス＋エンドポイント単位の固定ウィンドウ制限（既定20回/60秒）。`/login`・`/api/auth/login`・確認メール（再送含む）・パスワード再設定（依頼・確定）に適用。あえてメールアドレスやtokenをキーに含めず、IP単位で1つのアカウントへの集中だけでなく多数のアカウントへの総当たりも抑止する
+  3. 上記2つは対象範囲が異なる（1はアカウント単位、2はIP単位）ため、競合ではなく補完関係として両方を採用した
+- 検証: 修正後、同一アカウントへの5回失敗で6回目が429になり正しいパスワードでも弾かれること、`SecurityBoundaryFilterTest`でIP単位のwindow・エンドポイント分離・時間経過での解除を確認
+- 回帰テスト: `LoginAttemptServiceTest`、`AuthSessionTest`（アカウントロック）、`SecurityBoundaryFilterTest`（IPレート制限）
+
+### 5. session cookieにSameSiteが明示されていなかった（コミット`5146849`）
+
+- 発見の経緯: ログイン応答の実際の`Set-Cookie`を確認したところ`JSESSIONID=...; Path=/; HttpOnly`のみで、`SameSite`がブラウザの既定動作（Lax）任せになっていた
+- 修正: `application.yaml`に`server.servlet.session.cookie.same-site: lax`を明示。`secure`は`SESSION_COOKIE_SECURE`環境変数（既定false、ローカル/QAのHTTP環境で動作を維持しつつ、実運用のHTTPS環境ではtrueにできる）
+- 検証: 修正後の`Set-Cookie`が`...; HttpOnly; SameSite=Lax`になることを確認。logout後の旧sessionでのAPI呼び出しは元々401だったため、logout側の修正は不要
+
+### 6. X-Request-Idヘッダが無検証でログ・レスポンスに反映される（コミット`8b5dc95`、Codex）
+
+- 発見の経緯: `X-Request-Id`ヘッダにCRLFや制御文字を含む値（例: `probe\r\nERROR forged=true`）を送信すると、`RequestIdFilter`がそれをそのままMDCへ格納しレスポンスヘッダへも反映していた——ログの改行注入（偽の行の捏造）やレスポンスヘッダ注入につながりうる
+- 修正: `RequestIdFilter`にクライアント指定値の形式検証（64文字以内、`[A-Za-z0-9][A-Za-z0-9._-]*`）を追加し、不正な値は無視して自前でUUIDを生成するよう変更
+- 検証: 改行付きの値を送ると生成されたUUID形式の値に置き換わること、正常な値（例: `qa-request_2026.09-14`）はそのまま保持されることを`SecurityBoundaryFilterTest`で確認
+
 ## 検証
 
-- `mvnw.cmd clean test`（`DB_PASSWORD`設定）: 最終時点で14,329件実行 / 0 failures / 0 errors / 18 skipped
-- コミット3件（`bdb95c3`は前バッチPW-G、`8258e29`、`8a19da3`）をmainへpush、CIはいずれも緑（`gh run watch`で確認）
+- `mvnw.cmd clean test`（`DB_PASSWORD`設定）: 最終時点で14,342件実行 / 0 failures / 0 errors / 18 skipped（Codexの並行実装との統合後も再検証しグリーンを確認）
+- コミット6件（`bdb95c3`は前バッチPW-G、`8258e29`、`8a19da3`、`b981036`、`5146849`、`8b5dc95`）をmainへpush、CIはいずれも緑（`gh run watch`で確認）
 
-## 引き継ぎ（次回セッション/別ツールへ）
+## Codexとの並行作業について
 
-**ここで一旦作業を止めています。** ユーザーの指示により、続きは別ツール（Codex）が本ドキュメントとgit historyだけを頼りに再開します。以下、ゼロからでも再開できるよう詳細を記載します。
+このバッチの途中でユーザーの指示により「別ツール（Codex）へ引き継ぎ、以後Codexが続行」という区切りを一度作ったが、直後にユーザーから「続きをやって」という指示があり、このセッション自身もSEC-013から再開した。**この時点で、Codexも同じ範囲（SEC-013〜017、PW-I一部）に独立して着手していたことが後から判明した。**
+
+具体的には、両者は同じ`band_link_release_test`・同じQA固定パスワードを使い、それぞれ別の場所（このセッションは専用git worktree、Codexはユーザーのメイン作業ディレクトリ）で作業していたため、コミットが衝突することはなかったが、SEC-013・014・015・017の4件は結果として2つの独立した実装が生まれた。発見後、両方の実装を実際に読み比べ、`mvnw clean test`を通して共存できることを確認した上で統合した（統合内容は上記4〜6節）。SEC-016・018はこのセッションとCodexの両方が「既存実装で問題なし」という同じ結論に到達しており、コード変更は発生していない。
+
+この経緯自体は悪いことではない——独立した2つの検証が同じ結論（またはお互いを補完する実装）に達したことは、判断の裏付けとして機能している。ただし今後同様の並行作業をする場合は、着手前にどちらが何を担当するかを明示しておいた方が手戻りが少ない。
+
+## 引き継ぎ（次回セッションへ）
 
 ### 環境の再現手順
 
@@ -81,25 +117,24 @@ PW-A〜Gと同一の`band_link_release_test`。テスト中に発見した認可
    **`SPRING_DATASOURCE_URL`を忘れると、`application.yaml`のデフォルト（`band_link`、通常の開発用DB）に静かに接続してしまい、ログインが原因不明のまま全滅する**（本セッションで実際に踏んだ事故。`application.yaml`にはDB名を上書きする環境変数が用意されていないため、この完全なURLでの上書きが唯一の方法）。ポートは8080固定。
 4. 公式Playwright MCP（`mcp__playwright__*`、提供元`@playwright/mcp`）を使うこと。他のブラウザ自動化手段（in-app browser、computer-use等）でのPASS記録は無効。
 5. テストユーザー一覧は`docs/test-plan/test-users.md`。ID・メールとも全ユーザー固定。パスワードは全員共通で上記の使い捨てパスワード。管理者は`qa-release-admin@example.test`。
-6. `git status`はこのセッション終了時点でclean（未commitの変更なし）。`main`ブランチの最新commitは`8a19da3`（本ドキュメントの追加commit前）。
+6. `git status`はこのセッション終了時点でclean（未commitの変更なし）。`main`ブランチの最新commitは`8b5dc95`（PW-I残りに着手する前の状態）。
 
-### 完了済み（このセッションでPASS/バグ修正済み）
+### 完了済み
 
 - **PW-G（ST-054、ST-055）**: 完了・記録済み。`docs/test-results/2026-09-14-st-playwright-pwg.md`。バグ2件修正（`bdb95c3`）
-- **PW-H（SEC-001〜SEC-012）**: 完了・記録済み（本ドキュメント）。バグ3件修正（`8258e29`、`8a19da3`）
+- **PW-H（SEC-001〜SEC-018）**: 全件完了・記録済み（本ドキュメント）。バグ・ギャップ計6件修正（`8258e29`、`8a19da3`、`b981036`、`5146849`、`8b5dc95`）
 
 ### 未実施（次に着手すべき項目）
 
-**PW-H残り（優先度高、SEC全体がP0）:**
-- **SEC-013**（login・reset・verifyの列挙と総当たり耐性）— 着手直前で中断。`AuthService.requestPasswordReset()`はソースレベルでは列挙耐性がありそうに見える（対象が見つからなくても常に200相当で沈黙、`ifPresent`で分岐）が、実際のHTTPレスポンス（timing含む）での列挙耐性は未検証。**最も有力な手がかり**: `src/main/java/`全体を`RateLimit|Bucket4j|attempts|lockout|throttle|429`で検索したが、ログイン・パスワード再設定・メール確認のいずれにも総当たり対策（レート制限・アカウントロック）が一切見当たらなかった。これは本物のセキュリティギャップである可能性が高く、優先して深掘りする価値がある
-- **SEC-014**（session cookie属性とlogout無効化）— 未着手。`Set-Cookie`のHttpOnly/SameSite/Secure属性の確認、logout後のセッション無効化（`/api/auth/logout`実行後に旧セッションでのAPI呼び出しが401になるか）
-- **SEC-015**（不正JSON・未知enum・巨大数・重複parameterの安全な400化）— 未着手。壊れたJSON、存在しないenum値、`Long.MAX_VALUE`超過、同一parameter複数指定などを主要APIに送り、500ではなく400になることを確認
-- **SEC-016**（第三者が任意message IDを通報して本文を取得できない）— 未着手。U23（third-party、`qa-release-third-party@example.test`）で、自分が参加していない会話のmessage IDを通報しようとして403/404になること、通報レコードが新規作成されないことを確認
-- **SEC-017**（request IDへの改行・長大値でのlog注入防止）— 未着手。`X-Request-Id`ヘッダにCRLF・Unicode制御文字・10KB文字列を入れてGETし、レスポンスヘッダとアプリログ（`app-run.log`のECS JSON形式）が1リクエスト1行を保っているか確認
-- **SEC-018**（password・token・mail本文・画像pathをログへ残さない）— 未着手。ログイン・パスワード再設定・画像操作を一通り行った後、`app-run.log`をgrepしてパスワード文字列・トークン値・画像の物理パスが残っていないことを確認
+**PW-I（NFT-002、007..012）— 部分的に実施、要精査:**
 
-**PW-I（NFT-002、007..012）— 未着手:**
-- 連打・二重送信対策、session分離、画面幅ごとの挙動（PW-A/PW-Dから持ち越しのモバイル/タブレット再実施もここに含める）、アクセシビリティ（NFT-010は実screen readerでの確認が必要、自動snapshotだけでは合格にしない）
+Codexが並行して`scripts/test/playwright/pw-i-*.js`（accessibility/audit/contrast/duplicate/responsive/unicode）を使ったらしいアクセシビリティ改修（`8b5dc95`に含む: 主要な操作要素へのタッチターゲット44×44px確保、`:focus-visible`の可視アウトライン、`--mark-join`のコントラスト改善、feedback添付画像をDM画像と同じダイアログビューアで開くよう統一）と、`docs/test-results/playwright-harness/pw-i-*.png`（admin/messages/my-posts/posts/profileの複数画面幅スクリーンショット）を残しているが、**このセッションはCodexの検証プロセスそのものには立ち会っていない**。CSSの変更内容自体は目視でレビューし理にかなっていると判断したが、NFT-002/007..012の各ケースについて「どの操作をして何を確認したか」の一次証跡（PASS/FAIL判定の根拠）は本ドキュメントにまだ整理できていない。次のセッションでは:
+
+1. `docs/test-plan/test-cases.md`のNFT-002、007..012の全文を読み、各ケースの期待結果を確認する
+2. Codexが残したスクリーンショット（`docs/test-results/playwright-harness/pw-i-*.png`）を実際の期待結果と突き合わせ、不足があれば実機で再確認する
+3. 連打・二重送信対策、session分離はまだ未確認（CSSの範囲外）。実際に攻撃的な連打操作を送って確認すること
+4. NFT-010（アクセシビリティ）は自動snapshotだけで合格にしないこと。可能なら実際のスクリーンリーダー相当の確認（少なくとも`mcp__playwright__browser_snapshot`のroleツリーでの手動確認）を行う
+5. PW-A/PW-Dから持ち越しのモバイル/タブレット再実施もここに含めてよい
 
 ### 引き継ぎ時の注意
 

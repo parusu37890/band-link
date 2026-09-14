@@ -1,0 +1,53 @@
+﻿{
+    "SEC-014":  {
+                    "Status":  "PASS",
+                    "HttpOnly":  true,
+                    "SameSite":  "Lax",
+                    "LocalSecure":  false,
+                    "LogoutOldSessionStatus":  401,
+                    "ProductionSecureRequires":  "SESSION_COOKIE_SECURE=true"
+                },
+    "SEC-015":  {
+                    "Status":  "PASS",
+                    "MalformedJson":  400,
+                    "UnknownEnum":  400,
+                    "HugeLong":  400,
+                    "DuplicateScalar":  400
+                },
+    "SEC-016":  {
+                    "Status":  "PASS",
+                    "HttpStatus":  403,
+                    "Before":  1,
+                    "After":  1
+                },
+    "SEC-017":  {
+                    "Status":  "PASS",
+                    "Cases":  3,
+                    "Regenerated":  2,
+                    "ParserRejected":  1,
+                    "HostileValuesInLog":  0
+                },
+    "SEC-018":  {
+                    "Status":  "PASS",
+                    "SecretMatches":  0,
+                    "Checked":  [
+                                    "password-body",
+                                    "token-body",
+                                    "email-body",
+                                    "workspace-physical-path"
+                                ]
+                },
+    "SEC-013":  {
+                    "Status":  "PASS",
+                    "LoginKnownStatus":  401,
+                    "LoginUnknownStatus":  401,
+                    "SameBody":  true,
+                    "KnownMedianMs":  54.89,
+                    "UnknownMedianMs":  54.93,
+                    "MedianRatio":  1,
+                    "LoginRateLimited":  429,
+                    "ResetRateLimited":  429,
+                    "VerifyRateLimited":  429,
+                    "RateLimitedAccessLogs":  3
+                }
+}
