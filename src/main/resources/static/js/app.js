@@ -74,4 +74,12 @@ document.addEventListener('click', event => {
  scrollTo(0, 0);
 });
 
+// The shared #dialog (confirm prompts, the report form, image lightboxes) is a native <dialog>:
+// Escape already closes it for free, but a click on its own ::backdrop is reported as a click on the
+// dialog element itself, with no built-in behaviour attached - none of the callers close it, so
+// clicking outside the dialog's content silently did nothing.
+document.querySelector('#dialog')?.addEventListener('click', event => {
+  if (event.target.id === 'dialog') event.target.close();
+});
+
 window.addEventListener('popstate',route);window.addEventListener('DOMContentLoaded',route);

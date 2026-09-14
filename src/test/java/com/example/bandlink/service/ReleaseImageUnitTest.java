@@ -65,4 +65,20 @@ class ReleaseImageUnitTest {
         assertThrows(IllegalArgumentException.class,
                 () -> storage.store(new MockMultipartFile("file", "broken.png", "image/png", truncated)));
     }
+    /**
+     * PW-E follow-up (ST-038/ST-017): found via Playwright MCP with a real (non-degenerate) WebP
+     * upload. The signature check required the file to be exactly the 12-byte bare RIFF/WEBP header
+     * with no image payload after it - true only of a placeholder that carries no actual pixels. Any
+     * real-world WebP always has a VP8/VP8L/VP8X chunk following that header, so every real WebP
+     * upload was being rejected as "画像形式を確認できません" (500 at the HTTP layer, see
+     * ReleaseApiIntegrationTest.it033, because the error path could not be content-negotiated either).
+     */
+    @Test void codeUt023_realisticallySizedWebpWithPayloadAfterTheHeaderIsAccepted() {
+        byte[] header = {'R','I','F','F', 0,0,0,0, 'W','E','B','P'};
+        byte[] webp = new byte[header.length + 40];
+        System.arraycopy(header, 0, webp, 0, header.length);
+        // The bytes after the header stand in for a VP8 chunk; their content doesn't matter to the
+        // signature check, only that a real file never stops at byte 12 the way the fixture used to.
+        assertTrue(storage.store(new MockMultipartFile("file", "photo.webp", "image/webp", webp)).endsWith(".webp"));
+    }
 }

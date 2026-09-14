@@ -71,7 +71,11 @@ public class ImageStorageService {
             }
             return false;
         }
-        return b.length == 12 && b[0]==82 && b[1]==73 && b[2]==70 && b[3]==70 && b[8]==87 && b[9]==69 && b[10]==66 && b[11]==80;
+        // A real WebP file is never just the bare 12-byte RIFF/WEBP header: a VP8/VP8L/VP8X chunk
+        // with the actual pixel data always follows it, so the file is always larger than 12 bytes.
+        // Requiring an exact 12-byte length here rejected every real-world WebP image (only the
+        // degenerate no-pixel-data fixture happened to be exactly that size).
+        return b.length >= 12 && b[0]==82 && b[1]==73 && b[2]==70 && b[3]==70 && b[8]==87 && b[9]==69 && b[10]==66 && b[11]==80;
     }
 
     /** Browsers and native file pickers sometimes omit or mislabel the multipart MIME type. */

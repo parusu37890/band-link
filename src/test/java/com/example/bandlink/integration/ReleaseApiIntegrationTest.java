@@ -10,6 +10,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -194,6 +196,29 @@ class ReleaseApiIntegrationTest {
         mvc.perform(get("/api/search-history").with(user(GENERAL).roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].conditions").value(org.hamcrest.Matchers.containsString("qa_release_history_probe")));
+    }
+
+    /**
+     * PW-E follow-up (ST-039): POST /api/messages/images declares produces=text/plain for its
+     * success body (a bare URL string, not JSON) and the frontend matches that with its own
+     * Accept: text/plain. An invalid image still fails with a JSON {@link ApiExceptionHandler.Error}
+     * body, which without forcing the response content type could not be content-negotiated against
+     * that Accept header - Spring's own attempt to report the 400 threw a second exception, and the
+     * browser only ever saw an empty 500 instead of the "画像はjpg/png/webp、1枚5MBまでです" guidance
+     * ST-039 requires. A magic-byte-invalid WebP (the RIFF/WEBP header with no VP8 payload after it)
+     * doubled as a regression for ImageStorageService.valid(), which used to require WebP files to be
+     * exactly 12 bytes - the length of the bare header alone, which no real-world WebP file ever is.
+     */
+    @Test
+    void it033_invalidMessageImageReturnsReadableJsonNotABareServerError() throws Exception {
+        MockMultipartFile bogusWebp = new MockMultipartFile("file", "bogus.webp", "image/webp",
+                "this is not an actual webp file at all".getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        mvc.perform(multipart("/api/messages/images").file(bogusWebp)
+                        .with(user("qa-release-sender@example.test").roles("USER")).with(csrf())
+                        .accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test

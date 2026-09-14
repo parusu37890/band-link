@@ -32,6 +32,13 @@ public class ApiExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     ResponseEntity<Error> missing(Exception e) { return response(HttpStatus.NOT_FOUND, "NOT_FOUND", "対象が見つかりません。"); }
     @ExceptionHandler(ResponseStatusException.class)
-    ResponseEntity<Error> status(ResponseStatusException e) { return ResponseEntity.status(e.getStatusCode()).body(new Error("REQUEST_REJECTED", e.getReason() == null ? "処理できませんでした。" : e.getReason())); }
-    private ResponseEntity<Error> response(HttpStatus status, String code, String message) { return ResponseEntity.status(status).body(new Error(code, message)); }
+    ResponseEntity<Error> status(ResponseStatusException e) { return ResponseEntity.status(e.getStatusCode()).contentType(MediaType.APPLICATION_JSON).body(new Error("REQUEST_REJECTED", e.getReason() == null ? "処理できませんでした。" : e.getReason())); }
+    // A handful of endpoints (e.g. POST /api/messages/images) declare produces=text/plain for their
+    // success body and the frontend sends a matching Accept: text/plain. Error bodies here are still
+    // JSON, so without forcing the content type explicitly, Spring's content negotiation finds no
+    // acceptable representation for that Accept header and fails a second time while trying to report
+    // the first error - the caller sees an empty, unhandled 500 instead of the intended 4xx with a
+    // readable message. Forcing JSON here makes every error response independent of what the
+    // matching success response happens to produce.
+    private ResponseEntity<Error> response(HttpStatus status, String code, String message) { return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(new Error(code, message)); }
 }
