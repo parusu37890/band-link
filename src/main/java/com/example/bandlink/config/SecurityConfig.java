@@ -67,9 +67,20 @@ public class SecurityConfig {
                     }
                 })
                 .accessDeniedHandler((request, response, exception) -> {
-                    response.setStatus(403);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"code\":\"FORBIDDEN\",\"message\":\"この操作は許可されていません。ページを再読み込みしてご確認ください。\"}");
+                    // Mirrors the authenticationEntryPoint branch above: /admin carries the same
+                    // hasRole("ADMIN") rule as /api/admin/**, so a signed-in non-admin who follows a
+                    // stale link or types the URL hit this same handler as any rejected API call and
+                    // got the raw {"code":"FORBIDDEN",...} JSON printed as plain text on a blank white
+                    // page - no header, no footer, none of the page canvas ST-055 checks every route
+                    // for. A page request gets sent somewhere it can actually land instead.
+                    String uri = request.getRequestURI();
+                    if (uri.startsWith("/api/")) {
+                        response.setStatus(403);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"code\":\"FORBIDDEN\",\"message\":\"この操作は許可されていません。ページを再読み込みしてご確認ください。\"}");
+                    } else {
+                        response.sendRedirect("/posts");
+                    }
                 }))
             .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login").usernameParameter("email").defaultSuccessUrl("/", true).failureUrl("/login?error"))
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login"));
