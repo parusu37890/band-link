@@ -80,6 +80,13 @@ public class PostController {
                                  @RequestParam(defaultValue="12") int limit, Authentication authentication) {
         if (limit < 1 || limit > 50) limit = 12;
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
+        // This cursor-paginated endpoint is what the actual search screen calls (see recruitment-search.js);
+        // the plain GET /api/posts above is not used by the frontend for searching at all, so recording
+        // history only there meant a signed-in person's real searches were never saved. Record only on the
+        // cursor-less first page so "load more" pages of the same search don't spam the history; the
+        // service itself already no-ops for an unconditioned search (hasConditions()==false).
+        if (cursor == null && authentication != null && authentication.isAuthenticated())
+            userRepository.findByEmail(authentication.getName()).ifPresent(u -> searchHistoryService.record(u.getId(), criteria));
         List<PostResponse> all = postService.searchFor(viewerId(authentication), criteria, sort).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
         int offset = resolveCursorOffset(cursor, all.size());
         int end = Math.min(offset + limit, all.size());

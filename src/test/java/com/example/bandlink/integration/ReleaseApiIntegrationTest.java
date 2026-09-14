@@ -165,6 +165,37 @@ class ReleaseApiIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items").isArray());
     }
 
+    /**
+     * ST-028: a poster who marked "年齢不問" (ANY, no age preference) is not stating a specific
+     * band, so they must still surface for someone searching by a concrete one - P003 (920003) is
+     * seeded with ageRanges=["ANY"] and must appear in a search for S40 even though it never
+     * selected S40 itself. Before the fix, the age filter was a plain IN() against exactly the
+     * selected bands and silently dropped every ANY-tagged post as soon as one concrete band was
+     * chosen.
+     */
+    @Test
+    void it031_ageRangeSearchAlsoMatchesAnyTaggedPosts() throws Exception {
+        mvc.perform(get("/api/posts/page").param("ageRanges", "S40").param("limit", "50"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.id==920003)]").exists());
+    }
+
+    /**
+     * ST-032: the search screen (recruitment-search.js) only ever calls GET /api/posts/page, never
+     * the plain GET /api/posts that used to be the only endpoint recording search history - so a
+     * signed-in person's real searches were silently never saved, and GET /api/search-history stayed
+     * empty forever regardless of how much they searched.
+     */
+    @Test
+    void it032_pageSearchEndpointRecordsHistoryForSignedInUsers() throws Exception {
+        mvc.perform(get("/api/posts/page").param("keyword", "qa_release_history_probe")
+                        .with(user(GENERAL).roles("USER")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/search-history").with(user(GENERAL).roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].conditions").value(org.hamcrest.Matchers.containsString("qa_release_history_probe")));
+    }
+
     @Test
     void it024_messageImageRequiresParticipantOrExactReportModerator() throws Exception {
         String name = "97000000-0000-4000-8000-000000000007.png";

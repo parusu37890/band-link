@@ -130,8 +130,14 @@ public class PostService {
         }
         if (criteria != null && criteria.activityFrequencies() != null && !criteria.activityFrequencies().isEmpty())
             spec = spec.and((root, query, cb) -> root.get("activityFrequency").in(criteria.activityFrequencies()));
-        if (criteria != null && criteria.ageRanges() != null && !criteria.ageRanges().isEmpty())
-            spec = spec.and((root, query, cb) -> root.join("ageRanges").in(criteria.ageRanges()));
+        if (criteria != null && criteria.ageRanges() != null && !criteria.ageRanges().isEmpty()) {
+            // A poster who marked themselves "年齢不問" (ANY) is not stating a preference, so they
+            // must still surface for someone searching by a specific age band - the search would
+            // otherwise silently drop every ANY-tagged post the moment a concrete band is chosen.
+            java.util.Set<AgeRange> wanted = new java.util.HashSet<>(criteria.ageRanges());
+            wanted.add(AgeRange.ANY);
+            spec = spec.and((root, query, cb) -> root.join("ageRanges").in(wanted));
+        }
         spec = relationFilter(spec, "prefectures", criteria == null ? null : criteria.prefectureIds());
         spec = relationFilter(spec, "parts", criteria == null ? null : criteria.partIds());
         spec = relationFilter(spec, "genres", criteria == null ? null : criteria.genreIds());
