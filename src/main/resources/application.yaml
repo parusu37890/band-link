@@ -40,6 +40,20 @@ logging:
   level:
     org.hibernate.SQL: WARN
 
+server:
+  servlet:
+    session:
+      cookie:
+        # SEC-014: neither attribute was set anywhere, so JSESSIONID relied entirely on
+        # Tomcat/Spring Boot defaults - confirmed live (Set-Cookie: JSESSIONID=...; Path=/;
+        # HttpOnly, nothing else). HttpOnly was already present by default; same-site was not,
+        # so it depended on the browser's own default-Lax behaviour rather than being explicit.
+        # secure defaults false so local/QA runs over plain HTTP keep working (a Secure cookie is
+        # simply dropped by the browser over HTTP) and is meant to be set true via env var once
+        # this runs behind real HTTPS (see app.base-url's ${APP_BASE_URL:...} for the same pattern).
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+
 app:
   # 認証・復旧メールの差出人と、本文に載せる画面のURL（requirements 7章）。
   # mail-from が空、または spring.mail.host が空のあいだは送信しない。
