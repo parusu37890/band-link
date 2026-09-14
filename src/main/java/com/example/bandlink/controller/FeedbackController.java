@@ -41,7 +41,11 @@ public class FeedbackController {
     @ResponseStatus(HttpStatus.CREATED)
     public String image(Authentication authentication, @RequestParam MultipartFile file) {
         current(authentication);
-        return storage.store(file);
+        // SEC-011: not store() - a feedback screenshot can show account details or error content
+        // that shouldn't be reachable by anyone who has (or guesses) the URL, only by the admin
+        // reviewing the report. storeFeedback() puts it under a directory this same file's
+        // sibling admin-only endpoint serves, not the public /uploads/ tree.
+        return storage.storeFeedback(file);
     }
 
     private Long current(Authentication authentication) {

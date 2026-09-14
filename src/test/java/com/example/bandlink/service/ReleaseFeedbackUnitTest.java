@@ -37,11 +37,11 @@ class ReleaseFeedbackUnitTest {
         when(users.findById(1L)).thenReturn(Optional.of(user));
         when(feedback.save(any(Feedback.class))).thenAnswer(i -> i.getArgument(0));
         for (FeedbackType type : FeedbackType.values()) {
-            Feedback saved = service.create(1L, type, new FeedbackRequest("  日本語\n内容  ", "/uploads/qa-image.png"));
+            Feedback saved = service.create(1L, type, new FeedbackRequest("  日本語\n内容  ", "/api/admin/feedback/images/qa-image.png"));
             assertSame(user, saved.getUser());
             assertEquals(type, saved.getType());
             assertEquals("日本語\n内容", saved.getMessageText());
-            assertEquals("/uploads/qa-image.png", saved.getImageUrl());
+            assertEquals("/api/admin/feedback/images/qa-image.png", saved.getImageUrl());
             assertEquals(LocalDateTime.now(clock), saved.getCreatedAt());
         }
         verify(feedback, times(2)).save(any());
@@ -58,8 +58,14 @@ class ReleaseFeedbackUnitTest {
     }
 
     @Test void codeUt004_externalAndTraversalImagesAreRejectedBeforeSave() {
-        for (String image : new String[]{"https://example.invalid/a.png", "/uploads/../a.png",
-                "/uploads/a.svg", "/uploads/a.png?token=x", "javascript:alert(1)"}) {
+        // SEC-011: feedback attachments moved off the public /uploads/ tree onto the private
+        // /api/admin/feedback/images/ path (ImageStorageService.storeFeedback(),
+        // FeedbackController.image()) so a screenshot attached to a contact/feature-request
+        // message isn't reachable by anyone who merely has or guesses the URL. The old public
+        // shape must now be rejected right alongside the other malformed/foreign values below.
+        for (String image : new String[]{"https://example.invalid/a.png", "/uploads/qa-image.png",
+                "/api/admin/feedback/images/../a.png", "/api/admin/feedback/images/a.svg",
+                "/api/admin/feedback/images/a.png?token=x", "javascript:alert(1)"}) {
             assertThrows(IllegalArgumentException.class,
                     () -> service.create(1L, FeedbackType.CONTACT, new FeedbackRequest("valid", image)), image);
         }

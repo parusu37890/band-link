@@ -34,8 +34,13 @@ public class FeedbackService {
         String message = request.message() == null ? "" : request.message().trim();
         if (message.isBlank()) throw new IllegalArgumentException("内容を入力してください。");
         String image = request.imageUrl();
+        // SEC-011: this used to accept only the public /uploads/ shape, which is exactly the
+        // shape ImageStorageService.storeFeedback() (see FeedbackController.image()) stopped
+        // producing - it now returns /api/admin/feedback/images/{name}, the private path this
+        // controller's sibling admin-only endpoint serves. Leaving the old pattern here would
+        // have rejected every legitimately-uploaded attachment with "添付画像を確認してください。"
         if (image != null && !image.isBlank()
-                && !image.matches("/uploads/[A-Za-z0-9-]+\\.(jpg|png|webp)")) {
+                && !image.matches("/api/admin/feedback/images/[A-Za-z0-9-]+\\.(jpg|png|webp)")) {
             throw new IllegalArgumentException("添付画像を確認してください。");
         }
         var user = users.findById(userId).orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません。"));

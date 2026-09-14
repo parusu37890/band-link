@@ -23,6 +23,14 @@ public class ImageStorageService {
     public String storePrivate(MultipartFile file) {
         return storeAt(file, root.resolve("messages"), "/api/messages/images/");
     }
+    // SEC-011: feedback attachments (contact/feature-request screenshots, often showing account
+    // details or error content) were going through store(), the same public /uploads/ tree as
+    // profile and post images - anyone with the URL could view them, admin role or not. This puts
+    // them under their own private directory served only by AdminFeedbackController's
+    // hasRole("ADMIN")-gated endpoint, the same pattern storePrivate() already uses for DM images.
+    public String storeFeedback(MultipartFile file) {
+        return storeAt(file, root.resolve("feedback"), "/api/admin/feedback/images/");
+    }
     private String storeAt(MultipartFile file, Path destination, String publicPrefix) {
         String type = normalizedType(file);
         if (file == null || file.isEmpty() || file.getSize() > MAX || !TYPES.contains(type))
@@ -46,6 +54,9 @@ public class ImageStorageService {
     public Resource loadPrivate(String name) {
         try { return loadAt(name, root.resolve("messages")); }
         catch (IllegalArgumentException ex) { return loadAt(name, root); }
+    }
+    public Resource loadFeedback(String name) {
+        return loadAt(name, root.resolve("feedback"));
     }
     private Resource loadAt(String name, Path base) {
         if (name == null || !name.matches("[A-Za-z0-9-]+\\.(jpg|png|webp)")) throw new IllegalArgumentException("不正な画像名です");

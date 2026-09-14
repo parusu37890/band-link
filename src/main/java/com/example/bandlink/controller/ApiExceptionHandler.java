@@ -19,7 +19,7 @@ public class ApiExceptionHandler {
     }
     @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class, org.springframework.http.converter.HttpMessageNotReadableException.class})
     ResponseEntity<Error> invalid(Exception e) { return response(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "入力内容を確認してください。"); }
-    @ExceptionHandler({PostService.RuleViolationException.class, MessageService.RuleViolationException.class})
+    @ExceptionHandler({PostService.RuleViolationException.class, MessageService.RuleViolationException.class, ProfileService.RuleViolationException.class})
     ResponseEntity<Error> rule(RuntimeException e) { return response(HttpStatus.CONFLICT, "RULE_VIOLATION", e.getMessage()); }
     @ExceptionHandler(AuthService.EmailAlreadyUsedException.class)
     ResponseEntity<Error> duplicate(RuntimeException e) { return response(HttpStatus.CONFLICT, "EMAIL_ALREADY_USED", e.getMessage()); }

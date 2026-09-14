@@ -16,8 +16,8 @@ public class ProfileController {
     public ProfileController(ProfileService service,UserRepository users,ImageStorageService storage){this.service=service;this.users=users;this.storage=storage;}
     @GetMapping("/me") public MyProfileResponse me(Authentication a){return MyProfileResponse.from(current(a));}
     @PutMapping("/me") public MyProfileResponse update(Authentication a,@Valid @RequestBody ProfileUpdateRequest r){return MyProfileResponse.from(service.update(current(a).getId(),r));}
-    @PostMapping("/me/image") public MyProfileResponse image(Authentication a,@RequestParam MultipartFile file){User user=current(a);String previous=user.getProfileImageUrl();String next=storage.store(file);user.setProfileImageUrl(next);users.save(user);if(previous!=null)storage.delete(previous);return MyProfileResponse.from(user);}
-    @DeleteMapping("/me/image") public void removeImage(Authentication a){User user=current(a);storage.delete(user.getProfileImageUrl());user.setProfileImageUrl(null);users.save(user);}
+    @PostMapping("/me/image") public MyProfileResponse image(Authentication a,@RequestParam MultipartFile file){User user=current(a);service.requireActive(user.getId());String previous=user.getProfileImageUrl();String next=storage.store(file);user.setProfileImageUrl(next);users.save(user);if(previous!=null)storage.delete(previous);return MyProfileResponse.from(user);}
+    @DeleteMapping("/me/image") public void removeImage(Authentication a){User user=current(a);service.requireActive(user.getId());storage.delete(user.getProfileImageUrl());user.setProfileImageUrl(null);users.save(user);}
     @GetMapping("/{id}") public ProfileResponse profile(@PathVariable Long id){return ProfileResponse.from(service.getPublic(id));}
     private User current(Authentication a){return users.findByEmail(a.getName()).orElseThrow(()->new IllegalStateException("ユーザーが見つかりません"));}
 }
