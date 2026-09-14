@@ -271,7 +271,7 @@ class ReleaseCaseMatrixJUnitTest {
     }
 
     private static void validateMessage(String state) {
-        String content = state.equals("text-boundary") ? "m".repeat(1000) : (state.equals("oversize-image") ? "m" : null);
+        String content = state.equals("text-boundary") ? "m".repeat(500) : (state.equals("oversize-image") ? "m" : null);
         String image = state.equals("oversize-image") ? "i".repeat(1001) : null;
         Object request = newRecord("com.example.bandlink.dto.MessageRequests$Send", content, image);
         boolean valid = VALIDATOR.validate(request).isEmpty();

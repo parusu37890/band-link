@@ -20,7 +20,7 @@
 | role | enum | NOT NULL, DEFAULT 'USER' | USER / ADMIN（付与方法は§4参照） |
 | age | int | NULL可 | 生の年齢。公開時は年代のみ表示（アプリ側で算出） |
 | gender | varchar | NULL可 | |
-| bio | text | NULL可、最大1000文字 | 自己紹介（4章） |
+| bio | text | NULL可、最大500文字 | 自己紹介（4章） |
 | experience_years | int | NULL可 | |
 | video_url | varchar | NULL可 | |
 | profile_image_url | varchar | NULL可 | |
@@ -91,7 +91,7 @@
 `conversations`: id, user_a_id, user_b_id, created_at, last_message_at
 - 2人の組は常に`user_a_id < user_b_id`になるよう保存し、`UNIQUE(user_a_id, user_b_id)`で1組1会話を強制する。
 
-`messages`: id, conversation_id, sender_id, content(NULL可,最大1000文字), image_url(NULL可), created_at, **read_at**(timestamp, NULL可)
+`messages`: id, conversation_id, sender_id, content(NULL可,最大500文字), image_url(NULL可), created_at, **read_at**(timestamp, NULL可)
 - 既存実装は`read`真偽値だったが、モック画面(`band-link-preview.html`)が「既読 14:24」と既読**時刻**を表示する設計になっているため、`read`→`read_at`(nullable timestamp)に変更する。
 
 ### 1.7 notifications
@@ -277,7 +277,7 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 |---|---|---|
 | 投稿タイトル文字数上限 | 30文字 | |
 | 投稿本文文字数上限 | 500文字 | |
-| メッセージ本文文字数上限 | 1,000文字 | |
+| メッセージ本文文字数上限 | 500文字 | |
 | 活動エリア自由記入上限 | 100文字 | |
 | 画像許可形式 | jpg, png, webp | 拡張子だけでなくマジックバイト検証も行う（11章「画像実体検証」対応） |
 | 1ページ取得件数 | 20件 | 無限スクロールのカーソル方式と併用 |
