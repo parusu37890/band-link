@@ -61,11 +61,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
-        if (!userRepository.existsByEmail(email)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.UNAUTHORIZED, "このメールアドレスは登録されていません。");
-        }
+        // Do not pre-check whether the email exists: that turns a wrong-password reply
+        // ("メールアドレスとパスワードを確認してください。") and an unknown-email reply into a
+        // registered-email oracle. BandLinkUserDetailsService already throws
+        // UsernameNotFoundException for a missing user, which Spring Security's default
+        // hideUserNotFoundExceptions=true converts to the same BadCredentialsException as a
+        // wrong password, so both land on ApiExceptionHandler's single generic message.
         Authentication authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
         touchLogin(request.email());
         return currentUser(authentication);

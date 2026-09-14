@@ -42,7 +42,10 @@ export async function api(path,options={}) {
   const type=response.headers.get('content-type') || '';
   const data=response.status===204?null:type.includes('json')?await response.json():await response.text();
   if(!response.ok || response.redirected || (response.status!==204&&!type.includes('json')&&method==='GET')) {
-    const error=new Error(response.status===401?'ログインが必要です。ログインしてからもう一度お試しください。':data?.message || (response.status===404?'お探しの情報は見つかりませんでした。':response.status===403?'この操作は許可されていません。ページを再読み込みしてご確認ください。':'処理を完了できませんでした。時間をおいてもう一度お試しください。'));
+    // The server already tells 401s apart (wrong login credentials vs. no session at all)
+    // with its own message, so prefer that over a one-size-fits-all client string — otherwise
+    // a failed login attempt shows "please log in", which is nonsense on the login form itself.
+    const error=new Error(data?.message || (response.status===401?'ログインが必要です。ログインしてからもう一度お試しください。':response.status===404?'お探しの情報は見つかりませんでした。':response.status===403?'この操作は許可されていません。ページを再読み込みしてご確認ください。':'処理を完了できませんでした。時間をおいてもう一度お試しください。'));
     error.status=response.status;error.code=data?.code;throw error;
   }
   return data;
