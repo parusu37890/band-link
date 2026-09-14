@@ -2,6 +2,43 @@
 
 更新：2026-09-07。実際の機能・検証状況は本書と確認記録を基準にする。以前の「募集・画面は未実装」という引き継ぎは古いため、本書で置き換える。
 
+## 2026-09-14 リリーステスト計画（ST-001..055、SEC-001..018、NFT-002/007..012）完了
+
+`docs/test-plan/release-test-plan.md`・`docs/test-plan/test-cases.md`・`docs/test-plan/playwright-mcp-spec.md`に定義されたバッチPW-A〜PW-Iを、公式Playwright MCP（`mcp__playwright__*`、提供元`@playwright/mcp`）による実機検証で全件実施・記録した。下記より下の「Claudeが次に進めること」節（2026-09-07時点の依頼）は、この一連の検証によって実施済みとなっている。
+
+**各バッチの記録**（すべて`docs/test-results/`配下）:
+
+| バッチ | 対象 | 記録 |
+|---|---|---|
+| PW-A | ST-001..010（登録・ログイン・メール・LINE） | `2026-09-14-st-playwright-pwa.md` |
+| PW-B | ST-011..019（プロフィール・画像・media・活動表示） | `2026-09-14-st-playwright-pwb.md` |
+| PW-C | ST-020..026（投稿作成・編集・終了・画像） | `2026-09-14-st-playwright-pwc.md` |
+| PW-D | ST-027..034（検索・ページング・詳細・導線） | `2026-09-14-st-playwright-pwd.md` |
+| PW-E | ST-035..043（DM・画像拡大・既読・SSE） | `2026-09-14-st-playwright-pwe.md` |
+| PW-F | ST-044..053（block・report・admin・feedback・通知） | `2026-09-14-st-playwright-pwf.md` |
+| PW-G | ST-054..055（障害回復・全route背景） | `2026-09-14-st-playwright-pwg.md` |
+| PW-H | SEC-001..018（権限・攻撃入力） | `2026-09-14-st-playwright-pwh.md` |
+| PW-I | NFT-002、007..012（連打・分離・画面幅・a11y） | `2026-09-14-st-playwright-pwi.md`（本セッション） |
+
+**発見・修正した不具合**（全バッチ合計、詳細は各記録の「発見した不具合」節）:
+
+- 停止中ユーザーが自分のプロフィールを書き換えられる（PW-H、`ProfileService`）
+- 問い合わせ・機能要望の添付画像が誰でも閲覧できる（PW-H、`FeedbackController`/`ImageStorageService`）
+- JPEGの検証がSOIマーカーのみでゴミバイト列を受理する（PW-H、`ImageStorageService`）
+- ログイン・パスワード再設定・メール確認に総当たり対策が一切なかった（PW-H、`LoginAttemptService`＋`AuthRateLimitFilter`）
+- session cookieに`SameSite`が明示されていなかった（PW-H）
+- `X-Request-Id`ヘッダが無検証でログ・レスポンスに反映される（PW-H、Codexと合流）
+- 通知ベルの未読状態がcolor-onlyのdotのみで、支援技術（スクリーンリーダー）へ伝わっていなかった（PW-I、`app.js`の`header()`、`aria-label`を未読件数付きで動的更新するよう修正）
+- PW-A〜G・44×44pxタッチターゲット等のアクセシビリティCSS改修は各記録・コミット`8b5dc95`等を参照
+
+**リリース判定状況**: 上記バッチはすべてPASS（発見した不具合は全件その場で修正・回帰テスト追加・`mvnw clean test`緑を確認済み）。ただし以下は範囲外または未検証のまま残っている——次にリリース判定を行う担当はこれを踏まえること。
+
+- 実機ブラウザ（Safari、実iOS/Android）、実スクリーンリーダー（NVDA/VoiceOver等）による確認は未実施。PW-Iのキーボード・a11y検証はPlaywright MCPのaccessibility snapshotとキーボード操作の実機確認までで、スクリーンリーダーの実際の読み上げ音声は確認していない
+- NFT-008（画面幅）は25 route×4 viewportの全網羅ではなく、代表画面での抜き取り確認（詳細は`2026-09-14-st-playwright-pwi.md`）
+- NFT-003〜006、NFT-013（同時実行・DB制約系の非機能試験）はPW-A〜Iの範囲外で、今回未実施
+- `/support`ページの案内文とメール未確認ゲートの実際の挙動の不整合（PW-Hで気づいたが文言修正はスコープ外とし未着手）
+- ログ基盤（Elasticsearch/Kibana）・実LINE OAuth・公開環境そのものの確認は本テスト計画の範囲外
+
 ## 2026-09-07 認証メールを本登録リンクへ変更
 
 - 登録時の確認メールは、確認コードを入力させる文面から `/verify-email?token=...` のワンタイムリンクへ変更した。
