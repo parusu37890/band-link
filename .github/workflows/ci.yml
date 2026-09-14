@@ -10,6 +10,10 @@ jobs:
     # BandLinkApplicationTests loads the full application context, which opens a real
     # datasource. Without a database the context fails before any assertion runs, so CI
     # gets the same PostgreSQL the application expects rather than a stubbed one.
+    env:
+      # Only protects a throwaway database inside this job's own ephemeral Postgres
+      # container, destroyed when the job ends: not a credential worth secreting.
+      QA_RELEASE_PASSWORD: BandLink-QA-CI-Disposable-01
     services:
       postgres:
         image: postgres:18
@@ -36,3 +40,59 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
         run: ./mvnw -B clean test
+
+      # ReleaseApiIntegrationTest (15 P0/P1 cases: session lifecycle, withdrawal cascade,
+      # profile visibility, message-image authorization, CSRF, etc.) is gated behind
+      # QA_RELEASE_IT=true precisely so "mvn test" above never touches it, and so it was
+      # silently skipped by CI until now. It needs its own seeded database, built the same
+      # way a developer builds it locally: create the DB, start the app once against it to
+      # create schema and master data, seed disposable fixture rows, then run the suite.
+      - name: Build application jar
+        run: ./mvnw -B -DskipTests package
+
+      - name: Create disposable release QA database
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -c "CREATE DATABASE band_link_release_test"
+
+      - name: Create schema and master data in release QA database
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/band_link_release_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+        run: |
+          java -jar target/band-link-*.jar --server.port=8091 &
+          APP_PID=$!
+          ready=false
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8091/ >/dev/null 2>&1; then ready=true; break; fi
+            sleep 2
+          done
+          kill "$APP_PID" 2>/dev/null || true
+          wait "$APP_PID" 2>/dev/null || true
+          if [ "$ready" != "true" ]; then
+            echo "Application never became ready against band_link_release_test" >&2
+            exit 1
+          fi
+
+      - name: Generate disposable QA password hash
+        id: qa_hash
+        run: |
+          ./mvnw -B -q dependency:build-classpath -Dmdep.outputFile=target/cp.txt
+          mkdir -p target/qa-tools
+          javac -cp "target/classes:$(cat target/cp.txt)" -d target/qa-tools scripts/test/ReleasePasswordHash.java
+          HASH=$(java -cp "target/qa-tools:target/classes:$(cat target/cp.txt)" ReleasePasswordHash)
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Seed release QA database
+        env:
+          PGPASSWORD: postgres
+          QA_HASH: ${{ steps.qa_hash.outputs.hash }}
+        run: psql -h localhost -U postgres -d band_link_release_test -v qa_password_hash="$QA_HASH" -f scripts/test/seed-release-users.sql
+
+      - name: Run release integration tests
+        env:
+          QA_RELEASE_IT: 'true'
+          QA_RELEASE_DB_USERNAME: postgres
+          QA_RELEASE_DB_PASSWORD: postgres
+        run: ./mvnw -B -Dtest=ReleaseApiIntegrationTest test
