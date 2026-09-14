@@ -75,6 +75,11 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -85,5 +90,31 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- The matrix runner is intentionally isolated from the application test
+	     sources so the 14,227 dynamic cases can be compiled and executed even
+	     when another test source is being repaired.  The profile is opt-in and
+	     has no effect on the normal test lifecycle. -->
+	<profiles>
+		<profile>
+			<id>release-matrix-junit</id>
+			<activation>
+				<property><name>matrixOnly</name></property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<testIncludes>
+								<testInclude>**/matrix/ReleaseCaseMatrixJUnitTest.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

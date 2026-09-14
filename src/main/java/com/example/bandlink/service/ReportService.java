@@ -6,6 +6,7 @@ import com.example.bandlink.repository.*;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 public class ReportService {
@@ -20,6 +21,11 @@ public class ReportService {
 
     public void create(Long reporter, ReportRequest r) {
         User u = users.findById(reporter).orElseThrow();
+        if (r.targetType() == ReportTargetType.MESSAGE) {
+            var message = messages.findById(r.targetId()).orElseThrow(() -> new IllegalArgumentException("対象メッセージが見つかりません"));
+            if (u.getRole() != UserRole.ADMIN && !message.getConversation().includes(reporter))
+                throw new AccessDeniedException("会話参加者のみ通報できます");
+        }
         Report report = new Report(u, r.targetType(), r.targetId(), r.reason().trim(), LocalDateTime.now(clock));
         // A moderator has to see what was reported, but requirements 8章 limits that to the reported
         // message itself — never the conversation around it. Copying the body and image at report

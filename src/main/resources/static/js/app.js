@@ -1,28 +1,28 @@
 import {api,state,h,icon,showPage,notice} from './ui.js';
 import {discoveryPage} from './discovery.js';
-import {accountPage} from './account.js';
-import {communityPage} from './community.js';
+import {accountPage} from './account.js?v=20260913-3';
+import {communityPage} from './community.js?v=20260913-3';
 
 const path=()=>location.pathname.replace(/\/+$/,'')||'/';
 async function loadUser(){try{state.user=await api('/api/auth/me');}catch{state.user=null;}}
 function header(){
  const el=document.querySelector('#header');const here=path();
- const brand=(tag,attrs='')=>`<${tag} class="wordmark" ${attrs}><img class="brand-mark" src="/assets/mark.svg" alt=""><span>Band Link</span></${tag}>`;
+ const brand=(tag,attrs='')=>`<${tag} class="wordmark" ${attrs}><img class="brand-mark" src="/assets/mark.svg?v=20260913-1" alt=""><span>Band Link</span></${tag}>`;
  if(state.user?.status==='SUSPENDED'){el.innerHTML=`<div class="header-inner">${brand('a','href="/support" aria-label="Band Link"')}</div>`;return;}
  if(state.user && !state.user.emailVerified){
   el.innerHTML=`<div class="header-inner">${brand('span','aria-label="Band Link"')}<button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>`;
   el.querySelector('#verification-logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
   return;
  }
- el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の募集</a>`:''}</nav><div class="header-actions">${state.user?`<a class="icon-button" href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
+ const feedbackLinks=state.user?`<a href="/contact" class="${here==='/contact'?'active':''}">お問い合わせ</a><a href="/feature-request" class="${here==='/feature-request'?'active':''}">機能要望</a>`:'';
+ el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の募集</a>`:''}${feedbackLinks}</nav><div class="header-actions">${state.user?`<a class="icon-button" href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
  if(state.user){api('/api/notifications/unread-count').then(x=>{const d=el.querySelector('[data-unread-dot]');if(d)d.hidden=!(x?.count>0);}).catch(()=>{});}
 }
 // requirements 3章: while an account is suspended, the screen after login carries the notice and
 // where to ask about it, and nothing else. Without this the app looked normal and the suspension
 // only surfaced as a 409 on whatever the person tried to do. The support page keeps its own route
 // so it stays reachable, and logout lives here because settings no longer does. The screen used to
-// send people to a contact address that page never held (requirements 11章 lists 問い合わせ先 as
-// undecided), so it now says plainly that the channel is not open yet — see docs/decisions/0006.
+// send people to the help page, which now carries separate inquiry and feature-request forms.
 function suspendedScreen(){
  showPage(`<div class="page narrow">
    <div class="page-heading"><div><h1>アカウントの利用を停止しています</h1></div></div>
@@ -38,7 +38,7 @@ function suspendedScreen(){
 async function route(){
  await loadUser();header();
  const current=path();
- if(state.user?.status==='SUSPENDED'&&current!=='/support'){suspendedScreen();return;}
+ if(state.user?.status==='SUSPENDED'&&!['/support','/contact','/feature-request'].includes(current)){suspendedScreen();return;}
  if(state.user && !state.user.emailVerified && current!=='/verify-email'){
   history.replaceState(null,'','/verify-email');
   await accountPage('/verify-email');
@@ -54,7 +54,7 @@ async function route(){
 // to the browser. Kept to plain string checks so the list reads like PageController's.
 const shellRoutes = new Set(['/', '/posts', '/posts/new', '/my/posts', '/settings', '/settings/profile',
   '/settings/blocks', '/login', '/register', '/verify-email', '/password-reset', '/password-reset/confirm',
-  '/messages', '/notifications', '/blocks', '/admin', '/admin/reports', '/support']);
+  '/messages', '/notifications', '/blocks', '/admin', '/admin/reports', '/support', '/contact', '/feature-request']);
 const digits = value => value.length > 0 && [...value].every(c => c >= '0' && c <= '9');
 const withId = [['/posts/', ''], ['/posts/', '/edit'], ['/users/', ''], ['/messages/', '']];
 const servedByShell = pathname => shellRoutes.has(pathname) || withId.some(([prefix, suffix]) =>

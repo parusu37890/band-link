@@ -1,3 +1,4 @@
+\encoding UTF8
 -- Band Link local demo data. Safe to run repeatedly: demo rows are identified by email and the 【デモ NN】 title prefix.
 -- Titles and bodies are deliberately varied so the recruitment list can be judged at realistic volume
 -- (40 near-identical rows made it impossible to tell whether the list reads well).
@@ -34,6 +35,15 @@ BEGIN
     ('demo02@bandlink.local', interval '5 days'),
     ('demo03@bandlink.local', interval '20 days'),
     ('demo04@bandlink.local', interval '200 days')
+  ) AS v(email, ago) WHERE users.email = v.email;
+
+  -- Keep two demo posters online for presence checks while leaving the other activity buckets visible.
+  -- ActivitySignal treats a last_seen_at within five minutes as online.
+  UPDATE users SET last_seen_at = now() - v.ago FROM (VALUES
+    ('demo01@bandlink.local', interval '1 minute'),
+    ('demo02@bandlink.local', interval '4 minutes'),
+    ('demo03@bandlink.local', interval '15 minutes'),
+    ('demo04@bandlink.local', interval '2 hours')
   ) AS v(email, ago) WHERE users.email = v.email;
 
   DELETE FROM user_parts WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'demo0%@bandlink.local');
@@ -179,4 +189,16 @@ BEGIN
   INSERT INTO post_age_ranges (post_id, age_range)
   SELECT p.id, CASE WHEN p.id % 4 = 0 THEN 'ANY' WHEN p.id % 4 = 1 THEN 'S20' WHEN p.id % 4 = 2 THEN 'S30' ELSE 'S40' END
   FROM posts p WHERE p.title LIKE '【デモ %】%' ON CONFLICT DO NOTHING;
+
+  -- 公開中の募集はユーザーごとに1件まで。旧シードで複数OPENになった
+  -- 既存行も、再実行時に最新の1件以外を通常終了へ揃える。
+  WITH ranked_open AS (
+    SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS row_num
+    FROM posts
+    WHERE title LIKE '【デモ %】%' AND status = 'OPEN'
+  )
+  UPDATE posts p
+  SET status = 'CLOSED', closed_reason = 'MANUAL', closed_at = COALESCE(p.closed_at, now())
+  FROM ranked_open r
+  WHERE p.id = r.id AND r.row_num > 1;
 END $$;

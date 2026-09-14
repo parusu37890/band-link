@@ -1,6 +1,7 @@
 * { box-sizing: border-box; }
-html { scroll-padding-top: 24px; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.75 var(--font); -webkit-font-smoothing: antialiased; }
+html { scroll-padding-top: 24px; background: var(--bg); min-height: 100%; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.75 var(--font); -webkit-font-smoothing: antialiased; }
+#app { min-height: 100vh; background: var(--bg); }
 button, input, select, textarea { font: inherit; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
@@ -32,14 +33,15 @@ small, .small { font-size: 13px; }
 .spread { justify-content: space-between; }
 .stack { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 .panel { padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
-.back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 24px; font-size: 13px; color: var(--muted); }
+.back-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: -8px 0 24px -4px; padding: 8px 4px; font-size: 15px; font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.back-link .icon { width: 18px; height: 18px; }
 .body-text, .message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .body-text { font-size: 16px; line-height: 2.05; }
 .loading { padding: 88px 20px; color: var(--muted); text-align: center; }
-* { scrollbar-color: var(--focus) var(--raised); }
+* { scrollbar-color: var(--focus) var(--bg); }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-track { background: var(--raised); }
-*::-webkit-scrollbar-thumb { background: var(--focus); border: 3px solid var(--raised); border-radius: 10px; }
+*::-webkit-scrollbar-track { background: var(--bg); }
+*::-webkit-scrollbar-thumb { background: var(--focus); border: 3px solid var(--bg); border-radius: 10px; }
 @media (max-width: 640px) {
   .page { padding-block: 28px 52px; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; margin-bottom: 28px; }

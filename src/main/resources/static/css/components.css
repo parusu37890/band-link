@@ -4,7 +4,7 @@
 .wordmark { display: inline-flex; align-items: center; gap: 10px; font-size: 25px; font-weight: 750; line-height: 1; letter-spacing: -1.3px; white-space: nowrap; }
 .brand-mark { display: block; width: 30px; height: 30px; }
 .wordmark span { font-size: 26px; font-weight: 400; }
-.main-nav { display: flex; align-self: stretch; gap: 28px; }
+.main-nav { display: flex; align-self: stretch; flex-wrap: wrap; gap: 28px; }
 .main-nav a { display: flex; align-items: center; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
 .main-nav a.active { border-color: var(--accent); color: var(--ink); }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
@@ -96,7 +96,7 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
   .wordmark { font-size: 22px; } .brand-mark { width: 24px; height: 24px; }
   .header-actions { gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
   .header-profile { max-width: 98px; } .header-actions .icon-button { width: 40px; }
-  .main-nav { order: 3; width: 100%; margin-top: 4px; gap: 24px; }
+  .main-nav { order: 3; width: 100%; margin-top: 4px; gap: 4px 20px; }
   .main-nav a { min-height: 40px; }
   .main-nav a { min-height: 44px; font-size: 13px; }
   .form-grid { grid-template-columns: 1fr; } .form-section > legend { font-size: 19px; }

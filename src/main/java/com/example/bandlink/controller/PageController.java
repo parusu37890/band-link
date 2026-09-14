@@ -11,7 +11,8 @@ public class PageController {
     @GetMapping({"/", "/posts", "/posts/new", "/posts/{id}", "/posts/{id}/edit",
             "/my/posts", "/users/{id}", "/settings", "/settings/profile", "/settings/blocks",
             "/login", "/register", "/verify-email", "/password-reset", "/password-reset/confirm",
-            "/messages", "/messages/{id}", "/notifications", "/blocks", "/admin", "/admin/reports", "/support"})
+            "/messages", "/messages/{id}", "/notifications", "/blocks", "/admin", "/admin/reports", "/support",
+            "/contact", "/feature-request"})
     public String app() {
         return "posts";
     }

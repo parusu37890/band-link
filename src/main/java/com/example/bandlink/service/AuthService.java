@@ -33,13 +33,13 @@ public class AuthService {
     private final PrefectureRepository prefectures;
     private final Clock clock;
 
-    @org.springframework.beans.factory.annotation.Autowired
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        EmailVerificationTokenRepository verificationTokens,
                        PasswordResetTokenRepository resetTokens, MailService mail, AccountDeletionService accountDeletion) {
         this(userRepository, passwordEncoder, verificationTokens, resetTokens, mail, accountDeletion,
                 null, null, null, null, Clock.systemDefaultZone());
     }
+    @org.springframework.beans.factory.annotation.Autowired
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        EmailVerificationTokenRepository verificationTokens,
                        PasswordResetTokenRepository resetTokens, MailService mail, AccountDeletionService accountDeletion,
@@ -96,6 +96,7 @@ public class AuthService {
         if (!stored.isUsableAt(now())) throw new InvalidTokenException();
         stored.getUser().setEmailVerifiedAt(now());
         stored.setUsedAt(now());
+        verificationTokens.saveAndFlush(stored);
     }
 
     /** Sends a fresh one-time confirmation link to the currently signed-in, unverified user. */

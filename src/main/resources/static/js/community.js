@@ -141,11 +141,15 @@ async function messagesPage(path) {
       header.innerHTML = '';
       composer.innerHTML = '';
       messages.innerHTML = conversations.length
-        ? empty('会話を選んで、続きを話す')
+        ? ''
         : empty('まだ会話がありません', '募集や公開プロフィールから送ったメッセージと、受け取った返信がここに並びます。', button('募集を探す', '/posts', 'secondary'));
       return;
     }
     shell.classList.add('has-conversation');
+    // A new DM has no conversation row yet, so renderList marks the shell as empty. That state is
+    // correct for the inbox, but it must not hide the composer when a profile supplied ?to=...
+    // and we already resolved the recipient.
+    shell.classList.remove('is-empty');
     header.innerHTML = `<header class="chat-header"><a class="button secondary mobile-back" href="/messages" aria-label="会話一覧に戻る">${icon('arrow-left')}<span>会話一覧</span></a><div class="row">${avatar(peer)}<div><h2>${h(personName(peer))}</h2>${peer.status === 'WITHDRAWN' || peer.status === 'SUSPENDED' ? '<span class="muted">現在連絡できません</span>' : `<a href="/users/${positiveId(peer.id)}">プロフィールを見る</a>`}</div></div></header>`;
     const unavailable = peer.status === 'WITHDRAWN' || peer.status === 'SUSPENDED' || blocked;
     if (unavailable) {
@@ -158,7 +162,7 @@ async function messagesPage(path) {
     }
     // Keep the live form during polling, including focus, selection and attachment.
     if (composer.querySelector('[data-message-form]')) return;
-    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="1000" placeholder="自己紹介や、募集について聞きたいことを書いてください。"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div class="composer-file"><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" class="composer-file-input"><label class="button secondary small" for="message-image">画像を添付</label></div><button class="button primary" type="submit">送信する ${icon('arrow')}</button></div><div data-form-error role="alert"></div></form>`;
+    composer.innerHTML = `<form class="composer" data-message-form><label class="form-field composer-field" for="message-content">メッセージ<textarea class="input" id="message-content" name="content" rows="3" maxlength="1000" placeholder="自己紹介や、募集について聞きたいことを書いてください。"></textarea></label><div class="composer-attachment" data-attachment hidden></div><div class="composer-toolbar"><div class="composer-file"><input id="message-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-label="添付する画像" class="composer-file-input"><label class="button secondary small" for="message-image">画像を添付</label></div><button class="button primary" type="submit">送信</button></div><div data-form-error role="alert"></div></form>`;
     const form = composer.querySelector('form');
     const input = form.elements.content;
     const imageInput = form.elements.image;
@@ -175,13 +179,18 @@ async function messagesPage(path) {
     imageInput.addEventListener('change', () => {
       const file = imageInput.files?.[0];
       if (!file) return;
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      const extension = (file.name || '').toLowerCase();
+      const inferredType = file.type === 'image/jpg' ? 'image/jpeg' : file.type ||
+        (extension.endsWith('.jpg') || extension.endsWith('.jpeg') ? 'image/jpeg' : extension.endsWith('.png') ? 'image/png' : extension.endsWith('.webp') ? 'image/webp' : '');
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(inferredType) || file.size > 5 * 1024 * 1024) {
         imageInput.value = '';
         attachment.hidden = false;
         attachment.innerHTML = notice('JPEG・PNG・WebPの画像を、1枚5MB以内で選択してください。', 'error');
         return;
       }
-      draftImage = file;
+      // Preserve the original name while giving the multipart part a MIME type even when a native
+      // picker returned an empty or non-standard type (the server still validates the file bytes).
+      draftImage = file.type === inferredType ? file : new File([file], file.name || `message.${inferredType.split('/')[1]}`, { type: inferredType });
       renderAttachment();
     });
     renderAttachment();
@@ -243,7 +252,10 @@ async function messagesPage(path) {
     const markup = message => {
       const mine = String(message.senderId) === String(state.user.id);
       const id = positiveId(message.id);
-      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl) ? `<img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy">` : ''}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
+      const image = message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl)
+        ? `<button type="button" class="message-image-button" data-expand-image="${h(message.imageUrl)}" aria-label="画像を拡大表示"><img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy"></button>`
+        : '';
+      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
     };
     if (visible.length) reconcileRows(rows, visible, markup);
     else rows.innerHTML = empty('まだメッセージがありません', '下の欄から最初のメッセージを送れます。');
@@ -253,7 +265,17 @@ async function messagesPage(path) {
       messages.scrollTop = nextAnchor ? messages.scrollTop + nextAnchor.getBoundingClientRect().top - messages.getBoundingClientRect().top - anchorOffset : oldScroll;
     }
   }
+  function openImageViewer(url) {
+    const dialog = document.querySelector('#dialog');
+    dialog.innerHTML = `<form method="dialog" class="image-dialog"><button type="submit" class="button secondary small">閉じる</button><img src="${h(url)}" alt="メッセージ画像（拡大表示）"></form>`;
+    dialog.showModal();
+  }
   messages.addEventListener('click', event => {
+    const imageButton = event.target.closest('[data-expand-image]');
+    if (imageButton) {
+      openImageViewer(imageButton.dataset.expandImage);
+      return;
+    }
     const reportButton = event.target.closest('[data-report-message]');
     if (reportButton) report('MESSAGE', reportButton.dataset.reportMessage);
     if (event.target.closest('[data-older-messages]')) {
@@ -487,9 +509,10 @@ async function adminPage() {
   }
   const statuses = { PENDING: '未対応', REVIEWED: '確認済み', DISMISSED: '対応不要', ACTIONED: '対応済み' };
   const types = { POST: '募集投稿', USER: 'ユーザー', MESSAGE: 'メッセージ' };
-  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form></aside></div></div>`, '運営管理');
+  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form></aside></div><section class="admin-feedback stack"><h2>お問い合わせ・機能要望</h2><div data-feedback aria-busy="true"><p role="status">受信内容を読み込んでいます…</p></div></section></div>`, '運営管理');
   const container = main.querySelector('[data-reports]');
   const select = main.querySelector('#report-status');
+  const feedbackContainer = main.querySelector('[data-feedback]');
   let revision = 0;
   async function load() {
     const currentRevision = ++revision;
@@ -528,6 +551,17 @@ async function adminPage() {
     } finally { if (currentRevision === revision) container.setAttribute('aria-busy', 'false'); }
   }
   select.addEventListener('change', load);
+  async function loadFeedback() {
+    try {
+      const items = await api('/api/admin/feedback');
+      feedbackContainer.setAttribute('aria-busy', 'false');
+      feedbackContainer.innerHTML = items.length ? items.map(item => `<article class="feedback-card panel"><div class="row spread"><strong>${item.type === 'FEATURE_REQUEST' ? '機能要望' : 'お問い合わせ'}</strong><span class="hint">${h(item.username)} · ${h(time(item.createdAt))}</span></div><p class="message-text">${h(item.message)}</p>${item.imageUrl && /^\/uploads\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(item.imageUrl) ? `<a href="${h(item.imageUrl)}" target="_blank" rel="noopener"><img class="feedback-image" src="${h(item.imageUrl)}" alt="添付画像"></a>` : ''}</article>`).join('') : empty('受信した内容はありません。');
+    } catch (error) {
+      feedbackContainer.setAttribute('aria-busy', 'false');
+      feedbackContainer.innerHTML = retryMarkup('お問い合わせを読み込めませんでした。');
+      feedbackContainer.querySelector('[data-retry]').addEventListener('click', loadFeedback);
+    }
+  }
   const form = main.querySelector('[data-unsuspend-form]');
   bindForm(form, async () => {
     const id = positiveId(form.elements.userId.value);
@@ -538,5 +572,5 @@ async function adminPage() {
       form.reset();
     });
   });
-  await load();
+  await Promise.all([load(), loadFeedback()]);
 }

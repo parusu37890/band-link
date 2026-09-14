@@ -28,4 +28,14 @@ class UserTest {
         user.setStatus(UserStatus.SUSPENDED);
         assertFalse(user.isActive());
     }
+
+    @Test
+    void legacyGenderValuesArePresentedWithTheStandardLabels() {
+        User user = new User("haruki", "haruki@example.com", "hashed");
+
+        user.setGender("男");
+        assertEquals("男性", user.getGender());
+        user.setGender("女");
+        assertEquals("女性", user.getGender());
+    }
 }

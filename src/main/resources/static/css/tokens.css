@@ -1,32 +1,28 @@
-/* Light. The canvas is warm paper, a little lighter than it first was. It went #f4f3ee → #faf9f5
-   (too small a step to see) → #ffffff (white, and too much) → here: L* 95.8, 97.9, 100.0, 97.2.
-   White is kept for the surfaces that sit on it, which is where reading actually happens. The sage the dark theme carried stays as the accent, darkened to a moss that
-   holds up as link text. Every value below was measured, not guessed; the ratios are noted where
-   a rule depends on them. */
+/* Light, on warm paper. Every neutral surface uses one page canvas so a white or gray panel never
+   interrupts the reading surface. */
 :root {
   color-scheme: light;
-  --bg: #f8f7f3;             /* page canvas — warm paper, 1.07:1 against the white on it */
-  --surface: #ffffff;        /* panels, inputs, anything meant to be read on */
-  --raised: #f0eee6;         /* quiet fill: active rows, hovers, file buttons — 1.08:1 on --bg,
-                                the step it has always had, so a hovered row still reads */
-  --ink: #1b1d19;            /* 15.84:1 on --bg */
+  --bg: #f8f7f3;             /* page canvas — shared by profile and settings */
+  --surface: var(--bg);      /* static surfaces share the page canvas */
+  --raised: var(--bg);       /* active rows, hovers, and file buttons keep the same canvas */
+  --ink: #1b1d19;            /* 16.98:1 on --bg */
   /* Secondary text. At 5.20:1 this read as washed out against the 15.29:1 title beside it,
      and worst at the sizes it is actually used — 12px on the board, 10.5px on a phone. OURSOUNDS
      runs its listing meta at 8.59:1 for the same 12px, which is why theirs stays readable. */
-  --muted: #464a41;          /* 8.46:1 on --bg, 7.80:1 on --raised, 9.07:1 on --surface */
+  --muted: #464a41;          /* 9.07:1 on the shared canvas */
   --line: #d8d6cc;           /* hairline separators — decorative, not a control boundary */
   /* Borders that carry a control boundary need 3:1 against the page (WCAG 1.4.11).
      --line is a quiet separator and sits below that, so form controls use this instead. */
-  --control-line: #7f8577;   /* 3.55:1 on --bg, 3.27:1 on --raised */
-  --accent: #45643c;         /* 6.24:1 on --bg — moss, the dark theme's sage brought to light */
+  --control-line: #7f8577;   /* 3.80:1 on the shared canvas */
+  --accent: #45643c;         /* 6.69:1 on --bg — moss, the dark theme's sage brought to light */
   --focus: #2e6fd8;          /* blue focus and selection state */
-  --accent-alt: #8a4a2a;    /* 6.33:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
-  --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 10.08:1 */
+  --accent-alt: #8a4a2a;    /* 6.79:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
+  --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 10.80:1 */
   --rule: #45643c;           /* the 3px rule that opens a profile, an auth panel, a contact block */
-  --danger: #9c3025;         /* 6.84:1 on --bg */
-  --danger-line: #b07668;    /* 3.48:1 on --bg — danger control boundary */
+  --danger: #9c3025;         /* 7.33:1 on --bg */
+  --danger-line: #b07668;    /* 3.73:1 on --bg — danger control boundary */
   --danger-bg: #fbeeec;      /* --danger on it is 6.48:1 */
-  --success: #3f6b3a;        /* 5.80:1 on --bg */
+  --success: #3f6b3a;        /* 6.22:1 on --bg */
   /* Presence is written beside the dot so color is not the only cue. */
   --online: #8db600;         /* 黄緑のオンライン表示 */
   /* 募集と参加希望 are intent categories, separated from the green accent: blue/orange. */
@@ -36,10 +32,10 @@
   --notice-bg: #eaf0f6;
   --notice-line: #4a6f96;
   --notice-ink: #2b4a66;     /* 8.04:1 on --notice-bg */
-  --field: #ffffff;          /* input fill */
+  --field: var(--bg);        /* input fill — the profile editor keeps one canvas colour */
   --placeholder: #6e7268;    /* 4.92:1 on --field */
-  --avatar-bg: #dcdcd2;
-  --avatar-ink: #3f443b;     /* 7.24:1 on --avatar-bg */
+  --avatar-bg: var(--bg);    /* placeholder avatars do not introduce a gray tile */
+  --avatar-ink: #3f443b;     /* readable against the shared canvas */
   --bubble-bg: #cbd8c0;      /* the reader's own messages — 1.23:1 against the incoming bubble.
                                 #dfe4da was only 1.07 and the two sides read as one colour once the
                                 theme went light; alignment carried the whole distinction. */

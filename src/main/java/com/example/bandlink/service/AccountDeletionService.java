@@ -48,6 +48,7 @@ public class AccountDeletionService {
                 userId, userId, userId);
         jdbc.update("delete from conversations where user_a_id = ? or user_b_id = ?", userId, userId);
         jdbc.update("delete from notifications where user_id = ?", userId);
+        jdbc.update("delete from feedback where user_id = ?", userId);
         jdbc.update("delete from blocks where blocker_id = ? or blocked_id = ?", userId, userId);
         jdbc.update("delete from search_histories where user_id = ?", userId);
         jdbc.update("delete from email_verification_tokens where user_id = ?", userId);

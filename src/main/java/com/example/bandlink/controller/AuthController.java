@@ -155,7 +155,7 @@ public class AuthController {
 
     private boolean profileComplete(User user) {
         return user.getAge() != null && user.getExperienceYears() != null
-                && ("男".equals(user.getGender()) || "女".equals(user.getGender()))
+                && ("男性".equals(user.getGender()) || "女性".equals(user.getGender()))
                 && !user.getParts().isEmpty() && !user.getGenres().isEmpty()
                 && !user.getStances().isEmpty() && !user.getPrefectures().isEmpty();
     }

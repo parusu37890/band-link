@@ -25,6 +25,7 @@ export async function accountPage(path){
   if(path==='/login'||path==='/register'||path==='/verify-email'||path==='/password-reset'||path==='/password-reset/confirm'){await authPage(path);return true;}
   if(path==='/settings'||path==='/settings/profile'){if(requireUser()) await profileEdit();return true;}
   if(path==='/settings/blocks') return false;
+  if(path==='/contact'||path==='/feature-request'){if(requireUser()) await feedbackPage(path==='/feature-request'?'FEATURE_REQUEST':'CONTACT');return true;}
   if(path==='/support'){await supportPage();return true;}
   if(/^\/users\/\d+$/.test(path)){await profilePage(path.split('/')[2]);return true;}
   return false;
@@ -56,7 +57,7 @@ async function authPage(path){
   let form='';
   const passwordField=(id,autocomplete)=>`<div class="password-field"><input class="input" id="${id}" name="${id==='newPassword'?'newPassword':'password'}" type="password" autocomplete="${autocomplete}" minlength="8" maxlength="128" required><button type="button" class="password-toggle" data-password-toggle="${id}" aria-label="パスワードを表示">${icon('eye')}</button></div>`;
   if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','current-password')}</div><button class="button primary full" type="submit">ログイン</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでログイン</a>`:''}`;
-  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><fieldset class="form-section"><legend>基本情報</legend><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男" required><span>男</span></label><label class="chip-select"><input type="radio" name="gender" value="女"><span>女</span></label></div></div></fieldset>${registrationFields}<button class="button primary full" type="submit">アカウントを作成</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでアカウントを作成</a>`:''}`;
+  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><fieldset class="form-section"><legend>基本情報</legend><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男性" required><span>男性</span></label><label class="chip-select"><input type="radio" name="gender" value="女性"><span>女性</span></label></div></div></fieldset>${registrationFields}<button class="button primary full" type="submit">アカウントを作成</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでアカウントを作成</a>`:''}`;
   if(verify) form=verificationToken
     ? `<div class="verify-link-state"><p class="muted">メール内のリンクを確認しています…</p></div>`
     : `<div class="verify-waiting"><p>登録時に送信した確認メールを開き、本文のリンクをタップしてください。</p><p class="hint">メールが見つからない場合は、迷惑メールフォルダも確認してください。</p>${state.user&&!state.user.emailVerified?'<button type="button" class="button secondary full" id="resend-verification">確認メールを再送する</button>':''}</div>`;
@@ -68,7 +69,7 @@ async function authPage(path){
     : verify ? ''
     : `<a href="/login">ログインへ戻る</a>`;
   const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。':'';
-  showPage(`<div class="page auth-page"><section class="auth-panel"><a class="auth-mark" href="/" aria-label="Band Link ホーム"><img src="/assets/mark.svg" alt=""> <span>Band Link</span></a><h1>${h(config[0])}</h1><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
+  showPage(`<div class="page auth-page${register?' register-page':''}"><section class="auth-panel"><a class="auth-mark" href="/" aria-label="Band Link ホーム"><img src="/assets/mark.svg?v=20260913-1" alt=""> <span>Band Link</span></a><h1>${h(config[0])}</h1><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
     let response;
@@ -171,7 +172,7 @@ async function profileEdit(){
           <fieldset class="form-section"><legend>プロフィール画像</legend><div class="profile-image-editor"><div id="profile-image-preview">${avatar(p,true)}</div><div class="stack"><input id="profileImage" name="profileImage" type="file" accept="image/jpeg,image/png,image/webp" hidden><div class="row"><button type="button" class="button secondary" id="choose-profile-image">画像を選ぶ</button><button type="button" class="button quiet small" id="clear-profile-selection" hidden>選択を取り消す</button></div><p class="hint" id="profile-image-name" aria-live="polite">JPEG・PNG・WebP / 5MBまで</p>${p.profileImageUrl?'<button type="button" class="button quiet small" id="remove-profile-image">現在の画像を削除</button>':''}</div></div></fieldset>
           <fieldset class="form-section"><legend>自己紹介</legend><div class="stack"><div class="form-field"><label for="username">表示名 <span class="required">必須</span></label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required value="${h(p.username)}"></div><div class="form-field"><label for="bio">自己紹介 <span class="optional">任意</span></label><textarea class="input" id="bio" name="bio" maxlength="1000" rows="7" placeholder="好きなアーティスト、これまでの活動、これからやりたい音楽など。">${h(p.bio)}</textarea><span class="hint" data-count="bio"></span></div></div></fieldset>
           <fieldset class="form-section"><legend>音楽と活動エリア</legend><div class="stack">${fields.map(x=>section(...x)).join('')}</div></fieldset>
-          <fieldset class="form-section"><legend>基本情報</legend><div class="stack"><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" value="${p.age??''}" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" value="${p.experienceYears??''}" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男" ${p.gender==='男'?'checked':''} required><span>男</span></label><label class="chip-select"><input type="radio" name="gender" value="女" ${p.gender==='女'?'checked':''}><span>女</span></label></div></div></div></fieldset>
+          <fieldset class="form-section"><legend>基本情報</legend><div class="stack"><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" value="${p.age??''}" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" value="${p.experienceYears??''}" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男性" ${p.gender==='男性'?'checked':''} required><span>男性</span></label><label class="chip-select"><input type="radio" name="gender" value="女性" ${p.gender==='女性'?'checked':''}><span>女性</span></label></div></div></div></fieldset>
           <fieldset class="form-section"><legend>演奏動画・音源</legend><div class="stack"><div class="form-field"><label for="youtubeUrl">YouTube URL <span class="optional">任意</span></label><input class="input" id="youtubeUrl" name="youtubeUrl" type="url" maxlength="1000" value="${h(p.youtubeUrl||'')}" placeholder="https://youtu.be/..."></div><div class="form-field"><label for="tiktokUrl">TikTok URL <span class="optional">任意</span></label><input class="input" id="tiktokUrl" name="tiktokUrl" type="url" maxlength="1000" value="${h(p.tiktokUrl||'')}" placeholder="https://www.tiktok.com/@..."></div><div class="form-field"><label for="soundcloudUrl">SoundCloud URL <span class="optional">任意</span></label><input class="input" id="soundcloudUrl" name="soundcloudUrl" type="url" maxlength="1000" value="${h(p.soundcloudUrl||'')}" placeholder="https://soundcloud.com/..."></div><div class="form-field"><label for="spotifyUrl">Spotify URL <span class="optional">任意</span></label><input class="input" id="spotifyUrl" name="spotifyUrl" type="url" maxlength="1000" value="${h(p.spotifyUrl||'')}" placeholder="https://open.spotify.com/track/..."></div><div class="form-field"><label for="appleMusicUrl">Apple Music URL <span class="optional">任意</span></label><input class="input" id="appleMusicUrl" name="appleMusicUrl" type="url" maxlength="1000" value="${h(p.appleMusicUrl||'')}" placeholder="https://music.apple.com/..."></div><div class="form-field"><label for="videoUrl">その他のURL <span class="optional">任意</span></label><input class="input" id="videoUrl" name="videoUrl" type="url" maxlength="1000" value="${h(p.videoUrl||'')}" placeholder="https://..."></div><span class="hint">各サービスのURLを個別に登録できます。</span></div></fieldset>
           <div class="sticky-actions">${button('キャンセル','/users/'+p.id,'secondary')}<button class="button primary" type="submit">変更を保存</button></div>
         </form>
@@ -228,9 +229,44 @@ async function profileEdit(){
   main.querySelector('#logout').onclick=()=>confirmAction('ログアウトしますか？','次回はメールアドレスとパスワードでログインできます。',async()=>{await api('/api/auth/logout',{method:'POST'});location.assign('/login');});
   main.querySelector('#withdraw').onclick=()=>confirmAction('退会しますか？','プロフィール、募集、会話、メッセージを削除します。削除後は元に戻せません。同じメールアドレスで再登録できます。',async()=>{await api('/api/auth/withdraw',{method:'POST'});state.user=null;location.assign('/');});
 }
-// Two symmetric cards said little and promised a contact address the page did not have —
-// the suspension screen sends people here for exactly that (requirements 5章・53行). Rewritten
-// as the situations a reader actually arrives with, each ending at the screen that resolves it.
+async function feedbackPage(type){
+  const feature=type==='FEATURE_REQUEST';
+  const title=feature?'機能要望':'お問い合わせ';
+  const description=feature?'こうなったら使いやすい、を教えてください。':'困っていることや確認したいことを運営に知らせてください。';
+  showPage(`<div class="page feedback-page"><a class="back-link" href="/posts">${icon('back')}募集一覧へ</a><div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div></div><form id="feedback-form" class="feedback-form"><div class="form-field"><label for="feedback-message">${feature?'要望の内容':'お問い合わせ内容'}</label><textarea class="input" id="feedback-message" name="message" rows="9" maxlength="3000" required placeholder="自由にご記入ください。"></textarea><span class="hint">3000文字まで</span></div><div class="form-field"><label for="feedback-image">画像（任意）</label><input id="feedback-image" name="image" type="file" accept="image/jpeg,image/png,image/webp"><div class="feedback-attachment" data-feedback-attachment hidden></div><span class="hint">画面の状態が分かる画像を1枚添付できます（5MBまで）。</span></div><div id="feedback-status" aria-live="polite"></div><button class="button primary" type="submit">送信</button></form></div>`,title);
+  const form=main.querySelector('#feedback-form');
+  const imageInput=form.elements.image;
+  const attachment=form.querySelector('[data-feedback-attachment]');
+  let image=null, previewUrl=null;
+  const clearPreview=()=>{if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}};
+  const renderAttachment=()=>{
+    clearPreview();
+    attachment.hidden=!image;
+    if(!image){attachment.innerHTML='';return;}
+    previewUrl=URL.createObjectURL(image);
+    attachment.innerHTML=`<img src="${h(previewUrl)}" alt="添付する画像のプレビュー"><div><strong>${h(image.name)}</strong><span class="muted">${(image.size/1024/1024).toFixed(1)} MB</span><button type="button" class="button quiet small" data-remove-feedback-image>取り消す</button></div>`;
+    attachment.querySelector('[data-remove-feedback-image]').onclick=()=>{image=null;imageInput.value='';renderAttachment();};
+  };
+  imageInput.addEventListener('change',()=>{
+    const file=imageInput.files?.[0];
+    if(!file){image=null;renderAttachment();return;}
+    const name=(file.name||'').toLowerCase();
+    const inferred=file.type==='image/jpg'?'image/jpeg':file.type||(name.endsWith('.jpg')||name.endsWith('.jpeg')?'image/jpeg':name.endsWith('.png')?'image/png':name.endsWith('.webp')?'image/webp':'');
+    if(!['image/jpeg','image/png','image/webp'].includes(inferred)||file.size>5*1024*1024){image=null;imageInput.value='';attachment.hidden=false;attachment.innerHTML=notice('JPEG・PNG・WebPの画像を、1枚5MB以内で選択してください。','error');return;}
+    image=file.type===inferred?file:new File([file],file.name||'feedback-image',{type:inferred});
+    renderAttachment();
+  });
+  window.addEventListener('pagehide',clearPreview,{once:true});
+  bindForm(form,async fd=>{
+    let imageUrl=null;
+    if(image){const upload=new FormData();upload.append('file',image);imageUrl=await api('/api/feedback/images',{method:'POST',headers:{Accept:'text/plain'},body:upload});}
+    await api(feature?'/api/feedback/feature-request':'/api/feedback/contact',{method:'POST',body:{message:fd.get('message'),imageUrl}});
+    form.reset();image=null;renderAttachment();main.querySelector('#feedback-status').innerHTML=notice(feature?'機能要望を受け付けました。':'お問い合わせを受け付けました。','success');
+  });
+}
+
+// Help is organized around the situations a reader actually arrives with, each ending at the
+// screen that resolves it. Service inquiries and feature requests have separate forms above.
 const helpItem = ([question, answer, link]) =>
   `<article class="help-item"><h3>${h(question)}</h3><p>${h(answer)}</p>${link ? `<a class="help-link" href="${h(link[1])}">${h(link[0])}${icon('arrow')}</a>` : ''}</article>`;
 const helpSection = (id, title, items) =>
@@ -261,7 +297,8 @@ function supportPage(){
     <section class="help-contact" aria-labelledby="help-contact-title">
       <h2 id="help-contact-title">運営への連絡</h2>
       <p>募集・メッセージ・プロフィールの内容についての連絡は、各画面の「通報」から運営に届きます。</p>
-      <p class="hint">利用停止など、通報では扱えない件の問い合わせ先はまだ公開していません。決まりしだいこのページに掲載します。</p>
+      <p class="hint">サービスについての問い合わせや、改善の提案は専用フォームから送れます。画像も1枚添付できます。</p>
+      <div class="row help-contact-actions"><a class="button secondary" href="/contact">お問い合わせ</a><a class="button secondary" href="/feature-request">機能要望</a></div>
     </section>
   </div>`, 'ヘルプ');
 }

@@ -16,7 +16,7 @@ public record RegisterRequest(
         @NotBlank @Size(min = 8, max = 128) String password,
         @NotNull @Min(0) @Max(120) Integer age,
         @NotNull @Min(0) @Max(100) Integer experienceYears,
-        @NotNull @Pattern(regexp = "男|女", message = "性別は男または女から選択してください。") String gender,
+        @NotNull @Pattern(regexp = "男性|女性", message = "性別は男性または女性から選択してください。") String gender,
         @NotEmpty Set<Long> partIds, @NotEmpty Set<Long> genreIds,
         @NotEmpty Set<Long> stanceIds, @NotEmpty Set<Long> prefectureIds
 ) {

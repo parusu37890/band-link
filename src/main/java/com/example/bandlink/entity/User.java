@@ -79,8 +79,14 @@ public class User {
     public void setRole(UserRole role) { this.role = role; }
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    /** Returns the release-facing gender labels even for legacy rows using the old short values. */
+    public String getGender() { return standardizeGender(gender); }
+    public void setGender(String gender) { this.gender = standardizeGender(gender); }
+    private static String standardizeGender(String value) {
+        if ("男".equals(value)) return "男性";
+        if ("女".equals(value)) return "女性";
+        return value;
+    }
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
     public Integer getExperienceYears() { return experienceYears; }

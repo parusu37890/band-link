@@ -24,10 +24,12 @@ PowerShellの場合は`$env:DB_PASSWORD = "<postgresのパスワード>"`。Mave
 
 ## テストデータ準備
 
-デモ表示用のユーザー4名・募集40件を追加するSQLを `scripts/dev/seed-demo-posts.sql` に置いている。これはローカルDB専用で、`demo01@bandlink.local`〜`demo04@bandlink.local` を識別子にしている。パスワードは4ユーザー共通で `password`。実行手順はDB接続情報を設定したPowerShellから次の通り（2026-09-06実行確認済み）。
+デモ表示用のユーザー4名・募集40件を追加するSQLを `scripts/dev/seed-demo-posts.sql` に置いている。これはローカルDB専用で、`demo01@bandlink.local`〜`demo04@bandlink.local` を識別子にしている。パスワードは4ユーザー共通で `password`。デモ01・02は`last_seen_at`を5分以内に設定し、募集一覧で「オンライン中」を確認できるようにしている。SQL先頭で`UTF8`を明示しているため、Windows PowerShellのSJISロケールでも日本語データをそのまま投入できる。実行手順はDB接続情報を設定したPowerShellから次の通り（2026-09-06実行確認済み）。
 
 ```
-$env:PGPASSWORD = "<postgresのパスワード>"
+$env:DB_PASSWORD = "<postgresのパスワード>"
+$env:PGPASSWORD = $env:DB_PASSWORD
+$env:PGCLIENTENCODING = "UTF8"
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h localhost -U postgres -d band_link -f scripts/dev/seed-demo-posts.sql
 ```
 
@@ -213,3 +215,13 @@ Playwright MCPのサーバーはこの実行環境に公開されていないた
 `PostServiceTest`を含むJUnit 37件が成功した。`community.js`と`recruitment-search.js`の`node --check`、`git diff --check`も成功。8080の最新ビルドで、ログイン順セレクター、活動区分の表示、検索欄のフォーカス、プロフィール背景をブラウザ確認した。画像ファイルを選択して本文なしのメッセージを送信し、会話へ「メッセージ画像」が表示されることまで確認した。画像アップロードAPIは`text/plain`を明示し、JSONとして誤解析されないようAcceptヘッダーを合わせている。
 
 Playwright MCP、8081、Safari、実機、スクリーンリーダー、第三者アカウントでの画像403、実LINE OAuth、Elasticsearch/Kibanaは引き続き未検証である。
+
+## 全組み合わせ業務JUnit（2026-09-14）
+
+`full-case-inventory.csv` のAPI・入力・サービス・認可・保存処理14,227ケースを、ケースIDごとのJUnit DynamicTestとして実行する。ローカルで次のコマンドを実行し、14,227件すべて成功することを確認済み。
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test/run-full-business-matrix-junit.ps1
+```
+
+実行器はJDK 25を優先し、`BANDLINK_TEST_JAVA_HOME`、既知のJDK 25、`JAVA_HOME`、既知のJDK 26の順に利用可能なJDKを選ぶ。別のJDKを使う場合は `BANDLINK_TEST_JAVA_HOME` にJDKのルートを設定する。ケース別結果は `docs/test-results/api-case-adapters/full-business-matrix-results.csv`、集計と範囲は `docs/test-results/full-business-matrix-junit.md` に保存する。

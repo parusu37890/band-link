@@ -82,7 +82,10 @@ public class PostController {
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
         List<PostResponse> all = postService.searchFor(viewerId(authentication), criteria, sort).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
         int offset = 0;
-        if (cursor != null && cursor.matches("[0-9]+")) offset = Math.min(Integer.parseInt(cursor), all.size());
+        if (cursor != null && cursor.matches("[0-9]+")) {
+            try { offset = Math.min(Math.max(0, Integer.parseInt(cursor)), all.size()); }
+            catch (NumberFormatException ignored) { offset = all.size(); }
+        }
         int end = Math.min(offset + limit, all.size());
         boolean hasNext = end < all.size();
         return new PostPageResponse(all.subList(offset,end), hasNext ? String.valueOf(end) : null, hasNext);

@@ -120,7 +120,7 @@ public class PostService {
         Specification<Post> spec = (root, query, cb) -> cb.and(cb.equal(root.get("status"), PostStatus.OPEN), cb.equal(root.get("user").get("status"), UserStatus.ACTIVE));
         if (criteria != null && criteria.keyword() != null && !criteria.keyword().isBlank()) {
             String keyword = "%" + criteria.keyword().trim().toLowerCase(java.util.Locale.ROOT) + "%";
-            spec = spec.and((root, query, cb) -> cb.or(cb.like(cb.lower(root.get("title")), keyword), cb.like(cb.lower(root.get("content")), keyword)));
+            spec = spec.and((root, query, cb) -> cb.or(cb.like(cb.lower(root.get("title")), keyword), cb.like(cb.lower(root.get("content")), keyword), cb.like(cb.lower(root.get("areaSub")), keyword)));
         }
         if (criteria != null && criteria.activityFrequencies() != null && !criteria.activityFrequencies().isEmpty())
             spec = spec.and((root, query, cb) -> root.get("activityFrequency").in(criteria.activityFrequencies()));
@@ -170,7 +170,12 @@ public class PostService {
 
     private User activeVerifiedUser(Long id) { User user = activeUser(id); if (!user.isEmailVerified()) throw new RuleViolationException("メールアドレスの確認が必要です"); return user; }
     private User activeUser(Long id) { User user = userRepository.findById(id).orElseThrow(() -> new RuleViolationException("ユーザーが見つかりません")); if (user.getStatus() != UserStatus.ACTIVE) throw new RuleViolationException("現在この操作は利用できません"); return user; }
-    private Post owned(Long postId, Long userId) { return postRepository.findByIdAndUserId(postId, userId).orElseThrow(() -> new RuleViolationException("投稿が見つかりません")); }
+    private Post owned(Long postId, Long userId) {
+        return postRepository.findByIdAndUserId(postId, userId).orElseGet(() -> {
+            if (postRepository.existsById(postId)) throw new org.springframework.security.access.AccessDeniedException("投稿の所有者ではありません");
+            throw new RuleViolationException("投稿が見つかりません");
+        });
+    }
     private void checkEditLock(User user) { if (user.getLastEditedAt() != null && user.getLastEditedAt().isAfter(now().minusHours(EDIT_LOCK_HOURS))) throw new RuleViolationException("投稿の作成・編集は12時間に1回までです"); }
     private void assign(Post p, java.util.Set<Long> partIds, java.util.Set<Long> genreIds, java.util.Set<Long> stanceIds, java.util.Set<Long> prefectureIds, java.util.Set<AgeRange> ages) {
         p.getParts().clear(); p.getParts().addAll(partRepository.findAllById(partIds)); p.getGenres().clear(); p.getGenres().addAll(genreRepository.findAllById(genreIds));
