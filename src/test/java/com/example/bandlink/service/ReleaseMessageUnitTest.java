@@ -127,11 +127,11 @@ class ReleaseMessageUnitTest {
         assertEquals(old, alreadyRead.getReadAt());
         verifyNoInteractions(notifications);
     }
-    @Test void codeUt016_dtoRejects1001CharactersButAccepts1000() {
+    @Test void codeUt016_dtoRejects501CharactersButAccepts500() {
         try (var factory = Validation.buildDefaultValidatorFactory()) {
             var validator = factory.getValidator();
-            assertTrue(validator.validate(new MessageRequests.Send("あ".repeat(1000), null)).isEmpty());
-            assertFalse(validator.validate(new MessageRequests.Send("あ".repeat(1001), null)).isEmpty());
+            assertTrue(validator.validate(new MessageRequests.Send("あ".repeat(500), null)).isEmpty());
+            assertFalse(validator.validate(new MessageRequests.Send("あ".repeat(501), null)).isEmpty());
             assertFalse(validator.validate(new MessageRequests.Send(null, "x".repeat(1001))).isEmpty());
         }
     }

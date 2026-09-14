@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Set;
 public record ProfileUpdateRequest(@NotBlank @Size(max=80) String username, @NotNull @Pattern(regexp="男性|女性", message="性別は男性または女性から選択してください。") String gender,
-        @Size(max=1000) String bio, @NotNull @Min(0) @Max(120) Integer age,
+        @Size(max=500) String bio, @NotNull @Min(0) @Max(120) Integer age,
         @NotNull @Min(0) @Max(100) Integer experienceYears, @Size(max=1000) String videoUrl,
         @Size(max=1000) String youtubeUrl, @Size(max=1000) String tiktokUrl,
         @Size(max=1000) String soundcloudUrl, @Size(max=1000) String spotifyUrl,
