@@ -154,7 +154,7 @@ FROM (VALUES(1,'MESSAGE',940002,'PENDING'),(2,'POST',920001,'REVIEWED'),
  (3,'USER',910011,'ACTIONED'),(4,'POST',920002,'DISMISSED'))v(n,t,target,status) CROSS JOIN qa_config q;
 INSERT INTO feedback(id,user_id,type,message_text,image_url,created_at)
 SELECT 962000+n,u,t,'QA_RELEASE 合成自由記述'||E'\n'||'二行目',
- CASE WHEN n=1 THEN '/uploads/97000000-0000-4000-8000-000000000009.png' ELSE NULL END,q.anchor-(n||' minutes')::interval
+ CASE WHEN n=1 THEN '/api/admin/feedback/images/97000000-0000-4000-8000-000000000009.png' ELSE NULL END,q.anchor-(n||' minutes')::interval
 FROM(VALUES(1,910004,'CONTACT'),(2,910004,'FEATURE_REQUEST'),(3,910022,'CONTACT'))v(n,u,t) CROSS JOIN qa_config q;
 INSERT INTO email_verification_tokens(id,user_id,token,expires_at,used_at,created_at)
 SELECT 963000+n,910001,'qa-release-verify-'||label,

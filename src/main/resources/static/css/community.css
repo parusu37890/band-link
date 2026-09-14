@@ -16,7 +16,7 @@
 .conversation-item.active { background: var(--raised); box-shadow: inset 3px 0 var(--accent); }
 .chat-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
 .chat-header { display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
-.chat-header h2 { font-size: 16px; } .chat-header a:not(.button) { font-size: 12px; color: var(--accent); }
+.chat-header h2 { font-size: 16px; } .chat-header a:not(.button) { display:inline-flex; align-items:center; min-height:44px; font-size:12px; color:var(--accent); }
 .chat-status { padding: 10px 24px 0; font-size: 12px; } .chat-status:empty { display: none; }
 .chat-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; padding: 28px; }
 /* Short threads sit next to the composer instead of leaving a gap under them.
@@ -32,8 +32,8 @@
 .message.mine > .message-text { background: var(--bubble-bg); color: var(--bubble-ink); border-radius: 4px 0 4px 4px; }
 .message > .message-text:empty { display: none; }
 .message-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
-.message-meta .button { min-height: 36px; padding: 4px; }
-.message-image-button { display: block; max-width: min(280px,100%); margin-top: 8px; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.message-meta .button { min-width:44px; min-height:44px; padding:4px; }
+.message-image-button { display: block; min-width:44px; min-height:44px; max-width: min(280px,100%); margin-top: 8px; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .message-image-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 .message-image { display: block; max-width: 100%; max-height: 280px; object-fit: contain; }
 dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px; }
@@ -69,7 +69,7 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
 .notification-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .notification-meta strong { font-weight: 500; } .notification-meta time { font-size: 12px; color: var(--muted); margin-left: auto; }
 .notification-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 13px; }
-.notification-actions a { color: var(--accent); } .notification-copy > p { overflow-wrap: anywhere; }
+.notification-actions a { display:inline-flex; align-items:center; min-height:44px; color:var(--accent); } .notification-copy > p { overflow-wrap: anywhere; }
 .block-list { border-top: 1px solid var(--line); } .block-item { display: flex; gap: 16px; padding: 24px 0; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
 .block-item .stack { gap: 4px; flex: 1; } .block-item .muted { font-size: 12px; }
 .admin-layout { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 40px; }
@@ -81,6 +81,7 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
 .feedback-card { display: grid; gap: 16px; background: var(--bg); }
 .feedback-card .row { align-items: baseline; }
 .feedback-image { display: block; width: min(360px, 100%); max-height: 260px; object-fit: contain; border: 1px solid var(--line); }
+.feedback-image-button { display: inline-flex; min-width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; }
 @media (max-width: 1000px) { .chat-shell { grid-template-columns: 230px minmax(0,1fr); }.admin-layout { grid-template-columns: 1fr; }.admin-tools { border-left: 0; border-top: 1px solid var(--line); padding-inline: 0; } }
 @media (max-width: 640px) {
   .chat-shell { grid-template-columns: 1fr; height: calc(100dvh - 250px); min-height: 360px; max-height: none; }

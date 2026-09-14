@@ -1,11 +1,11 @@
 /* Shared controls are flat, square and kept quieter than the content. */
 .site-header { border-bottom: 1px solid var(--line); background: var(--bg); }
 .header-inner { min-height: 84px; display: flex; align-items: center; gap: 56px; }
-.wordmark { display: inline-flex; align-items: center; gap: 10px; font-size: 25px; font-weight: 750; line-height: 1; letter-spacing: -1.3px; white-space: nowrap; }
+.wordmark { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 25px; font-weight: 750; line-height: 1; letter-spacing: -1.3px; white-space: nowrap; }
 .brand-mark { display: block; width: 30px; height: 30px; }
 .wordmark span { font-size: 26px; font-weight: 400; }
 .main-nav { display: flex; align-self: stretch; flex-wrap: wrap; gap: 28px; }
-.main-nav a { display: flex; align-items: center; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
+.main-nav a { display: flex; align-items: center; min-height:44px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
 .main-nav a.active { border-color: var(--accent); color: var(--ink); }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .header-profile { max-width: 160px; overflow: hidden; white-space: nowrap !important; text-overflow: ellipsis; }
@@ -89,18 +89,18 @@ dialog { color: var(--ink); background: var(--surface); border: 1px solid var(--
 dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; } dialog p { color: var(--muted); font-size: 14px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
 .site-footer { border-top: 1px solid var(--line); display: flex; align-items: center; gap: 24px; padding-block: 28px; color: var(--muted); font-size: 12px; }
-.site-footer .wordmark { font-size: 20px; color: var(--ink); } .site-footer p { flex: 1; } .copyright { font: 11px var(--mono); }
+.site-footer .wordmark { font-size: 20px; color: var(--ink); } .site-footer > a { display:inline-flex; align-items:center; min-width:44px; min-height:44px; padding:8px 4px; } .site-footer p { flex: 1; } .copyright { font: 11px var(--mono); }
 .mobile-only { display: none; }
 .password-field { position: relative; }
 .password-field .input { padding-right: 52px; }
-.password-toggle { position: absolute; right: 6px; top: 5px; width: 40px; height: 38px; border: 0; background: transparent; color: var(--muted); }
+.password-toggle { position: absolute; right: 4px; top: 2px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); }
 .password-toggle:hover { color: var(--ink); background: var(--raised); }
 @media (max-width: 900px) { .header-inner { gap: 24px; } .main-nav { gap: 16px; } .header-actions { gap: 8px; } }
 @media (max-width: 640px) {
   .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 12px; padding-top: 10px; }
   .wordmark { font-size: 22px; } .brand-mark { width: 24px; height: 24px; }
   .header-actions { gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
-  .header-profile { max-width: 98px; } .header-actions .icon-button { width: 40px; }
+  .header-profile { max-width: 98px; } .header-actions .icon-button { width: 44px; }
   .main-nav { order: 3; width: 100%; margin-top: 4px; gap: 4px 20px; }
   .main-nav a { min-height: 40px; }
   .main-nav a { min-height: 44px; font-size: 13px; }

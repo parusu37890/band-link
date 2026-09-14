@@ -27,6 +27,9 @@ for ($index = 1; $index -le 9; $index++) {
 $privateTarget = Join-Path $target 'messages'
 New-Item -ItemType Directory -Path $privateTarget | Out-Null
 [IO.File]::WriteAllBytes((Join-Path $privateTarget '97000000-0000-4000-8000-000000000007.png'), $png)
+$feedbackTarget = Join-Path $target 'feedback'
+New-Item -ItemType Directory -Path $feedbackTarget | Out-Null
+[IO.File]::WriteAllBytes((Join-Path $feedbackTarget '97000000-0000-4000-8000-000000000009.png'), $png)
 [IO.File]::WriteAllBytes((Join-Path $target 'qa-valid.png'), $png)
 [IO.File]::WriteAllBytes((Join-Path $target 'qa-valid.jpg'), $jpeg)
 [IO.File]::WriteAllBytes((Join-Path $target 'qa-valid.webp'), $webp)

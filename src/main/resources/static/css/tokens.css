@@ -27,7 +27,7 @@
   --online: #8db600;         /* 黄緑のオンライン表示 */
   /* 募集と参加希望 are intent categories, separated from the green accent: blue/orange. */
   --mark-wanted: #2864c7;    /* white on it is 5.72:1 */
-  --mark-join: #c15b2d;      /* white on it is 4.68:1 */
+  --mark-join: #a94821;      /* --bg on it is 5.61:1 at the small single-character mark */
   --success-bg: #edf3ea;     /* --success on it is 5.51:1 */
   --notice-bg: #eaf0f6;
   --notice-line: #4a6f96;

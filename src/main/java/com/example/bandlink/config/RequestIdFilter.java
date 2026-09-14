@@ -12,6 +12,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Component;
  * search keywords that belong to the person searching.
  */
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestIdFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger("com.example.bandlink.access");
 
@@ -36,7 +39,7 @@ public class RequestIdFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
         String id = request.getHeader("X-Request-Id");
-        if (id == null || id.isBlank()) id = UUID.randomUUID().toString();
+        if (!validRequestId(id)) id = UUID.randomUUID().toString();
         long startedAt = System.nanoTime();
         MDC.put("request_id", id);
         response.setHeader("X-Request-Id", id);
@@ -51,5 +54,10 @@ public class RequestIdFilter implements Filter {
             log.info("request completed");
             MDC.clear();
         }
+    }
+
+    private boolean validRequestId(String value) {
+        return value != null && value.length() <= 64
+                && value.matches("[A-Za-z0-9][A-Za-z0-9._-]*");
     }
 }

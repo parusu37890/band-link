@@ -555,7 +555,12 @@ async function adminPage() {
     try {
       const items = await api('/api/admin/feedback');
       feedbackContainer.setAttribute('aria-busy', 'false');
-      feedbackContainer.innerHTML = items.length ? items.map(item => `<article class="feedback-card panel"><div class="row spread"><strong>${item.type === 'FEATURE_REQUEST' ? '機能要望' : 'お問い合わせ'}</strong><span class="hint">${h(item.username)} · ${h(time(item.createdAt))}</span></div><p class="message-text">${h(item.message)}</p>${item.imageUrl && /^\/uploads\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(item.imageUrl) ? `<a href="${h(item.imageUrl)}" target="_blank" rel="noopener"><img class="feedback-image" src="${h(item.imageUrl)}" alt="添付画像"></a>` : ''}</article>`).join('') : empty('受信した内容はありません。');
+      feedbackContainer.innerHTML = items.length ? items.map(item => `<article class="feedback-card panel"><div class="row spread"><strong>${item.type === 'FEATURE_REQUEST' ? '機能要望' : 'お問い合わせ'}</strong><span class="hint">${h(item.username)} · ${h(time(item.createdAt))}</span></div><p class="message-text">${h(item.message)}</p>${item.imageUrl && /^\/api\/admin\/feedback\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(item.imageUrl) ? `<button type="button" class="feedback-image-button" data-feedback-image="${h(item.imageUrl)}" aria-label="添付画像を拡大表示"><img class="feedback-image" src="${h(item.imageUrl)}" alt="添付画像"></button>` : ''}</article>`).join('') : empty('受信した内容はありません。');
+      feedbackContainer.querySelectorAll('[data-feedback-image]').forEach(element => element.addEventListener('click', () => {
+        const dialog = document.querySelector('#dialog');
+        dialog.innerHTML = `<form method="dialog" class="image-dialog"><button type="submit" class="button secondary small">閉じる</button><img src="${h(element.dataset.feedbackImage)}" alt="お問い合わせの添付画像（拡大表示）"></form>`;
+        dialog.showModal();
+      }));
     } catch (error) {
       feedbackContainer.setAttribute('aria-busy', 'false');
       feedbackContainer.innerHTML = retryMarkup('お問い合わせを読み込めませんでした。');

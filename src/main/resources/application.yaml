@@ -55,6 +55,14 @@ server:
         secure: ${SESSION_COOKIE_SECURE:false}
 
 app:
+  security:
+    # SEC-013: caps POST attempts per remote address+endpoint across the anonymous auth surface
+    # (login/verify/reset), independent of LoginAttemptService's per-email lockout in AuthService -
+    # this stops a single IP hammering many different accounts, which a per-email counter alone
+    # would not catch.
+    auth-rate-limit:
+      max-requests: ${AUTH_RATE_LIMIT_MAX_REQUESTS:20}
+      window-seconds: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
   # 認証・復旧メールの差出人と、本文に載せる画面のURL（requirements 7章）。
   # mail-from が空、または spring.mail.host が空のあいだは送信しない。
   mail-from: ${MAIL_FROM:}
