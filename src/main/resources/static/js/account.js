@@ -1,4 +1,4 @@
-import {mediaHref,mediaEmbed} from './media-embed.js';
+import {mediaHref,mediaEmbed,mediaProvider} from './media-embed.js';
 import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice} from './ui.js';
 
 const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
@@ -14,7 +14,7 @@ const factRows = p => [
   ['経験年数', p.experienceYears == null ? '' : p.experienceYears + '年'],
   ['年齢', p.ageRange || ''],
   ['性別', p.gender || ''],
-  ['最近の活動', p.activity || '']
+  ['最近の活動', p.online ? 'オンライン中' : (p.activity || '')]
 ].filter(([, value]) => value);
 const facts = p => {
   const rows = factRows(p);
@@ -118,8 +118,11 @@ async function profilePage(id){
   try {
     const p=await api('/api/users/'+Number(id));
     const own=state.user&&String(state.user.id)===String(p.id);
-    const mediaItems=[['YouTube',p.youtubeUrl],['TikTok',p.tiktokUrl],['SoundCloud',p.soundcloudUrl],['Spotify',p.spotifyUrl],['Apple Music',p.appleMusicUrl],['その他',p.videoUrl]].filter(([,url])=>mediaHref(url));
-    const mediaMarkup=mediaItems.length?`<section class="detail-section profile-video"><h2>演奏動画・音源</h2><div class="profile-media-list">${mediaItems.map(([label,url])=>{const embed=mediaEmbed(url);return `<article class="profile-media-item"><h3>${h(label)}</h3>${embed?`<iframe class="media-frame" style="${embed.ratio?`aspect-ratio:${embed.ratio}`:`height:${Number(embed.height)}px`}${embed.width?`;max-width:${Number(embed.width)}px`:''}" src="${h(embed.src)}" title="${h(p.username)}の${h(label)}" loading="lazy" allow="encrypted-media; fullscreen; clipboard-write" allowfullscreen></iframe>`:''}<a class="row media-link" href="${h(mediaHref(url))}" target="_blank" rel="noopener noreferrer">${icon('external')}${h(label)}で開く</a></article>`}).join('')}</div></section>`:'';
+    const mediaItems=[p.youtubeUrl,p.tiktokUrl,p.soundcloudUrl,p.spotifyUrl,p.appleMusicUrl,p.videoUrl].filter(url=>mediaHref(url));
+    // The label shown is always the service the URL's own host resolves to (never the name of the
+    // field it happened to be typed into): pasting a non-Spotify link into "Spotify URL" must not
+    // render as a trusted-looking "Spotifyで開く" link to somewhere else.
+    const mediaMarkup=mediaItems.length?`<section class="detail-section profile-video"><h2>演奏動画・音源</h2><div class="profile-media-list">${mediaItems.map(url=>{const label=mediaProvider(url)||'リンク';const embed=mediaEmbed(url);return `<article class="profile-media-item"><h3>${h(label)}</h3>${embed?`<iframe class="media-frame" style="${embed.ratio?`aspect-ratio:${embed.ratio}`:`height:${Number(embed.height)}px`}${embed.width?`;max-width:${Number(embed.width)}px`:''}" src="${h(embed.src)}" title="${h(p.username)}の${h(label)}" loading="lazy" allow="encrypted-media; fullscreen; clipboard-write" allowfullscreen></iframe>`:''}<a class="row media-link" href="${h(mediaHref(url))}" target="_blank" rel="noopener noreferrer">${icon('external')}${h(label)}で開く</a></article>`}).join('')}</div></section>`:'';
     const contact=own?button('プロフィールを編集','/settings/profile','secondary'):button('メッセージを送る',state.user?'/messages?to='+p.id:'/login?next='+encodeURIComponent('/messages?to='+p.id));
     showPage(`<div class="page profile-page">
       <a class="back-link" href="/posts">${icon('back')}募集一覧へ</a>
@@ -206,6 +209,7 @@ async function profileEdit(){
   imageInput.addEventListener('change',()=>{
     const image=imageInput.files?.[0];
     if(!image){resetSelection();return;}
+    if(!image.size){resetSelection();fileName.textContent='このファイルは空です。別の画像を選んでください。';return;}
     if(image.size>5*1024*1024||!['image/jpeg','image/png','image/webp'].includes(image.type)){resetSelection();fileName.textContent='5MB以下のJPEG・PNG・WebP画像を選んでください。';return;}
     releasePreview();previewUrl=URL.createObjectURL(image);
     preview.innerHTML=`<span class="avatar large"><img src="${h(previewUrl)}" alt="保存するプロフィール画像のプレビュー"></span>`;

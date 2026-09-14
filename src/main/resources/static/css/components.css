@@ -62,6 +62,11 @@
 .input, input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not(.search-input), select, textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--control-line); border-radius: var(--radius); color: var(--ink); background: var(--field); }
 .input:focus, input:focus, select:focus, textarea:focus { border-color: var(--focus); }
 input::placeholder, textarea::placeholder { color: var(--placeholder); }
+/* Age/experience-style fields are free numeric entry, not a stepper: no native up/down arrows
+   anywhere they appear (registration, profile settings, admin tools), on any browser engine. */
+input[type=number] { appearance: textfield; -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 textarea { min-height: 150px; resize: vertical; line-height: 1.85; }
 input[type=file] { font-size: 14px; }
 input[type=file]::file-selector-button { background: var(--raised); color: var(--ink); border: 1px solid var(--line); padding: 8px 12px; margin-right: 12px; }

@@ -64,9 +64,6 @@
 .register-page .auth-panel { border-top: 0; }
 .register-page :is(input, select, textarea):focus,
 .register-page :is(input, select, textarea):focus-visible { border-color: var(--control-line); outline: 0; box-shadow: none; }
-.register-page input[type=number] { appearance: textfield; -moz-appearance: textfield; }
-.register-page input[type=number]::-webkit-inner-spin-button,
-.register-page input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .register-page .form-section + .registration-choice,
 .register-page .registration-choice + .registration-choice { border-top: 0; padding-top: 0; }
 .register-page .registration-choice .chip-select span { border-color: transparent; background: transparent; padding-inline: 0; }
