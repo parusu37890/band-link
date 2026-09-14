@@ -81,14 +81,22 @@ public class PostController {
         if (limit < 1 || limit > 50) limit = 12;
         PostSearchCriteria criteria = new PostSearchCriteria(keyword, prefectureIds, partIds, genreIds, stanceIds, ageRanges, activityFrequency);
         List<PostResponse> all = postService.searchFor(viewerId(authentication), criteria, sort).stream().filter(p -> type == null || p.getType().name().equals(type.name())).map(PostResponse::from).toList();
-        int offset = 0;
-        if (cursor != null && cursor.matches("[0-9]+")) {
-            try { offset = Math.min(Math.max(0, Integer.parseInt(cursor)), all.size()); }
-            catch (NumberFormatException ignored) { offset = all.size(); }
-        }
+        int offset = resolveCursorOffset(cursor, all.size());
         int end = Math.min(offset + limit, all.size());
         boolean hasNext = end < all.size();
         return new PostPageResponse(all.subList(offset,end), hasNext ? String.valueOf(end) : null, hasNext);
+    }
+
+    /**
+     * Resolves the "/page" cursor into a list offset. Extracted as a pure function (no DB access)
+     * so the release case matrix can exercise the huge-cursor/invalid-cursor scenarios directly:
+     * a cursor that isn't all digits is treated as "start from the top" rather than an error, and
+     * a cursor too large to parse as an int is clamped to the end of the list rather than throwing.
+     */
+    public static int resolveCursorOffset(String cursor, int total) {
+        if (cursor == null || !cursor.matches("[0-9]+")) return 0;
+        try { return Math.min(Math.max(0, Integer.parseInt(cursor)), total); }
+        catch (NumberFormatException ignored) { return total; }
     }
 
     @GetMapping("/{id}")

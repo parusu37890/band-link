@@ -3,19 +3,25 @@ package com.example.bandlink.matrix;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.example.bandlink.controller.PostController;
+import com.example.bandlink.service.ImageStorageService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +32,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestFactory;
+import org.springframework.mock.web.MockMultipartFile;
 
 /**
  * Executes one JUnit dynamic test for every API/unit/integration row in the
@@ -45,6 +52,9 @@ class ReleaseCaseMatrixJUnitTest {
             "Authentication", "Profile", "Recruitment-post", "Search",
             "Direct-message", "Image-storage", "Report-admin", "Feedback", "Security");
     private static final Set<String> PRIORITIES = Set.of("P0", "P1", "P2", "P3");
+    // Both features here have a case in runDtoContract that asserts against the real production
+    // code (Bean Validation for Profile, ImageStorageService for Image-storage) for every one of
+    // their InputState values -- that is what earns the UNIT_CONTRACT label below.
     private static final Set<String> UNIT_ADAPTERS = Set.of("Profile", "Image-storage");
     private static final Path RESULTS = Paths.get("target", "release-case-matrix-results.csv");
 
@@ -96,10 +106,125 @@ class ReleaseCaseMatrixJUnitTest {
             case "Authentication" -> validateAuthentication(row.inputState());
             case "Profile" -> validateProfile(row.inputState());
             case "Recruitment-post" -> validatePost(row.inputState());
+            case "Search" -> validateSearch(row.inputState());
             case "Direct-message" -> validateMessage(row.inputState());
+            case "Image-storage" -> validateImageStorage(row.inputState());
+            case "Report-admin" -> validateReportAdmin(row.inputState());
             case "Feedback" -> validateFeedback(row.inputState());
-            default -> { /* Security/search/image authorization require live adapters. */ }
+            // Every Security InputState (CSRF token presence, session identity, IDOR, enum/number
+            // fuzzing) is only observable through a live Spring MVC filter chain and HTTP response;
+            // there is no DTO or pure-Java logic in this codebase that distinguishes them standalone.
+            default -> { /* Security requires live adapters. */ }
         }
+    }
+
+    /**
+     * Search's InputStates are mostly keyword-match/no-match scenarios resolved by a JPA
+     * Specification query (search/no-hit/title-hit/body-hit/area-hit/max-length): genuinely
+     * DB-only, so they stay unexercised here. The cursor states are different -- PostController
+     * resolves the "/page" cursor with a pure function (no DB) precisely so that a malformed or
+     * oversized cursor can't 500; that function is asserted directly below.
+     */
+    private static void validateSearch(String state) {
+        switch (state) {
+            case "huge-cursor" -> assertTrue(PostController.resolveCursorOffset("99999999999999999999", 37) == 37,
+                    "a cursor too large to parse as int must clamp to the end of the page, not throw");
+            case "invalid-cursor" -> assertTrue(PostController.resolveCursorOffset("not-a-number", 37) == 0,
+                    "a non-numeric cursor must be ignored (offset 0), not treated as an error");
+            default -> { /* empty-keyword/title-hit/body-hit/area-hit/no-hit/max-length: DB query only. */ }
+        }
+    }
+
+    private static void validateReportAdmin(String state) {
+        Object request = switch (state) {
+            case "post" -> reportRequest("POST", 1L, "迷惑行為の報告です");
+            case "user" -> reportRequest("USER", 1L, "迷惑行為の報告です");
+            case "dm" -> reportRequest("MESSAGE", 1L, "迷惑行為の報告です");
+            case "empty-reason" -> reportRequest("POST", 1L, "");
+            case "reason-boundary" -> reportRequest("POST", 1L, "理".repeat(1000));
+            // unknown-id: a nonexistent targetId is still a syntactically valid request -- whether
+            // the target actually exists is a repository lookup in ReportService, not a DTO rule.
+            default -> reportRequest("POST", 999999999L, "存在しない対象の報告です");
+        };
+        boolean valid = VALIDATOR.validate(request).isEmpty();
+        assertTrue(valid == !state.equals("empty-reason"),
+                "report DTO state=" + state + " violations=" + VALIDATOR.validate(request));
+    }
+
+    private static Object reportRequest(String targetType, long targetId, String reason) {
+        return newRecord("com.example.bandlink.dto.ReportRequest",
+                enumValue("com.example.bandlink.entity.ReportTargetType", targetType), targetId, reason);
+    }
+
+    private static final Path IMAGE_ROOT = createImageRoot();
+    private static final ImageStorageService IMAGE_STORAGE = isolatedImageStorage(IMAGE_ROOT);
+    private static final byte[] PNG_BYTES = Base64.getDecoder().decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=");
+
+    /**
+     * Exercises the real ImageStorageService (magic-byte/IEND validation, MIME inference, size
+     * limit, path-traversal guard) against an isolated temp directory -- the same technique
+     * ReleaseImageUnitTest uses -- so every Image-storage InputState gets a real assertion instead
+     * of the generic row contract.
+     */
+    private static void validateImageStorage(String state) {
+        switch (state) {
+            case "jpeg" -> acceptImage(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}, "photo.jpg", "image/jpeg", ".jpg");
+            case "png" -> acceptImage(PNG_BYTES, "photo.png", "image/png", ".png");
+            case "webp" -> acceptImage(new byte[]{'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'}, "photo.webp", "image/webp", ".webp");
+            case "exact-5mb" -> acceptImage(padded(PNG_BYTES, 5 * 1024 * 1024), "boundary.png", "image/png", ".png");
+            case "empty" -> rejectImage(new byte[0], "empty.png", "image/png");
+            case "over-5mb" -> rejectImage(padded(PNG_BYTES, 5 * 1024 * 1024 + 1), "over.png", "image/png");
+            case "fake-mime" -> rejectImage("<svg onload=alert(1)/>".getBytes(StandardCharsets.UTF_8), "fake.png", "image/png");
+            case "double-extension" -> rejectImage(PNG_BYTES, "invoice.png.exe", null);
+            case "truncated" -> rejectImage(new byte[]{(byte) 137, 80, 78, 71, 13, 10, 26, 10}, "broken.png", "image/png");
+            case "path-traversal" -> assertPathTraversalRejected();
+            default -> { }
+        }
+    }
+
+    private static byte[] padded(byte[] base, int size) {
+        byte[] out = new byte[size];
+        System.arraycopy(base, 0, out, 0, base.length);
+        return out;
+    }
+
+    private static void acceptImage(byte[] data, String filename, String contentType, String expectedExtension) {
+        MockMultipartFile file = new MockMultipartFile("file", filename, contentType, data);
+        String url = IMAGE_STORAGE.store(file);
+        try {
+            assertTrue(url.endsWith(expectedExtension), "image-storage accepted file lost its expected extension: " + url);
+        } finally {
+            IMAGE_STORAGE.delete(url);
+        }
+    }
+
+    private static void rejectImage(byte[] data, String filename, String contentType) {
+        MockMultipartFile file = new MockMultipartFile("file", filename, contentType, data);
+        assertThrows(IllegalArgumentException.class, () -> IMAGE_STORAGE.store(file));
+    }
+
+    private static void assertPathTraversalRejected() {
+        for (String name : new String[]{"../private.png", "..\\private.png", "/etc/passwd.png"}) {
+            assertThrows(IllegalArgumentException.class, () -> IMAGE_STORAGE.load(name));
+        }
+    }
+
+    private static Path createImageRoot() {
+        try { return Files.createTempDirectory("release-case-matrix-images"); }
+        catch (IOException ex) { throw new UncheckedIOException(ex); }
+    }
+
+    private static ImageStorageService isolatedImageStorage(Path root) {
+        ImageStorageService service = new ImageStorageService();
+        try {
+            Field field = ImageStorageService.class.getDeclaredField("root");
+            field.setAccessible(true);
+            field.set(service, root);
+        } catch (ReflectiveOperationException ex) {
+            throw new AssertionError("Cannot isolate ImageStorageService root", ex);
+        }
+        return service;
     }
 
     private static void validateAuthentication(String state) {
