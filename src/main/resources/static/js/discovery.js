@@ -1,5 +1,5 @@
 import {postEditor} from './post-editor.js';
-import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,report,confirmAction,time,relativeTime,ages,frequencyLabel,chips,requireUser,verificationNotice} from './ui.js';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,report,confirmAction,time,relativeTime,ages,frequencyLabel,chips,requireUser,verificationNotice,openImageViewer} from './ui.js';
 import {listing,readListing,writeListing} from './recruitment-search.js';
 const labelNames = values => (values||[]).map(x=>x.name).join('・');
 export function postCard(post) {
@@ -25,7 +25,7 @@ async function detail(id){
  const own=String(state.user?.id)===String(p.userId),joining=p.type==='WANTS_TO_JOIN';
  let author={username:p.username};try{author=await api('/api/users/'+p.userId);}catch{/* Public post remains readable if profile lookup fails. */}
  const area=labelNames(p.prefectures),ageText=(p.ageRanges||[]).map(x=>ages.find(a=>a[0]===x)?.[1]||x).join('・');
- const gallery=images.length?`<section class="detail-section"><h2>募集の写真</h2><div class="post-image-grid">${images.map((image,index)=>image.imageUrl&&/^\/uploads\/[A-Za-z0-9/_.-]+$/.test(image.imageUrl)?`<a href="${h(image.imageUrl)}" target="_blank" rel="noopener" aria-label="${index+1}枚目の募集画像を大きく表示（新しいタブ）"><img src="${h(image.imageUrl)}" alt="募集画像 ${index+1}枚目" loading="lazy"></a>`:'').join('')}</div></section>`:'';
+ const gallery=images.length?`<section class="detail-section"><h2>募集の写真</h2><div class="post-image-grid">${images.map((image,index)=>image.imageUrl&&/^\/uploads\/[A-Za-z0-9/_.-]+$/.test(image.imageUrl)?`<button type="button" class="post-image-button" data-expand-image="${h(image.imageUrl)}" aria-label="${index+1}枚目の募集画像を拡大表示"><img src="${h(image.imageUrl)}" alt="募集画像 ${index+1}枚目" loading="lazy"></button>`:'').join('')}</div></section>`:'';
  showPage(`<div class="page post-detail-page"><a class="back-link" href="${h(backUrl)}">${icon('back')}募集一覧へ</a><div class="detail-layout"><article class="detail-article">
   <div class="detail-topline"><span class="post-type ${joining?'join':''}">${joining?'参加希望':'メンバー募集'}</span><span>投稿 ${h(relativeTime(p.createdAt))}</span>${p.status==='CLOSED'?'<strong>募集終了</strong>':''}</div>
   <h1 class="detail-title">${h(p.title)}</h1>
@@ -36,6 +36,7 @@ async function detail(id){
   <footer class="detail-record"><p>投稿日 ${h(time(p.createdAt))}${p.expiresAt?' / 掲載期限 '+h(time(p.expiresAt)):''}</p>${state.user&&!own?'<button class="button quiet small" id="report-post">この募集を通報</button>':''}</footer>
  </article><aside class="sidebar author-contact"><h2>投稿者</h2><a class="detail-person" href="/users/${p.userId}">${avatar(author,true)}<span><strong>${h(p.username)}</strong>${p.authorActivity?`<small>${h(p.authorActivity)}</small>`:''}</span></a>${author.bio?`<p class="author-excerpt">${h(author.bio)}</p>`:''}<a class="read-post" href="/users/${p.userId}">プロフィールを読む ${icon('arrow')}</a><div class="author-message">${own?button('自分の募集を管理','/my/posts'):button('メッセージを送る',state.user?'/messages?to='+p.userId:'/login?next='+encodeURIComponent('/messages?to='+p.userId))}${own?'<p>編集・終了・再公開は自分の募集から行えます。</p>':''}</div></aside></div></div>`,p.title);
  main.querySelector('.back-link').onclick=()=>{if(previous)writeListing({...previous,restore:true});};main.querySelector('#report-post')?.addEventListener('click',()=>report('POST',id));
+ main.querySelectorAll('[data-expand-image]').forEach(btn=>btn.addEventListener('click',()=>openImageViewer(btn.dataset.expandImage,btn.getAttribute('aria-label'))));
 }
 async function ownPosts(){
  const posts=await api('/api/posts/mine');showPage(`<div class="page own-posts-page"><div class="page-heading"><div><h1>自分の募集</h1><p>公開中の募集と、これまでの募集を管理します。</p></div>${button('新しい募集を作成','/posts/new')}</div><div class="stack">${verificationNotice()}${posts.length?posts.map(p=>`<article class="panel"><div class="row spread"><span class="badge">${p.status==='OPEN'?'公開中':'募集終了'}</span><span class="hint">掲載期限 ${h(time(p.expiresAt))}</span></div><h2 style="margin:20px 0">${h(p.title)}</h2><div class="row">${button('詳細を見る','/posts/'+p.id,'secondary')}${p.status==='OPEN'?`${button('編集する','/posts/'+p.id+'/edit','secondary')}<button class="button quiet" data-close="${p.id}">募集を終了</button>`:['MANUAL','EXPIRED'].includes(p.closedReason)?`<button class="button primary" data-reopen="${p.id}">再公開する</button>`:'<span class="hint">この募集は再公開できません。</span>'}</div></article>`).join(''):empty('募集を作成してみましょう','あなたの音楽の好みや活動条件を伝えると、仲間が見つけやすくなります。',button('募集を作成する','/posts/new'))}</div><p class="hint" style="margin-top:24px">同時に公開できる募集は1件です。新規投稿・編集後の12時間は、新規投稿・編集ができません。終了・再公開はいつでも操作できます。</p></div>`,'自分の募集');

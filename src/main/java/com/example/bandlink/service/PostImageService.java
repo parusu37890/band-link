@@ -10,7 +10,9 @@ import com.example.bandlink.repository.UserRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,9 +73,13 @@ public class PostImageService {
         return images.findByPostIdOrderBySortOrderAsc(postId);
     }
     private User owner(Long postId, Long userId) { Post p=posts.findByIdAndUserId(postId,userId).orElseThrow(()->new PostService.RuleViolationException("投稿が見つかりません")); if(p.getStatus()!=PostStatus.OPEN)throw new PostService.RuleViolationException("公開中の投稿のみ画像を変更できます"); return users.findById(userId).orElseThrow(); }
+    private static final DateTimeFormatter EDIT_LOCK_UNTIL_FORMAT = DateTimeFormatter.ofPattern("M月d日 H:mm", Locale.JAPAN);
     private void editAllowed(User u, Post p){
-        if (u.getLastEditedAt() != null && u.getLastEditedAt().isAfter(now().minusHours(12)) && !sameWriteWindow(u, p))
-            throw new PostService.RuleViolationException("投稿の作成・編集は12時間に1回までです");
+        if (u.getLastEditedAt() == null || sameWriteWindow(u, p)) return;
+        LocalDateTime availableAt = u.getLastEditedAt().plusHours(12);
+        if (availableAt.isAfter(now()))
+            throw new PostService.RuleViolationException("投稿の作成・編集は12時間に1回までです。次に編集できるのは"
+                    + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
     }
     private boolean sameWriteWindow(User u, Post p) {
         LocalDateTime reference = p.getUpdatedAt() == null ? p.getCreatedAt() : p.getUpdatedAt();

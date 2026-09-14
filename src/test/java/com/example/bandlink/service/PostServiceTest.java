@@ -38,6 +38,28 @@ class PostServiceTest {
         assertThrows(PostService.RuleViolationException.class, () -> service.create(1L, request));
     }
 
+    /**
+     * Regression for ST-023: the 12-hour edit-lock message used to only say "投稿の作成・編集は
+     * 12時間に1回までです" with no indication of when the person could try again, even though the
+     * exact moment (lastEditedAt + 12h) was already known server-side. Now it must name that moment.
+     */
+    @Test
+    void editLockMessageNamesWhenEditingBecomesAvailableAgain() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
+        PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
+        User user = new User("u", "u@example.com", "hash");
+        user.setEmailVerifiedAt(LocalDateTime.now(clock).minusDays(1));
+        user.touchLogin(LocalDateTime.now(clock));
+        // Edited 1 hour ago: 11 hours still remain of the 12-hour lock, available again at 23:00.
+        user.setLastEditedAt(LocalDateTime.now(clock).minusHours(1));
+        when(users.findById(1L)).thenReturn(Optional.of(user));
+
+        PostService.RuleViolationException ex = assertThrows(PostService.RuleViolationException.class,
+                () -> service.create(1L, request()));
+        assertTrue(ex.getMessage().contains("次に編集できるのは9月5日 23:00以降です"),
+                () -> "unexpected message: " + ex.getMessage());
+    }
+
     @Test
     void listClosesExpiredOpenPostsLazily() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));

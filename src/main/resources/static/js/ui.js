@@ -59,6 +59,13 @@ export function confirmAction(title,description,handler) {
   const dialog=document.querySelector('#dialog');dialog.innerHTML=`<h2 id="dialog-title">${h(title)}</h2><p>${h(description)}</p><form id="confirm-form"><div class="dialog-actions"><button type="button" class="button secondary" data-cancel>キャンセル</button><button type="submit" class="button primary">実行する</button></div></form>`;
   dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();bindForm(dialog.querySelector('form'),async()=>{await handler();dialog.close();});dialog.showModal();
 }
+/** Opens an image at full size in the shared modal dialog, keeping focus in-page instead of
+    handing the person off to a new tab. Closing (Esc, backdrop click, or the close button, all
+    native <dialog> behaviour) returns focus to whatever thumbnail opened it. */
+export function openImageViewer(url,alt) {
+  const dialog=document.querySelector('#dialog');dialog.innerHTML=`<form method="dialog" class="image-dialog"><button type="submit" class="button secondary small">閉じる</button><img src="${h(url)}" alt="${h(alt||'拡大表示')}"></form>`;
+  dialog.showModal();
+}
 export function report(type,id) {
   const dialog=document.querySelector('#dialog');dialog.innerHTML=`<h2 id="dialog-title">運営に通報する</h2><p>困ったことや問題のある内容をお知らせください。相手に通報者の名前は表示されません。</p><form class="stack" style="margin-top:24px"><div class="form-field"><label for="reason">通報理由</label><textarea id="reason" name="reason" required maxlength="1000" placeholder="どのような問題があったか、具体的にご記入ください。"></textarea></div><div class="dialog-actions"><button type="button" class="button secondary" data-cancel>キャンセル</button><button type="submit" class="button primary">通報を送信</button></div></form>`;
   dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();bindForm(dialog.querySelector('form'),async data=>{await api('/api/reports',{method:'POST',body:{targetType:type,targetId:Number(id),reason:data.get('reason')}});dialog.close();toast('通報を受け付けました。');});dialog.showModal();

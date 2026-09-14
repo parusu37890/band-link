@@ -147,7 +147,9 @@
 .read-post { display:inline-flex; align-items:center; gap:10px; min-height:44px; padding:8px 0; font-size:15px; font-weight:600; color:var(--accent); text-decoration:underline; text-underline-offset:4px; }
 .read-post .icon { width:18px; height:18px; }
 .detail-record { margin-top:32px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; justify-content:space-between; }
-.post-image-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .post-image-grid img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; } .post-image-grid a:first-child:last-child { grid-column:1/-1; }
+.post-image-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .post-image-grid img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; } .post-image-grid .post-image-button:first-child:last-child { grid-column:1/-1; }
+.post-image-button { display:block; padding:0; border:0; background:none; cursor:zoom-in; border-radius:var(--radius); overflow:hidden; }
+.post-image-button:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
 .own-posts-page > .stack > .panel { background:none; border-width:1px 0 0; padding-inline:0; }
 @media(max-width:1099px) {
  .board-layout { grid-template-columns:1fr; gap:24px; } .search-rail { border:0; padding:0; }

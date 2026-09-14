@@ -9,12 +9,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
 public class PostService {
     private static final long EDIT_LOCK_HOURS = 12;
+    // Matches the "9月14日 11:10" shape the frontend's own time() helper (ui.js) renders elsewhere
+    // for a post's own dates; used here because this message is plain server-formatted Japanese text,
+    // not a raw timestamp field the client reformats.
+    private static final DateTimeFormatter EDIT_LOCK_UNTIL_FORMAT = DateTimeFormatter.ofPattern("M月d日 H:mm", Locale.JAPAN);
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PartRepository partRepository;
@@ -176,7 +182,14 @@ public class PostService {
             throw new RuleViolationException("投稿が見つかりません");
         });
     }
-    private void checkEditLock(User user) { if (user.getLastEditedAt() != null && user.getLastEditedAt().isAfter(now().minusHours(EDIT_LOCK_HOURS))) throw new RuleViolationException("投稿の作成・編集は12時間に1回までです"); }
+    private void checkEditLock(User user) {
+        if (user.getLastEditedAt() == null) return;
+        LocalDateTime availableAt = user.getLastEditedAt().plusHours(EDIT_LOCK_HOURS);
+        if (availableAt.isAfter(now())) {
+            throw new RuleViolationException("投稿の作成・編集は12時間に1回までです。次に編集できるのは"
+                    + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
+        }
+    }
     private void assign(Post p, java.util.Set<Long> partIds, java.util.Set<Long> genreIds, java.util.Set<Long> stanceIds, java.util.Set<Long> prefectureIds, java.util.Set<AgeRange> ages) {
         p.getParts().clear(); p.getParts().addAll(partRepository.findAllById(partIds)); p.getGenres().clear(); p.getGenres().addAll(genreRepository.findAllById(genreIds));
         p.getStances().clear(); p.getStances().addAll(stanceRepository.findAllById(stanceIds)); p.getPrefectures().clear(); p.getPrefectures().addAll(prefectureRepository.findAllById(prefectureIds == null ? java.util.Set.of() : prefectureIds)); p.getAgeRanges().clear(); p.getAgeRanges().addAll(ages);
