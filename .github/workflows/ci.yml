@@ -90,6 +90,13 @@ jobs:
           QA_HASH: ${{ steps.qa_hash.outputs.hash }}
         run: psql -h localhost -U postgres -d band_link_release_test -v qa_password_hash="$QA_HASH" -f scripts/test/seed-release-users.sql
 
+      # The seed SQL above only creates database rows; ImageStorageService reads/writes
+      # actual files under BANDLINK_UPLOAD_DIR (default "uploads"), so the fixture UUIDs
+      # the seed script references need real files on disk too, or every image-serving
+      # case 400s with "file not found" instead of exercising the authorization check.
+      - name: Create release QA image fixtures
+        run: pwsh -File scripts/test/create-release-images.ps1 -Destination uploads
+
       - name: Run release integration tests
         env:
           QA_RELEASE_IT: 'true'
