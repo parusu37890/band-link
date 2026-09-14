@@ -108,7 +108,10 @@ public final class SecuritySearchImageReportAdapter {
     private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
     private static final byte[] PNG = Base64.getDecoder().decode(
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=");
-    private static final byte[] JPEG = {(byte) 0xff, (byte) 0xd8, (byte) 0xff};
+    // SEC-012: ImageStorageService.valid() now requires the JPEG EOI marker (0xFFD9), the same
+    // way it already required PNG's IEND chunk - a bare SOI-only fixture stopped being "a jpeg"
+    // and started being exactly the signature-only garbage this suite exists to reject.
+    private static final byte[] JPEG = {(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0, 0, (byte) 0xff, (byte) 0xd9};
     private static final byte[] WEBP = {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'};
     private static final Path IMAGE_ROOT = Path.of("target", "full-matrix-images").toAbsolutePath().normalize();
 

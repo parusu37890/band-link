@@ -169,7 +169,11 @@ class ReleaseCaseMatrixJUnitTest {
      */
     private static void validateImageStorage(String state) {
         switch (state) {
-            case "jpeg" -> acceptImage(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}, "photo.jpg", "image/jpeg", ".jpg");
+            // SEC-012: a bare SOI-marker fixture (no EOI) used to pass here; ImageStorageService
+            // now requires the trailing EOI marker (0xFFD9) the way it already required PNG's
+            // IEND chunk, so the fixture needs one too - it stands in for the compressed scan
+            // data a real photo has between SOI and EOI.
+            case "jpeg" -> acceptImage(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0, 0, (byte) 0xFF, (byte) 0xD9}, "photo.jpg", "image/jpeg", ".jpg");
             case "png" -> acceptImage(PNG_BYTES, "photo.png", "image/png", ".png");
             case "webp" -> acceptImage(new byte[]{'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'}, "photo.webp", "image/webp", ".webp");
             case "exact-5mb" -> acceptImage(padded(PNG_BYTES, 5 * 1024 * 1024), "boundary.png", "image/png", ".png");

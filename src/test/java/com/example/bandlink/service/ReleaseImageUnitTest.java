@@ -81,4 +81,20 @@ class ReleaseImageUnitTest {
         // signature check, only that a real file never stops at byte 12 the way the fixture used to.
         assertTrue(storage.store(new MockMultipartFile("file", "photo.webp", "image/webp", webp)).endsWith(".webp"));
     }
+    /**
+     * SEC-012 (PW-H): found via Playwright MCP - a multipart upload consisting only of the JPEG
+     * SOI/APPn marker (0xFFD8FF) followed by arbitrary garbage was accepted, written to disk, and
+     * served back at a real URL, because the JPEG branch of valid() checked only those first 3
+     * bytes. PNG already required its IEND chunk for exactly this reason; JPEG now requires its
+     * own closing marker, the EOI (0xFFD9), the same way.
+     */
+    @Test void codeUt024_jpegWithoutAnEoiMarkerIsRejectedEvenWithACorrectSoiHeader() {
+        byte[] garbage = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        assertThrows(IllegalArgumentException.class,
+                () -> storage.store(new MockMultipartFile("file", "fake.jpg", "image/jpeg", garbage)));
+    }
+    @Test void codeUt025_realisticJpegWithScanDataAndEoiMarkerIsAccepted() {
+        byte[] jpeg = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0, 0, 0, 1, 2, 3, 4, 5, (byte) 0xFF, (byte) 0xD9};
+        assertTrue(storage.store(new MockMultipartFile("file", "photo.jpg", "image/jpeg", jpeg)).endsWith(".jpg"));
+    }
 }

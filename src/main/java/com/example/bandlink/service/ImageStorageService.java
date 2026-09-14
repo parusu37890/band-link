@@ -72,7 +72,14 @@ public class ImageStorageService {
         catch (IOException e) { throw new IllegalStateException("画像削除に失敗しました", e); }
     }
     private boolean valid(String type, byte[] b) {
-        if (type.equals("image/jpeg")) return b.length >= 3 && (b[0]&255)==255 && (b[1]&255)==216 && (b[2]&255)==255;
+        // SEC-012: this only checked the first 3 bytes (the SOI/APPn marker), the same
+        // signature-only gap PNG was already closed for below (see the IEND comment) - a file
+        // that was just those 3 bytes followed by arbitrary garbage passed straight through,
+        // got written to disk, and was served back at a real, guessable URL. A real JPEG always
+        // ends with the EOI marker (0xFFD9); require it the same way PNG requires its IEND chunk.
+        if (type.equals("image/jpeg"))
+            return b.length >= 5 && (b[0]&255)==255 && (b[1]&255)==216 && (b[2]&255)==255
+                    && (b[b.length-2]&255)==255 && (b[b.length-1]&255)==217;
         if (type.equals("image/png")) {
             if (b.length < 8 || (b[0]&255)!=137 || b[1]!=80 || b[2]!=78 || b[3]!=71 || b[4]!=13 || b[5]!=10 || b[6]!=26 || b[7]!=10) return false;
             // A signature-only or truncated PNG is not an image. Require the mandatory IEND chunk.
