@@ -19,6 +19,14 @@ public class ApiExceptionHandler {
     }
     @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class, org.springframework.http.converter.HttpMessageNotReadableException.class})
     ResponseEntity<Error> invalid(Exception e) { return response(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "入力内容を確認してください。"); }
+    // Raising spring.servlet.multipart.max-file-size/max-request-size above ImageStorageService's
+    // own 5MB check means that check is what normally fires first, with its own message - this is
+    // only the backstop for a request that still exceeds the raised framework limit. Without it,
+    // the exception fell through to Spring's default error page: no JSON body, so the frontend's
+    // `data?.message` was empty and it showed a generic "processing failed" text with no indication
+    // the file itself was the problem.
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    ResponseEntity<Error> tooLarge(Exception e) { return response(HttpStatus.BAD_REQUEST, "FILE_TOO_LARGE", "画像のサイズが大きすぎます。5MB以下のファイルを選んでください。"); }
     @ExceptionHandler({PostService.RuleViolationException.class, MessageService.RuleViolationException.class, ProfileService.RuleViolationException.class})
     ResponseEntity<Error> rule(RuntimeException e) { return response(HttpStatus.CONFLICT, "RULE_VIOLATION", e.getMessage()); }
     @ExceptionHandler(AuthService.EmailAlreadyUsedException.class)

@@ -19,6 +19,16 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+  # Spring's own defaults (1MB per file, 10MB per request) are well under what
+  # ImageStorageService/PostImageService actually allow (5MB per file, up to 3 per post) - any
+  # file over 1MB was rejected before it ever reached our code, with no message the frontend could
+  # show. Sized above the app-level caps so ImageStorageService's own 5MB check is what fires, with
+  # its normal message, not this generic multipart limit (see ApiExceptionHandler for the backstop
+  # for a request that still exceeds this).
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 20MB
   output:
     ansi:
       enabled: never
