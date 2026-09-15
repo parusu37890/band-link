@@ -2,6 +2,18 @@
 
 更新：2026-09-07。実際の機能・検証状況は本書と確認記録を基準にする。以前の「募集・画面は未実装」という引き継ぎは古いため、本書で置き換える。
 
+## 2026-09-15 NFT-004/005/006/013 完了、リリース判定に必要な非機能試験がすべて揃った
+
+`docs/test-results/2026-09-15-nft-004-005-006-013.md`に詳細。2026-09-14時点で「範囲外・未実施」として残っていたNFT-003〜006・NFT-013（同時実行・DB制約系の非機能試験）のうち、NFT-003は別セッションで先に完了済み（`9873c36`・`60622cc`）、本セッションで残りNFT-004・005・006・013を実施した。
+
+- **NFT-004**（同時画像追加で5枚上限）: `PostImageService.add/addAll`がNFT-003と同じcheck-then-insert競合を持っていた（バグ）。`post_images`へのBEFORE INSERTトリガー（`DatabaseConstraintInitializer`）で修正
+- **NFT-005**（同時初回DMで会話一意制約エラーを露出しない）: `MessageService`の会話取得/作成が同じ競合を持ち、敗者が生の500になり得た（バグ）。会話作成だけを`REQUIRES_NEW`の別トランザクションへ切り出し、敗者は対抗の勝者行を読み直して復旧するよう修正
+- **NFT-006**（seed再投入の冪等性）: 3回再投入し行数・checksumが完全一致することを確認。コード修正なし（元から冪等だった）
+- **NFT-013**（DB制約が最終防衛線）: NOT NULL/FK/UNIQUE/CHECKの6違反をDB直結で確認する過程で、`AuthService.register`と`BlockService.block`にも同型の競合があり、生の500になり得ることを発見（バグ）。`ApiExceptionHandler`に`DataIntegrityViolationException`の汎用ハンドラ（409）を追加し、NFT-003〜005で個別対応した3件以外の制約違反全般への最終防衛線とした
+- **副次修正**: `/support`ページの案内文「閲覧と検索は確認前でもできます」が`requirements.md`3章の確定仕様（未確認セッションは確認画面以外へ一切進めない）と矛盾していた件（PW-Hで指摘済み・スコープ外としていた）を、文言側を実装に合わせて修正して解消
+
+これにより、`docs/test-plan/test-cases.md`の全ケース（ST-001..055、SEC-001..018、NFT-002..013）が実施済みとなった。ただし実機ブラウザ・実スクリーンリーダー・NFT-008の全route網羅・実LINE OAuth・ログ基盤は引き続き範囲外（下記2026-09-14節の「残っている」項目を参照）。
+
 ## 2026-09-14 リリーステスト計画（ST-001..055、SEC-001..018、NFT-002/007..012）完了
 
 `docs/test-plan/release-test-plan.md`・`docs/test-plan/test-cases.md`・`docs/test-plan/playwright-mcp-spec.md`に定義されたバッチPW-A〜PW-Iを、公式Playwright MCP（`mcp__playwright__*`、提供元`@playwright/mcp`）による実機検証で全件実施・記録した。下記より下の「Claudeが次に進めること」節（2026-09-07時点の依頼）は、この一連の検証によって実施済みとなっている。
