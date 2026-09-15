@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f7f3">
-  <meta name="description" content="募集・加入希望の掲示板です。都道府県・パート・ジャンルから募集を探せます。閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="募集・加入希望の掲示板です。都道府県・パート・ジャンルから募集を探せます。閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。" th:content="${seoDescription}">
   <meta name="robots" content="index,follow" th:content="${seoRobots}">
-  <title>Band Link — 募集・加入希望の掲示板</title>
+  <title th:text="${seoTitle}">Band Link — 募集・加入希望の掲示板</title>
   <link rel="icon" type="image/svg+xml" href="/assets/mark.svg?v=20260913-1">
   <link rel="canonical" href="/posts" th:href="${seoCanonical}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Band Link">
   <meta property="og:locale" content="ja_JP">
-  <meta property="og:title" content="Band Link — 募集・加入希望の掲示板">
-  <meta property="og:description" content="募集・加入希望の掲示板です。都道府県・パート・ジャンルから募集を探せます。">
+  <meta property="og:title" content="Band Link — 募集・加入希望の掲示板" th:content="${seoTitle}">
+  <meta property="og:description" content="募集・加入希望の掲示板です。都道府県・パート・ジャンルから募集を探せます。" th:content="${seoDescription}">
   <meta property="og:url" content="/posts" th:content="${seoOgUrl}">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Band Link — 募集・加入希望の掲示板">
-  <meta name="twitter:description" content="募集・加入希望の掲示板です。都道府県・パート・ジャンルから音楽仲間を探せます。">
+  <meta name="twitter:title" content="Band Link — 募集・加入希望の掲示板" th:content="${seoTitle}">
+  <meta name="twitter:description" content="募集・加入希望の掲示板です。都道府県・パート・ジャンルから音楽仲間を探せます。" th:content="${seoDescription}">
   <link rel="stylesheet" href="/css/app.css?v=20260915-7">
   <script type="module" src="/js/app.js?v=20260915-3"></script>
   <script th:if="${!#strings.isEmpty(googleAnalyticsId)}" th:src="@{https://www.googletagmanager.com/gtag/js(id=${googleAnalyticsId})}" async></script>
