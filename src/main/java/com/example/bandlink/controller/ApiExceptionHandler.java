@@ -35,6 +35,20 @@ public class ApiExceptionHandler {
     ResponseEntity<Error> missing(Exception e) { return response(HttpStatus.NOT_FOUND, "NOT_FOUND", "対象が見つかりません。"); }
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<Error> status(ResponseStatusException e) { return ResponseEntity.status(e.getStatusCode()).contentType(MediaType.APPLICATION_JSON).body(new Error("REQUEST_REJECTED", e.getReason() == null ? "処理できませんでした。" : e.getReason())); }
+    // NFT-013: the database's own NOT NULL/FK/UNIQUE/CHECK constraints are the last line of defense
+    // against a race an application-level check cannot fully close (e.g. two concurrent requests
+    // both passing a check-then-insert check before either commits - the same class of bug NFT-003,
+    // NFT-004 and NFT-005 each found and fixed one instance of, with a specific recovery for each).
+    // This is the generic backstop for every OTHER case that is not worth a bespoke recovery (a
+    // losing request here really should just be rejected, e.g. two people racing to register the
+    // same email, or to block the same user twice): without this handler, any constraint violation
+    // that reaches this point uncaught falls through to Spring Boot's default error handling as a
+    // raw 500, which is exactly what NFT-013 requires never happens - every DB-level rejection must
+    // surface to the caller as a 4xx with a safe, generic message, never a raw 500 or SQL detail.
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    ResponseEntity<Error> dataIntegrity(org.springframework.dao.DataIntegrityViolationException e) {
+        return response(HttpStatus.CONFLICT, "DATA_CONFLICT", "この操作は完了できませんでした。時間をおいて再度お試しください。");
+    }
     // A handful of endpoints (e.g. POST /api/messages/images) declare produces=text/plain for their
     // success body and the frontend sends a matching Accept: text/plain. Error bodies here are still
     // JSON, so without forcing the content type explicitly, Spring's content negotiation finds no
