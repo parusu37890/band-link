@@ -27,6 +27,7 @@ export async function accountPage(path){
   if(path==='/settings/blocks') return false;
   if(path==='/contact'||path==='/feature-request'){if(requireUser()) await feedbackPage(path==='/feature-request'?'FEATURE_REQUEST':'CONTACT');return true;}
   if(path==='/support'){await supportPage();return true;}
+  if(path==='/privacy'){await privacyPage();return true;}
   if(/^\/users\/\d+$/.test(path)){await profilePage(path.split('/')[2]);return true;}
   return false;
 }
@@ -304,4 +305,41 @@ function supportPage(){
       <div class="row help-contact-actions"><a class="button secondary" href="/contact">お問い合わせ</a><a class="button secondary" href="/feature-request">機能要望</a></div>
     </section>
   </div>`, 'ヘルプ');
+}
+
+// Written from what the code actually stores and does, not a generic template - see each
+// item's counterpart in RegisterRequest/ProfileUpdateRequest, PostService/MessageService,
+// docs/logging.md, application.yaml (auth-rate-limit / google-analytics-id / line.*), and
+// docs/decisions/0006・0007. Update this alongside any change to what those collect or keep.
+function privacyPage(){
+  showPage(`<div class="page help-page">
+    <div class="page-heading"><div><h1>プライバシーポリシー</h1><p>Band Link（バンドリンク）が登録・利用にともなってお預かりする情報と、その取り扱いについて説明します。</p></div></div>
+    ${helpSection('privacy-collect', '登録・プロフィールで入力いただく情報', [
+      ['アカウント情報', 'メールアドレスとパスワードを登録時にお預かりします。パスワードはハッシュ化して保存しており、運営を含め誰も元のパスワードを読み取ることはできません。', null],
+      ['プロフィール情報', '表示名、年齢、性別、活動エリア（都道府県、最大3つ）、担当パート、好きなジャンル、経験年数、活動スタンスを必須項目としてお預かりします。自己紹介（任意・500文字まで）、プロフィール画像（任意・1枚5MBまで）、YouTube・TikTok・SoundCloud・Spotify・Apple Musicの演奏動画・音源URL（いずれも任意）もあわせて登録できます。', null],
+    ])}
+    ${helpSection('privacy-use', '利用にともなって生じる情報', [
+      ['募集投稿', '「募集」「加入希望」の投稿内容と、投稿にあわせて登録する画像（最大5枚・1枚5MBまで）をお預かりします。募集は一覧・詳細画面で公開されます。', null],
+      ['メッセージ', '会話相手とのメッセージ本文と画像（送信1回につき1枚・5MBまで）をお預かりします。メッセージの画像は、その会話の参加者だけが閲覧できるようアクセスを制限しています。', null],
+      ['通知・ブロック・通報', '新着メッセージなどのアプリ内通知、ブロックした相手の記録、通報の内容をお預かりします。メッセージを通報された場合に運営が確認できるのは、通報された本文・画像と通報理由だけで、前後のやりとりは含みません。', null],
+    ])}
+    ${helpSection('privacy-security', '安全のための情報処理', [
+      ['ログインの試行回数', '不正なログインを防ぐため、同一IPアドレスからのログイン・確認・再設定の試行回数を一定時間ごとに制限しています。', null],
+      ['アクセスログ', '障害調査のため、日時・処理内容・リクエストID・応答結果・所要時間を記録したアクセスログを保存しています。パスワード、認証トークン、Cookie、メッセージ本文、メールアドレス、画像の中身はログに記録しません。利用者を特定する記録が必要な場合も、元の値に戻せない形に変換したIDのみを記録します。', null],
+    ])}
+    ${helpSection('privacy-thirdparty', '外部サービスの利用', [
+      ['Googleアナリティクス', '設定により、アクセス状況の把握を目的としたGoogleアナリティクス（GA4）を利用する場合があります。有効な場合、Googleがcookieを設置し、訪問状況を収集することがあります。', ['Googleのプライバシーポリシー', 'https://policies.google.com/privacy']],
+      ['LINEログイン', 'LINEアカウントでログインした場合、LINEのユーザーIDと表示名を保存し、以後のログインに利用します。LINEのアクセストークンは保存しません。', null],
+    ])}
+    ${helpSection('privacy-retention', 'データの保存期間と削除', [
+      ['退会したとき', '退会すると、プロフィール、募集とその画像、会話とメッセージ、通知、ブロックの記録、検索履歴、ログイン情報、LINEアカウントとの連携を削除します。削除後は、同じメールアドレスやLINEアカウントで新しく登録し直せます。この操作は取り消せません。', ['アカウントの設定を見る', '/settings']],
+      ['利用停止になったとき', '運営による利用停止は退会とは異なり、アカウントと既存の会話はそのまま残ります。停止中は募集の掲載とメッセージの送信ができず、プロフィールと募集は非公開になります。解除は運営が行います。', null],
+    ])}
+    <section class="help-contact" aria-labelledby="privacy-contact-title">
+      <h2 id="privacy-contact-title">お問い合わせ</h2>
+      <p>このポリシーについてのご質問・ご意見は、お問い合わせフォームからご連絡ください。</p>
+      <div class="row help-contact-actions"><a class="button secondary" href="/contact">お問い合わせ</a></div>
+    </section>
+    <p class="muted" style="margin-top:32px">最終更新日: 2026年9月15日</p>
+  </div>`, 'プライバシーポリシー');
 }

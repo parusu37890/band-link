@@ -57,7 +57,7 @@ async function route(){
 // to the browser. Kept to plain string checks so the list reads like PageController's.
 const shellRoutes = new Set(['/', '/posts', '/posts/new', '/my/posts', '/settings', '/settings/profile',
   '/settings/blocks', '/login', '/register', '/verify-email', '/password-reset', '/password-reset/confirm',
-  '/messages', '/notifications', '/blocks', '/admin', '/admin/reports', '/support', '/contact', '/feature-request']);
+  '/messages', '/notifications', '/blocks', '/admin', '/admin/reports', '/support', '/contact', '/feature-request', '/privacy']);
 const digits = value => value.length > 0 && [...value].every(c => c >= '0' && c <= '9');
 const withId = [['/posts/', ''], ['/posts/', '/edit'], ['/users/', ''], ['/messages/', '']];
 const servedByShell = pathname => shellRoutes.has(pathname) || withId.some(([prefix, suffix]) =>

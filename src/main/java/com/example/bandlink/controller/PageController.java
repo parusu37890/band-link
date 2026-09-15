@@ -24,7 +24,7 @@ public class PageController {
             "/my/posts", "/users/{id}", "/settings", "/settings/profile", "/settings/blocks",
             "/login", "/register", "/verify-email", "/password-reset", "/password-reset/confirm",
             "/messages", "/messages/{id}", "/notifications", "/blocks", "/admin", "/admin/reports", "/support",
-            "/contact", "/feature-request"})
+            "/contact", "/feature-request", "/privacy"})
     public String app(HttpServletRequest request, Model model) {
         String path = request.getRequestURI();
         boolean publicPage = "/".equals(path) || "/posts".equals(path)
