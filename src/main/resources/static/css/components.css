@@ -8,11 +8,6 @@
 .main-nav a { display: flex; align-items: center; min-height:44px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
 .main-nav a.active { border-color: var(--accent); color: var(--ink); }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; order: 3; }
-/* Logged out: X sits right after the wordmark, header-actions (login/register) keeps the far-right
-   edge via its own margin-left: auto. Logged in: X moves back to the far right, after the
-   notifications/messages/profile icons, since there's no title-adjacent slot to fight for then. */
-.header-inner.is-guest > .x-link { order: 1; }
-.header-inner.is-authed > .x-link { order: 4; }
 .header-profile { max-width: 160px; overflow: hidden; white-space: nowrap !important; text-overflow: ellipsis; }
 .icon { display: inline-block; width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
 .icon-button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); position: relative; flex: none; }
@@ -101,7 +96,9 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 .crop-viewport:active { cursor: grabbing; }
 .crop-image { position: absolute; top: 0; left: 0; max-width: none; user-select: none; -webkit-user-drag: none; }
 .site-footer { border-top: 1px solid var(--line); display: flex; align-items: center; gap: 24px; padding-block: 28px; color: var(--muted); font-size: 12px; }
-.site-footer .wordmark { font-size: 20px; color: var(--ink); } .site-footer > a { display:inline-flex; align-items:center; min-width:44px; min-height:44px; padding:8px 4px; } .site-footer p { flex: 1; } .copyright { font: 11px var(--mono); }
+.site-footer .wordmark { font-size: 20px; color: var(--ink); } .site-footer > a, .site-footer .footer-brand > a { display:inline-flex; align-items:center; min-width:44px; min-height:44px; padding:8px 4px; } .site-footer p { flex: 1; } .copyright { font: 11px var(--mono); }
+.footer-brand { display: inline-flex; align-items: center; gap: 4px; }
+.footer-brand .icon-button.x-link { padding: 0; min-width: 44px; }
 .mobile-only { display: none; }
 .password-field { position: relative; }
 .password-field .input { padding-right: 52px; }
@@ -114,12 +111,9 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
   .header-actions { gap: 4px; } .header-actions .button { font-size: 12px; padding: 8px; }
   .header-profile { max-width: 98px; } .header-actions .icon-button { width: 44px; }
   .main-nav { order: 4; width: 100%; margin-top: 4px; gap: 4px 20px; }
-  /* .main-nav's order:4 above would otherwise collide with is-authed's order:4 X link and drag it
-     onto (or past) the nav's own wrapped row; order:3 keeps X tied to .header-actions on row one. */
-  .header-inner.is-authed > .x-link { order: 3; }
   .main-nav a { min-height: 40px; }
   .main-nav a { min-height: 44px; font-size: 13px; }
   .form-grid { grid-template-columns: 1fr; } .form-section > legend { font-size: 19px; }
-  .site-footer { flex-wrap: wrap; gap: 18px; } .site-footer .wordmark { flex-basis: 100%; } .site-footer p { display: none; }
+  .site-footer { flex-wrap: wrap; gap: 18px; } .site-footer .footer-brand { flex-basis: 100%; } .site-footer p { display: none; }
   .sticky-actions .button.primary { flex: 1; } .mobile-only { display: inline-flex; }
 }
