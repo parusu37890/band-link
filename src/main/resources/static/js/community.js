@@ -1,5 +1,5 @@
 import { api, h, icon, avatar, state, main, showPage, notice, empty, button, toast,
-  bindForm, report, confirmAction, time, poll } from './ui.js';
+  bindForm, confirmAction, time, poll } from './ui.js';
 
 const positiveId = value => /^[1-9]\d*$/.test(String(value ?? '')) ? String(value) : null;
 const personName = user => user?.status === 'WITHDRAWN' ? '退会済みユーザー' : user?.status === 'SUSPENDED' ? '利用停止中ユーザー' : (user?.username || 'ユーザー');
@@ -28,12 +28,11 @@ function reconcileRows(container, items, markup) {
         const active = document.activeElement;
         const focused = node.contains(active);
         const focusKey = active?.dataset.readNotification;
-        const reportKey = active?.dataset.reportMessage;
         const href = active?.getAttribute('href');
         node.replaceWith(replacement);
         if (position === node) position = replacement;
         if (focused) {
-          const target = focusKey ? replacement.querySelector('[data-read-notification]') : reportKey ? replacement.querySelector('[data-report-message]') : href ? [...replacement.querySelectorAll('a')].find(link => link.getAttribute('href') === href) : null;
+          const target = focusKey ? replacement.querySelector('[data-read-notification]') : href ? [...replacement.querySelectorAll('a')].find(link => link.getAttribute('href') === href) : null;
           (target || replacement).focus({ preventScroll: true });
         }
       }
@@ -255,7 +254,7 @@ async function messagesPage(path) {
       const image = message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl)
         ? `<button type="button" class="message-image-button" data-expand-image="${h(message.imageUrl)}" aria-label="画像を拡大表示"><img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy"></button>`
         : '';
-      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${!mine && id ? `<button type="button" class="button text-button" data-report-message="${id}" aria-label="このメッセージを通報する">通報</button>` : ''}</div></article>`;
+      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}</div></article>`;
     };
     if (visible.length) reconcileRows(rows, visible, markup);
     else rows.innerHTML = empty('まだメッセージがありません', '下の欄から最初のメッセージを送れます。');
@@ -276,8 +275,6 @@ async function messagesPage(path) {
       openImageViewer(imageButton.dataset.expandImage);
       return;
     }
-    const reportButton = event.target.closest('[data-report-message]');
-    if (reportButton) report('MESSAGE', reportButton.dataset.reportMessage);
     if (event.target.closest('[data-older-messages]')) {
       // Expanding the top keeps the previously visible message at the same reading position.
       const firstId = messages.querySelector('.message')?.dataset.messageId;
