@@ -1,6 +1,7 @@
 databases:
   - name: band-link-db
     plan: 0.1c-256mb
+    diskSizeGB: 1
     postgresMajorVersion: "16"
 
 services:
