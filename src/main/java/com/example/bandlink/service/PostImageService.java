@@ -33,16 +33,40 @@ public class PostImageService {
         User user = owner(postId, userId); editAllowed(user, post);
         if (images.countByPostId(postId) >= 5) throw new PostService.RuleViolationException("募集画像は5枚までです");
         String url = storage.store(file);
-        PostImage image = images.save(new PostImage(post, url, (int)images.countByPostId(postId), now()));
-        user.setLastEditedAt(now());
-        return image;
+        try {
+            PostImage image = images.saveAndFlush(new PostImage(post, url, (int)images.countByPostId(postId), now()));
+            user.setLastEditedAt(now());
+            return image;
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // NFT-004: the countByPostId check above is not atomic with this insert - a concurrent
+            // upload to the same post can pass it too, and lose the race to trg_post_images_limit
+            // (DatabaseConstraintInitializer). Delete the file already written to disk so the
+            // rejected DB row does not leave an orphan upload behind, and give the same user-facing
+            // message the synchronous over-5 case gets, not a raw 500.
+            storage.delete(url);
+            throw new PostService.RuleViolationException("募集画像は5枚までです");
+        }
     }
     @Transactional public List<PostImage> addAll(Long userId, Long postId, List<MultipartFile> files) {
         Post post = posts.findByIdAndUserId(postId,userId).orElseThrow(() -> new PostService.RuleViolationException("投稿が見つかりません"));
         User user = owner(postId, userId); editAllowed(user, post);
         if (files == null || files.isEmpty() || files.size() + images.countByPostId(postId) > 5) throw new PostService.RuleViolationException("募集画像は5枚までです");
         int order = (int)images.countByPostId(postId); List<PostImage> result = new java.util.ArrayList<>();
-        for (MultipartFile file : files) result.add(images.save(new PostImage(post, storage.store(file), order++, now())));
+        List<String> storedUrls = new java.util.ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                String url = storage.store(file);
+                storedUrls.add(url);
+                result.add(images.saveAndFlush(new PostImage(post, url, order++, now())));
+            }
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Same race as add(): this whole @Transactional method rolls back on the exception,
+            // which undoes every PostImage row already flushed in this loop too, so every file this
+            // request wrote to disk (including ones already "saved") becomes an orphan unless
+            // deleted here.
+            for (String url : storedUrls) storage.delete(url);
+            throw new PostService.RuleViolationException("募集画像は5枚までです");
+        }
         user.setLastEditedAt(now()); return result;
     }
     @Transactional public void remove(Long userId, Long postId, Long imageId) {
