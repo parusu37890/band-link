@@ -104,7 +104,7 @@ id, user_id, type(enum: NEW_MESSAGE, 将来拡張用に他の値を追加可能)
 |---|---|---|
 | id | bigint | |
 | user_id | bigint | |
-| conditions | jsonb | type・prefectures[]・parts[]・genres[]・stances[]・keyword・age_ranges[]・activity_frequency をまとめて保持 |
+| conditions | jsonb | type・prefectures[]・parts[]・genres[]・stances[]・age_ranges[]・activity_frequency をまとめて保持（keywordはキーワード検索廃止（[[0011]]）に伴い記録しない） |
 | conditions_hash | varchar | 配列を正規化(ソート)した上でのハッシュ。重複判定に使用 |
 | searched_at | timestamp | |
 
@@ -214,12 +214,14 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 
 | メソッド | パス | 認証 | 備考 |
 |---|---|---|---|
-| GET | /api/posts | 不要 | クエリ: type, prefectures[], parts[], genres[], stances[], ageRanges[], activityFrequency, keyword, cursor, limit。DB側でページング（無限スクロール用にカーソル方式を提案） |
+| GET | /api/posts | 不要 | クエリ: type, prefectures[], parts[], genres[], stances[], ageRanges[], activityFrequency, keyword（後方互換のため受理するが無視、下記参照）, cursor, limit。DB側でページング（無限スクロール用にカーソル方式を提案） |
 | GET | /api/posts/{id} | 不要 | 通常終了（MANUAL/EXPIRED）は本文・画像と「募集終了」を返す。退会・利用停止・管理者削除による非公開は本文・画像を返さず非公開表示とする。ブロック関係でも到達可（[[0004]]） |
 | POST | /api/posts | 要（メール確認要） | 業務ルールは§1.4参照 |
 | PUT | /api/posts/{id} | 要、本人のみ | |
 | DELETE | /api/posts/{id} | 要、本人のみ | |
 | POST | /api/posts/{id}/images | 要、本人のみ | 5枚上限、5MB/枚 |
+
+**`keyword`パラメータについて（[[0011]]でキーワード検索を廃止）**: `GET /api/posts`・`GET /api/posts/page`とも、クエリパラメータ`keyword`は後方互換のために引き続き受理するが、検索条件としては**無視する**（400にはしない、フィルタにも使わない）。フロントエンドはこのパラメータを送信しない。将来400で拒否する方針に変える場合は別リリース要件として扱う（`docs/decisions/0011-keyword-search-removed.md`参照）。
 | PATCH | /api/posts/{id}/close | 要、本人のみ | |
 | PATCH | /api/posts/{id}/reopen | 要、本人のみ | |
 
@@ -231,7 +233,7 @@ PENDING --(管理者: 確認のみ完了)--> REVIEWED
 |---|---|---|
 | GET | /api/search-history | 要 |
 
-`GET /api/posts`実行時、ログイン中かつ何らかの検索条件（type/keyword/prefectures/parts/genres/stances/ageRanges/activityFrequency のいずれか）が指定されていた場合のみ記録する。ページング目的の`cursor`と`limit`だけが指定された場合は記録しない。同じ正規化済み条件（typeを含む）は重複させず最新へ移動する。
+`GET /api/posts`実行時、ログイン中かつ何らかの検索条件（type/prefectures/parts/genres/stances/ageRanges/activityFrequency のいずれか）が指定されていた場合のみ記録する。`keyword`はキーワード検索廃止（[[0011]]）に伴い受理しても記録・判定には使わない。ページング目的の`cursor`と`limit`だけが指定された場合は記録しない。同じ正規化済み条件（typeを含む）は重複させず最新へ移動する。
 
 ### 4.5 メッセージ・会話（`/api/conversations/**`, `/api/messages`）
 

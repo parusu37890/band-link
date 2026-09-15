@@ -15,6 +15,7 @@ export async function listing(renderCard){
  const group=([key,title])=>`<details class="search-group" ${['prefectureIds','partIds'].includes(key)?'open':''}><summary><span>${title}</span><span data-choice-count="${key}">${values(params,key).length||'指定なし'}</span></summary><p class="choice-summary" data-choice-summary="${key}">${h(values(params,key).map(v=>label(key,v)).join('・'))}</p><div class="filter-options ${key==='prefectureIds'?'prefecture-options':''}">${options(key).map(([value,name])=>`<label class="filter-option"><input type="checkbox" name="${key}" value="${h(value)}" ${values(params,key).includes(String(value))?'checked':''}><span>${h(name)}</span></label>`).join('')}</div></details>`;
  const filterOpen=matchMedia('(min-width:1100px)').matches;
  showPage(`<div class="page discovery-page">
+  <h1 class="sr-only">バンドメンバー募集</h1>
   <div class="board-layout">
    <aside class="search-rail" aria-label="募集の検索"><form id="search-form">
     <div class="search-actions"><button class="button secondary filter-toggle" type="button" aria-controls="filters" aria-expanded="${filterOpen}">${icon('filter')}条件検索 <span>${applied.length?applied.length+'項目選択中':''}</span></button></div>
