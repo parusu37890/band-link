@@ -30,12 +30,35 @@ class PostServiceTest {
         assertThrows(PostService.RuleViolationException.class, () -> service.create(1L, request));
         user.setEmailVerifiedAt(LocalDateTime.now(clock).minusHours(13));
         when(posts.existsByUserIdAndStatusAndType(1L, PostStatus.OPEN, PostType.MEMBER_WANTED)).thenReturn(false, true);
-        when(posts.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
+        when(posts.saveAndFlush(any(Post.class))).thenAnswer(i -> i.getArgument(0));
         Post created = service.create(1L, request);
 
         assertEquals(PostStatus.OPEN, created.getStatus());
         assertEquals(LocalDateTime.now(clock).plusDays(30), created.getExpiresAt());
         assertThrows(PostService.RuleViolationException.class, () -> service.create(1L, request));
+    }
+
+    /**
+     * NFT-003: existsByUserIdAndStatusAndType is a fast-path check, not the real guard - two
+     * concurrent requests can both pass it before either commits. ux_posts_user_type_open (a
+     * partial unique index added by DatabaseConstraintInitializer) is what actually stops the
+     * loser; this only verifies the loser gets the same user-facing message as a synchronous
+     * duplicate, not a raw 500 from an uncaught DataIntegrityViolationException.
+     */
+    @Test
+    void createConvertsALostConcurrencyRaceIntoTheSameDuplicatePostMessage() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
+        PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
+        User user = new User("u", "u@example.com", "hash");
+        user.setEmailVerifiedAt(LocalDateTime.now(clock).minusHours(13));
+        when(users.findById(1L)).thenReturn(Optional.of(user));
+        when(posts.existsByUserIdAndStatusAndType(1L, PostStatus.OPEN, PostType.MEMBER_WANTED)).thenReturn(false);
+        when(posts.saveAndFlush(any(Post.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("ux_posts_user_type_open"));
+
+        PostService.RuleViolationException ex = assertThrows(PostService.RuleViolationException.class,
+                () -> service.create(1L, request()));
+        assertEquals("公開中の募集投稿は1件までです", ex.getMessage());
     }
 
     /**

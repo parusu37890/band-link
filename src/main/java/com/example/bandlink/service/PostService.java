@@ -45,12 +45,20 @@ public class PostService {
     public Post create(Long userId, PostRequests.Create request) {
         User user = activeVerifiedUser(userId);
         if (postRepository.existsByUserIdAndStatusAndType(userId, PostStatus.OPEN, request.type()))
-            throw new RuleViolationException(request.type() == PostType.WANTS_TO_JOIN ? "公開中の加入投稿は1件までです" : "公開中の募集投稿は1件までです");
+            throw duplicateOpenPost(request.type());
         LocalDateTime now = now();
         Post post = new Post(user, request.type(), request.title().trim(), request.content().trim(), request.areaSub(), request.activityFrequency(), now);
         assign(post, request.partIds(), request.genreIds(), request.stanceIds(), request.prefectureIds(), request.ageRanges());
         user.setLastEditedAt(now);
-        return postRepository.save(post);
+        try {
+            return postRepository.saveAndFlush(post);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // NFT-003: the existsBy check above is not atomic with this insert - a concurrent
+            // request from the same user can pass it too, and lose the race to
+            // ux_posts_user_type_open (DatabaseConstraintInitializer). Same user-facing message as
+            // the synchronous case, not a raw 500.
+            throw duplicateOpenPost(request.type());
+        }
     }
 
     @Transactional
@@ -72,10 +80,17 @@ public class PostService {
         if (post.getStatus() != PostStatus.CLOSED || (post.getClosedReason() != ClosedReason.MANUAL && post.getClosedReason() != ClosedReason.EXPIRED))
             throw new RuleViolationException("この投稿は再公開できません");
         if (postRepository.existsByUserIdAndStatusAndType(userId, PostStatus.OPEN, post.getType()))
-            throw new RuleViolationException(post.getType() == PostType.WANTS_TO_JOIN ? "公開中の加入投稿は1件までです" : "公開中の募集投稿は1件までです");
+            throw duplicateOpenPost(post.getType());
         LocalDateTime now = now(); post.reopen(now);
         if (user.getLastRankBoostedAt() == null || !user.getLastRankBoostedAt().isAfter(now.minusHours(EDIT_LOCK_HOURS))) { post.boostRank(now); user.setLastRankBoostedAt(now); }
-        return post;
+        try {
+            return postRepository.saveAndFlush(post);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Same race as create(): post is already managed here, so without an explicit flush the
+            // insert-equivalent UPDATE (status -> OPEN) would only hit the DB at commit, outside
+            // this method's reach to catch and translate.
+            throw duplicateOpenPost(post.getType());
+        }
     }
 
     @Transactional
@@ -198,5 +213,8 @@ public class PostService {
         p.getStances().clear(); p.getStances().addAll(stanceRepository.findAllById(stanceIds)); p.getPrefectures().clear(); p.getPrefectures().addAll(prefectureRepository.findAllById(prefectureIds == null ? java.util.Set.of() : prefectureIds)); p.getAgeRanges().clear(); p.getAgeRanges().addAll(ages);
     }
     private LocalDateTime now() { return LocalDateTime.now(clock); }
+    private RuleViolationException duplicateOpenPost(PostType type) {
+        return new RuleViolationException(type == PostType.WANTS_TO_JOIN ? "公開中の加入投稿は1件までです" : "公開中の募集投稿は1件までです");
+    }
     public static class RuleViolationException extends RuntimeException { public RuleViolationException(String message) { super(message); } }
 }
