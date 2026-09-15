@@ -62,6 +62,8 @@
 /* Registration is a quiet, single-flow form: the page rule and browser focus ring do not
    compete with the fields, while the controls keep their existing neutral boundaries. */
 .register-page .auth-panel { border-top: 0; }
+.login-page .auth-panel { border-top: 0; }
+.login-page .auth-footer { text-align: center; }
 .register-page :is(input, select, textarea):focus { border-color:var(--control-line); outline:0; box-shadow:none; }
 .register-page :is(input, select, textarea):focus-visible { border-color:var(--control-line); outline:2px solid var(--ink); outline-offset:2px; box-shadow:none; }
 .register-page .form-section + .registration-choice,
