@@ -18,19 +18,21 @@
 |U01|910001|qa-release-unverified@example.test|QA_RELEASE_unverified|USER / ACTIVE / メール未確認|有効・期限切れ・使用済み確認token。未確認ゲート|
 |U02|910002|qa-release-general@example.test|QA_RELEASE_general|USER / ACTIVE / 確認済み|通常ログイン、再設定token、一般操作|
 |U03|910003|qa-release-incomplete@example.test|QA_RELEASE_incomplete|USER / ACTIVE / 確認済み|年齢・性別・経験・全マスタ関連なし|
-|U04|910004|qa-release-complete@example.test|QA_RELEASE_complete|USER / ACTIVE / 確認済み|全プロフィール、3都府県、1000文字自己紹介、画像、問い合わせ・要望|
-|U05|910005|qa-release-wanted@example.test|QA_RELEASE_wanted|USER / ACTIVE / 確認済み|メンバー募集の公開投稿者、オンライン1分前|
-|U06|910006|qa-release-join@example.test|QA_RELEASE_join|USER / ACTIVE / 確認済み|参加希望の公開投稿者、最終アクセス10分前|
-|U07|910007|qa-release-sender@example.test|QA_RELEASE_sender|USER / ACTIVE / 確認済み|DM送信者、未読・通報・複数会話|
-|U08|910008|qa-release-receiver@example.test|QA_RELEASE_receiver|USER / ACTIVE / 確認済み|DM受信者、画像付き受信、未読通知|
-|U09|910009|qa-release-blocker@example.test|QA_RELEASE_blocker|USER / ACTIVE / 確認済み|U10をブロック済み|
-|U10|910010|qa-release-blocked@example.test|QA_RELEASE_blocked|USER / ACTIVE / 確認済み|U09からブロック済み|
+|U04|910004|qa-release-complete@example.test|QA_RELEASE_complete|USER / ACTIVE / 確認済み|全プロフィール、3都府県、1000文字自己紹介、熊アイコン、問い合わせ・要望|
+|U05|910005|qa-release-wanted@example.test|QA_RELEASE_wanted|USER / ACTIVE / 確認済み|募集の公開投稿者、オンライン中（最終アクセス1分前）|
+|U06|910006|qa-release-join@example.test|QA_RELEASE_join|USER / ACTIVE / 確認済み|加入希望の公開投稿者、10分前表示|
+|U07|910007|qa-release-sender@example.test|QA_RELEASE_sender|USER / ACTIVE / 確認済み|DM送信者、3時間前表示、未読・通報・複数会話|
+|U08|910008|qa-release-receiver@example.test|QA_RELEASE_receiver|USER / ACTIVE / 確認済み|DM受信者、2日前表示、画像付き受信、未読通知|
+|U09|910009|qa-release-blocker@example.test|QA_RELEASE_blocker|USER / ACTIVE / 確認済み|2週間前表示、U10をブロック済み|
+|U10|910010|qa-release-blocked@example.test|QA_RELEASE_blocked|USER / ACTIVE / 確認済み|投稿時刻の4週間表示上限、U09からブロック済み|
 |U11|910011|qa-release-suspended@example.test|QA_RELEASE_suspended|USER / SUSPENDED / 確認済み|停止時の画面・API権限、停止理由投稿|
 |U12|910012|qa-release-withdrawn@example.test|行なし|退会完了|退会後に個人・関連データが物理削除される期待状態|
 |U13|910013|qa-release-admin@example.test|QA_RELEASE_admin|ADMIN / ACTIVE / 確認済み|通報、問い合わせ、停止・解除管理|
-|U14|910014|qa-release-images@example.test|QA_RELEASE_images|USER / ACTIVE / 確認済み|投稿画像5枚、プロフィール・DM・feedback画像|
+|U14|910014|qa-release-images@example.test|QA_RELEASE_images|USER / ACTIVE / 確認済み|投稿画像5枚、熊アイコン、DM・feedback画像|
 |U15|910015|qa-release-age-min@example.test|QA_RELEASE_age-min|USER / ACTIVE / 確認済み|年齢0、経験0の下限|
 |U16|910016|qa-release-age-max@example.test|QA_RELEASE_age-max|USER / ACTIVE / 確認済み|年齢120、経験100、上限|
+
+U13〜U19は最終ログイン表示の月単位境界を固定する（1・2・3・4・5・6か月前と、6か月上限）。U21は7か月超の上限表示確認に使う。U05の `last_seen_at` はT0の1分前で「オンライン中」、U06は6分前でオンライン判定外かつ最終ログイン10分前とする。時間経過による境界ずれを避けるため、各ケースはseed直後に実行する。
 
 ## 追加の状態遷移ユーザー
 
@@ -41,7 +43,7 @@
 |U19|910019|順位更新1時間前。再公開しても順位更新不可|
 |U20|910020|順位更新13時間前。再公開で順位更新可能|
 |U21|910021|期限がT0の1分後。期限境界と遅延失効|
-|U22|910022|退会処理対象。投稿、会話、通知、画像、問い合わせを保持|
+|U22|910022|退会処理対象。投稿、会話、通知、熊アイコン、問い合わせを保持|
 |U23|910023|DM通報の第三者・IDOR確認|
 |U24|910024|旧仕様のWITHDRAWN残存行。公開DTO匿名化・ログイン拒否|
 |U25|910025|LINE連携済み、プロフィール未完成|
@@ -54,8 +56,8 @@
 
 |範囲 / 主なID|内容|
 |---|---|
-|P001 `920001`|U05の公開メンバー募集。複数パート・3都府県|
-|P002 `920002`|U06の公開参加希望。本文だけに固有語「藍色セッション」|
+|P001 `920001`|U05の公開募集。複数パート・3都府県|
+|P002 `920002`|U06の公開加入希望。本文だけに固有語「藍色セッション」|
 |P003/P004|編集可能・編集制限中|
 |P005/P006|手動終了・期限終了。再公開条件|
 |P007|T0+1分で期限切れになる公開投稿|
@@ -77,7 +79,7 @@
 
 - 正常: PNG、JPEG、WebP、5MBちょうど
 - 異常: 0byte、5MB+1byte、SVG、拡張子と実体不一致、PNGシグネチャだけの切断ファイル
-- `97000000-0000-4000-8000-000000000001.png` などseedが参照する9画像
+- `qa-bear-icon.jpg`（全QAユーザーのプロフィール画像）と、seedが参照する公開画像9枚
 
 画像生成先は必ず空の専用ディレクトリを `-Destination` で指定します。このスクリプトは既存ファイルがあるディレクトリを拒否します。
 

@@ -78,7 +78,7 @@ public class PostImageService {
         if (u.getLastEditedAt() == null || sameWriteWindow(u, p)) return;
         LocalDateTime availableAt = u.getLastEditedAt().plusHours(12);
         if (availableAt.isAfter(now()))
-            throw new PostService.RuleViolationException("投稿の作成・編集は12時間に1回までです。次に編集できるのは"
+            throw new PostService.RuleViolationException("投稿の編集は12時間に1回までです。次に編集できるのは"
                     + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
     }
     private boolean sameWriteWindow(User u, Post p) {

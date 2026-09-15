@@ -79,11 +79,11 @@ class ReleaseFeedbackUnitTest {
         verifyNoInteractions(feedback);
     }
 
-    @Test void codeUt006_beanValidationEnforces3000CharactersAndImageUrlLimit() {
+    @Test void codeUt006_beanValidationEnforces1000CharactersAndImageUrlLimit() {
         try (var factory = Validation.buildDefaultValidatorFactory()) {
             var validator = factory.getValidator();
-            assertTrue(validator.validate(new FeedbackRequest("あ".repeat(3000), null)).isEmpty());
-            assertFalse(validator.validate(new FeedbackRequest("あ".repeat(3001), null)).isEmpty());
+            assertTrue(validator.validate(new FeedbackRequest("あ".repeat(1000), null)).isEmpty());
+            assertFalse(validator.validate(new FeedbackRequest("あ".repeat(1001), null)).isEmpty());
             assertFalse(validator.validate(new FeedbackRequest(" ", null)).isEmpty());
             assertFalse(validator.validate(new FeedbackRequest(null, null)).isEmpty());
             assertTrue(validator.validate(new FeedbackRequest("valid", "x".repeat(1000))).isEmpty());

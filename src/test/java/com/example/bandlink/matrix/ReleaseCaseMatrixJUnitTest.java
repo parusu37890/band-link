@@ -283,7 +283,7 @@ class ReleaseCaseMatrixJUnitTest {
     }
 
     private static void validateFeedback(String state) {
-        String body = state.equals("empty-body") ? "" : (state.equals("body-boundary") ? "お".repeat(3000) : "お問い合わせ");
+        String body = state.equals("empty-body") ? "" : (state.equals("body-boundary") ? "お".repeat(1000) : "お問い合わせ");
         String image = state.equals("invalid-url") ? "i".repeat(1001) : null;
         Object request = newRecord("com.example.bandlink.dto.FeedbackRequest", body, image);
         boolean valid = VALIDATOR.validate(request).isEmpty();

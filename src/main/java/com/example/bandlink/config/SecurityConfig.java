@@ -32,14 +32,13 @@ public class SecurityConfig {
         http
             .csrf(org.springframework.security.config.Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
-                // The private message-image directory sits inside the same physical tree that
+                // The private message-image and feedback-attachment directories sit inside the same physical tree that
                 // /uploads/** maps to below (StaticResourceConfig has no way to carve a subpath
                 // out of a WebMvc resource handler), so it must be refused here, ahead of that
-                // permitAll, or the participant/admin check on /api/messages/images/{name} is
-                // pure decoration: the same file is one path segment away with no auth at all.
-                // Nothing legitimate ever requests this path — ImageStorageService.storePrivate
-                // hands the browser the /api/messages/images/ URL, never this one.
-                .requestMatchers("/uploads/messages/**").denyAll()
+                // permitAll, or the checks on /api/messages/images/{name} and
+                // /api/admin/feedback/images/{name} are bypassed by alternate public URLs.
+                // ImageStorageService returns the guarded /api URLs for both private directories.
+                .requestMatchers("/uploads/messages/**", "/uploads/feedback/**").denyAll()
                 .requestMatchers("/api/auth/me", "/api/auth/logout", "/api/auth/withdraw", "/api/users/me", "/api/posts/mine").authenticated()
                 .requestMatchers("/api/admin/**", "/admin").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**", "/api/csrf", "/api/masters", "/login", "/register",
@@ -57,7 +56,7 @@ public class SecurityConfig {
                         response.setContentType("application/json;charset=UTF-8");
                         response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"ログインしてください。\"}");
                     } else if (uri.startsWith("/uploads/")) {
-                        // /uploads/messages/** is the one path denied to everyone, not gated on being
+                        // Private /uploads subpaths are denied to everyone, not gated on being
                         // signed in (see the denyAll above), so redirecting to /login here would offer
                         // a fix that does not exist. An <img> tag cannot follow a redirect to an HTML
                         // page either way; a flat status is both more honest and what the tag needs.

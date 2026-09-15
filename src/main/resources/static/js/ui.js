@@ -7,22 +7,26 @@ export const button = (label, href, kind='primary') => `<a class="button ${h(kin
 export function safeUrl(value) { try { const u = new URL(value, location.origin); return ['http:','https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } }
 export function avatar(user, large=false) { const url = user?.profileImageUrl; const local = url && /^\/(?:uploads|api\/images)\/[a-zA-Z0-9/_.-]+$/.test(url); return `<span class="avatar${large?' large':''}" aria-hidden="true">${local ? `<img src="${h(url)}" alt="" loading="lazy">` : h((user?.username || '♪').slice(0,1))}</span>`; }
 export function time(value) { if (!value) return ''; const d=new Date(value); return Number.isNaN(d.valueOf())?'':new Intl.DateTimeFormat('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(d); }
-// Freshness decides whether a recruitment post is worth answering, so lists show age, not a date.
-export function relativeTime(value) {
-  if (!value) return '';
+// Posts and login activity share the minute/hour/day/week buckets. Posts expire after 30 days,
+// so their display stops at "4週間前"; login activity continues into month buckets.
+function activityRelativeTime(value, post = false) {
+  if (!value) return '—';
   const then = new Date(value);
-  if (Number.isNaN(then.valueOf())) return '';
-  const minutes = Math.floor((Date.now() - then.getTime()) / 60000);
-  if (minutes < 1) return 'たった今';
-  if (minutes < 60) return `${minutes}分前`;
+  if (Number.isNaN(then.valueOf())) return '—';
+  const minutes = Math.max(0, Math.floor((Date.now() - then.getTime()) / 60000));
+  if (minutes < 60) return `${Math.max(1, minutes)}分前`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}時間前`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}日前`;
   const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `${weeks}週間前`;
-  const months = Math.floor(days / 30);
-  return months < 12 ? `${months}か月前` : `${Math.floor(days / 365)}年前`;
+  if (weeks < 4) return `${weeks}週間前`;
+  if (post) return '4週間前';
+  return `${Math.min(6, Math.max(1, Math.floor(days / 30)))}か月前`;
+}
+export function relativeTime(value) { return activityRelativeTime(value, true); }
+export function loginRelativeTime(value, online = false) {
+  return online ? 'オンライン中' : activityRelativeTime(value);
 }
 export const notice = (message,type='info') => `<div class="notice ${h(type)}"${type==='error'?' role="alert"':''}>${h(message)}</div>`;
 export const empty = (title,body='',actionHtml='') => `<div class="empty-state">${icon('music')}<h2>${h(title)}</h2>${body?`<p>${h(body)}</p>`:''}${actionHtml}</div>`;

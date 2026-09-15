@@ -155,10 +155,11 @@ class ReleaseApiIntegrationTest {
     }
 
     @Test
-    void it017_keywordAlsoSearchesAreaSupplement() throws Exception {
+    void it017_removedKeywordDoesNotFilterSelectionOnlySearch() throws Exception {
         jdbc.update("update posts set area_sub='QA_RELEASE_補足だけの検索語' where id=920001");
         mvc.perform(get("/api/posts/page").param("keyword", "補足だけの検索語"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].id").value(920001));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.id==920001)]").exists());
     }
 
     @Test
@@ -189,13 +190,14 @@ class ReleaseApiIntegrationTest {
      * empty forever regardless of how much they searched.
      */
     @Test
-    void it032_pageSearchEndpointRecordsHistoryForSignedInUsers() throws Exception {
-        mvc.perform(get("/api/posts/page").param("keyword", "qa_release_history_probe")
+    void it032_pageSearchEndpointRecordsSelectionHistoryForSignedInUsers() throws Exception {
+        mvc.perform(get("/api/posts/page").param("partIds", "1")
                         .with(user(GENERAL).roles("USER")))
                 .andExpect(status().isOk());
         mvc.perform(get("/api/search-history").with(user(GENERAL).roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].conditions").value(org.hamcrest.Matchers.containsString("qa_release_history_probe")));
+                .andExpect(jsonPath("$[0].conditions").value(org.hamcrest.Matchers.containsString("parts=1")))
+                .andExpect(jsonPath("$[0].conditions").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("keyword"))));
     }
 
     /**
@@ -264,7 +266,42 @@ class ReleaseApiIntegrationTest {
         // path here would pass for the wrong reason (no file exists there at all)
         // without proving the private directory itself is unreachable.
         mvc.perform(get("/uploads/messages/97000000-0000-4000-8000-000000000007.png"))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void sec011_feedbackImageHasNoPublicBypassAndOnlyAdminCanFetchIt() throws Exception {
+        String name = "qa-security-feedback.png";
+        java.nio.file.Path root = java.nio.file.Paths.get(
+                System.getenv().getOrDefault("BANDLINK_UPLOAD_DIR", "uploads"))
+                .toAbsolutePath().normalize();
+        java.nio.file.Path privateFile = root.resolve("feedback").resolve(name);
+        java.nio.file.Path publicFile = root.resolve(name);
+        byte[] png = java.util.Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=");
+        java.nio.file.Files.createDirectories(privateFile.getParent());
+        java.nio.file.Files.write(privateFile, png);
+        java.nio.file.Files.write(publicFile, png);
+        try {
+            mvc.perform(get("/uploads/{name}", name))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType("image/png"));
+            mvc.perform(get("/uploads/feedback/{name}", name))
+                    .andExpect(status().isForbidden());
+            mvc.perform(get("/api/admin/feedback/images/{name}", name))
+                    .andExpect(status().isUnauthorized());
+            mvc.perform(get("/api/admin/feedback/images/{name}", name)
+                            .with(user(GENERAL).roles("USER")))
+                    .andExpect(status().isForbidden());
+            mvc.perform(get("/api/admin/feedback/images/{name}", name)
+                            .with(user(ADMIN).roles("ADMIN")))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType("image/png"))
+                    .andExpect(content().bytes(png));
+        } finally {
+            java.nio.file.Files.deleteIfExists(privateFile);
+            java.nio.file.Files.deleteIfExists(publicFile);
+        }
     }
 
     private long id(String table, String name) {

@@ -56,10 +56,10 @@
 |---|---|---|---|
 | id | bigint | PK | |
 | user_id | bigint | NOT NULL, FK | |
-| type | enum | NOT NULL | MEMBER_WANTED（メンバー募集） / WANTS_TO_JOIN（参加希望） |
+| type | enum | NOT NULL | MEMBER_WANTED（募集） / WANTS_TO_JOIN（加入希望） |
 | title | varchar(100) | NOT NULL | 文字数上限は実装案（11章対応、下記§5参照） |
 | content | text | NOT NULL, 最大500文字 | 募集本文 |
-| area_sub | varchar(100) | NULL可 | 市区町村・駅など自由記入 |
+| area_sub | varchar(100) | NULL可 | 旧データ互換用。新規画面では使用しない |
 | activity_frequency | enum | NOT NULL | WEEKLY_2PLUS / WEEKLY_1 / MONTHLY_2_3 / MONTHLY_1 / IRREGULAR / NEGOTIABLE |
 | status | enum | NOT NULL, DEFAULT 'OPEN' | OPEN / CLOSED（一覧表示可否はこれだけを見る） |
 | closed_reason | enum | NULL可 | MANUAL / EXPIRED / WITHDRAWN / SUSPENDED / DELETED_BY_ADMIN（8章「通常の終了と区別する」に対応） |
@@ -70,7 +70,7 @@
 | rank_updated_at | timestamp | NOT NULL | 一覧の並び順キー。新規作成時=created_at、順位アップ時=now()（11章「再公開の順位更新基準」対応） |
 
 **業務ルールの実装方針:**
-- 「同時公開は1ユーザー1件まで」は、`(user_id) WHERE status='OPEN'`の部分ユニークインデックスでDBレベルに強制する（11章「並行操作時の公開件数制限」対応。アプリ側のcheck-then-writeだけだと競合状態で2件同時OPENが作れてしまうため）。
+- 「同時公開は種別ごとに1ユーザー1件まで」は、`(user_id, type) WHERE status='OPEN'`の部分ユニークインデックスでDBレベルに強制する（11章「並行操作時の公開件数制限」対応）。
 - 新規作成・編集（本文・条件・画像すべて含む）は`users.last_edited_at`から12時間経過を条件に許可し、成功時に`last_edited_at`を更新する。
 - 再公開は`status`を`OPEN`に戻し`expires_at`を+30日更新するだけなら常に可能（editロックの対象外、既存確定事項どおり）。ただし「順位を上げる」動作は`users.last_rank_boosted_at`から12時間経過している場合のみ`rank_updated_at`を更新し、経過していなければ`rank_updated_at`は変更しない（再公開自体は成功する)。
 

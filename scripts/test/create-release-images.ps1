@@ -45,11 +45,18 @@ $overLimit = [byte[]]::new(5 * 1024 * 1024 + 1)
 [Array]::Copy($png, $overLimit, $png.Length)
 [IO.File]::WriteAllBytes((Join-Path $target 'qa-over-5mib.png'), $overLimit)
 
+# Deterministic profile icon used by U04, U14 and U22 in seed-release-users.sql.
+$bearSource = Join-Path $PSScriptRoot 'fixtures\qa-bear-icon.jpg'
+if (-not (Test-Path -LiteralPath $bearSource -PathType Leaf)) {
+    throw "テスト用プロフィール画像が見つかりません: $bearSource"
+}
+Copy-Item -LiteralPath $bearSource -Destination (Join-Path $target 'qa-bear-icon.jpg') -Force
+
 $manifest = @(
     'fixture_version=1'
     'generated_utc=' + [DateTime]::UtcNow.ToString('O')
     'destination=' + $target
-    'normal=png,jpg,webp,exactly-5mib'
+    'normal=png,jpg,webp,exactly-5mib,qa-bear-icon.jpg'
     'invalid=empty,svg,mime-mismatch,truncated,over-5mib'
 )
 [IO.File]::WriteAllLines((Join-Path $target 'QA_RELEASE_MANIFEST.txt'), $manifest)

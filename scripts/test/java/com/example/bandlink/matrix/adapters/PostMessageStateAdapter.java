@@ -34,7 +34,8 @@ public final class PostMessageStateAdapter {
             "body-boundary", "empty-body", "five-images", "join", "missing-choice", "recruit",
             "six-images", "too-many-choice", "zero-images");
     private static final Set<String> POST_DATA = Set.of(
-            "closed", "edit-locked", "expired", "non-owner", "owner", "published");
+            "closed", "edit-locked", "expired", "other-type-open", "posted-0-to-4-weeks",
+            "same-type-open");
     private static final Set<String> POST_OPS = Set.of(
             "list", "detail", "create", "edit", "close", "republish", "delete", "double-submit");
     private static final Set<String> MSG_USERS = Set.of(
@@ -121,6 +122,7 @@ public final class PostMessageStateAdapter {
         final long actorId;
         final User actor;
         final Post post;
+        final Set<PostType> createdTypes = EnumSet.noneOf(PostType.class);
 
         PostFx(ReleaseCase row) {
             this.row = row;
@@ -131,9 +133,14 @@ public final class PostMessageStateAdapter {
             actor = known.get(actorId);
             applyState(actor, row.userState());
             if (actor != null && row.userState().equals("admin")) actor.setRole(UserRole.ADMIN);
-            long ownerId = row.dataState().equals("non-owner")
-                    ? (actorId == PRIMARY ? OTHER : PRIMARY) : PRIMARY;
-            post = new Post(known.get(ownerId), PostType.MEMBER_WANTED, "title", "content",
+            long ownerId = PRIMARY;
+            PostType existingType = switch (row.dataState()) {
+                case "other-type-open" -> row.inputState().equals("join")
+                        ? PostType.MEMBER_WANTED : PostType.WANTS_TO_JOIN;
+                default -> row.inputState().equals("join")
+                        ? PostType.WANTS_TO_JOIN : PostType.MEMBER_WANTED;
+            };
+            post = new Post(known.get(ownerId), existingType, "title", "content",
                     "Tokyo", ActivityFrequency.WEEKLY_1, BASE);
             id(post, POST);
             if (row.dataState().equals("closed")) post.close(ClosedReason.MANUAL, BASE.plusHours(1));
@@ -150,9 +157,11 @@ public final class PostMessageStateAdapter {
             when(posts.findByIdAndUserId(anyLong(), anyLong())).thenAnswer(i ->
                     i.getArgument(0).equals(POST) && post.getUser().getId().equals(i.getArgument(1))
                             ? Optional.of(post) : Optional.empty());
-            when(posts.existsByUserIdAndStatus(anyLong(), any())).thenAnswer(i ->
-                    i.getArgument(1) == PostStatus.OPEN && post.getStatus() == PostStatus.OPEN
-                            && post.getUser().getId().equals(i.getArgument(0)));
+            when(posts.existsByUserIdAndStatusAndType(anyLong(), any(), any())).thenAnswer(i ->
+                    (i.getArgument(1) == PostStatus.OPEN && post.getStatus() == PostStatus.OPEN
+                            && post.getUser().getId().equals(i.getArgument(0))
+                            && post.getType() == i.getArgument(2))
+                            || createdTypes.contains(i.getArgument(2)));
             when(posts.findByStatusOrderByRankUpdatedAtDesc(PostStatus.OPEN)).thenReturn(List.of(post));
             when(posts.findByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(post));
             when(posts.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
@@ -176,9 +185,12 @@ public final class PostMessageStateAdapter {
 
         void create(PostRequests.Create request, boolean validInput) {
             if (!validInput) { readOnlyInvalid(); return; }
-            boolean allowed = activeVerified(actor) && !locked() && !actorHasOpen();
+            // The 12-hour lock applies to editing an existing post.  Creating a new
+            // recruitment or join post is intentionally unrestricted by that lock.
+            boolean allowed = activeVerified(actor) && !actorHasOpen(request.type());
             if (allowed) {
                 Post created = service.create(actorId, request);
+                createdTypes.add(request.type());
                 assertSame(actor, created.getUser());
                 assertNotNull(actor.getLastEditedAt());
                 verify(posts).save(created);
@@ -240,9 +252,10 @@ public final class PostMessageStateAdapter {
 
         void doubleSubmit(PostRequests.Create request, boolean validInput) {
             if (!validInput) { readOnlyInvalid(); return; }
-            boolean firstAllowed = activeVerified(actor) && !locked() && !actorHasOpen();
+            boolean firstAllowed = activeVerified(actor) && !actorHasOpen(request.type());
             if (firstAllowed) {
                 assertNotNull(service.create(actorId, request));
+                createdTypes.add(request.type());
                 assertThrows(PostService.RuleViolationException.class, () -> service.create(actorId, request));
                 verify(posts, times(1)).save(any());
             } else {
@@ -258,8 +271,9 @@ public final class PostMessageStateAdapter {
         }
 
         boolean owns() { return actor != null && post.getUser().getId().equals(actorId); }
-        boolean actorHasOpen() {
-            return post.getStatus() == PostStatus.OPEN && post.getUser().getId().equals(actorId);
+        boolean actorHasOpen(PostType type) {
+            return post.getStatus() == PostStatus.OPEN && post.getUser().getId().equals(actorId)
+                    && post.getType() == type;
         }
         boolean locked() {
             return actor != null && actor.getLastEditedAt() != null
@@ -443,7 +457,7 @@ public final class PostMessageStateAdapter {
     private static MessageRequests.Send messageRequest(String state) {
         return switch (state) {
             case "empty" -> new MessageRequests.Send(null, null);
-            case "text-boundary" -> new MessageRequests.Send("m".repeat(1000), null);
+            case "text-boundary" -> new MessageRequests.Send("m".repeat(500), null);
             case "oversize-image" -> new MessageRequests.Send(null, "i".repeat(1001));
             case "image" -> new MessageRequests.Send(null, "/api/messages/images/qa.png");
             case "text-image" -> new MessageRequests.Send("message", "/api/messages/images/qa.png");

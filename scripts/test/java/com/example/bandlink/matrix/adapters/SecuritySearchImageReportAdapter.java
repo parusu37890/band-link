@@ -82,10 +82,10 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public final class SecuritySearchImageReportAdapter {
     private static final Set<String> SEARCH_USERS = Set.of("anonymous", "user", "suspended", "withdrawn", "admin");
-    private static final Set<String> SEARCH_INPUTS = Set.of("empty-keyword", "title-hit", "body-hit", "area-hit",
-            "no-hit", "max-length", "huge-cursor", "invalid-cursor");
+    private static final Set<String> SEARCH_INPUTS = Set.of("no-filter", "single-filter", "multi-value-or",
+            "cross-field-and", "all-filters", "no-hit", "huge-cursor", "invalid-cursor");
     private static final Set<String> SEARCH_DATA = Set.of("zero", "one", "many", "tie", "history", "no-history");
-    private static final Set<String> SEARCH_OPERATIONS = Set.of("initial", "search", "filter", "sort", "load-more", "retry", "clear");
+    private static final Set<String> SEARCH_OPERATIONS = Set.of("initial", "apply", "change", "sort", "load-more", "retry", "clear");
 
     private static final Set<String> IMAGE_USERS = Set.of("anonymous", "user", "participant", "third-party", "admin");
     private static final Set<String> IMAGE_INPUTS = Set.of("jpeg", "png", "webp", "empty", "exact-5mb", "over-5mb",
@@ -133,16 +133,16 @@ public final class SecuritySearchImageReportAdapter {
     private static void executeSearch(ReleaseCase row) {
         requireKnown(row, SEARCH_USERS, SEARCH_INPUTS, SEARCH_DATA, SEARCH_OPERATIONS);
         PostSearchCriteria criteria = searchCriteria(row.inputState());
-        if ("empty-keyword".equals(row.inputState()) || row.inputState().endsWith("cursor")) {
-            assertFalse(criteria.hasConditions(), "cursor/empty input is not a search condition");
+        if ("no-filter".equals(row.inputState()) || row.inputState().endsWith("cursor")) {
+            assertFalse(criteria.hasConditions(), "unfiltered/cursor input is not a search condition");
         } else {
-            assertTrue(criteria.hasConditions(), "keyword input must be an executable condition");
+            assertTrue(criteria.hasConditions(), "selection input must be an executable condition");
         }
         if ("max-length".equals(row.inputState())) assertEquals(500, criteria.keyword().length());
 
         switch (row.operation()) {
             case "initial" -> assertSearchPage(criteria, null, 12, 1);
-            case "search", "filter" -> assertSearchHistory(row, criteria);
+            case "apply", "change" -> assertSearchHistory(row, criteria);
             case "sort" -> assertSearchSort(criteria);
             case "load-more" -> assertSearchCursor(row, criteria);
             case "retry" -> assertSearchRetry(row, criteria);
@@ -153,12 +153,13 @@ public final class SecuritySearchImageReportAdapter {
 
     private static PostSearchCriteria searchCriteria(String state) {
         return switch (state) {
-            case "empty-keyword", "huge-cursor", "invalid-cursor" -> new PostSearchCriteria("  ", null, null, null, null, null, null);
-            case "title-hit" -> new PostSearchCriteria("Midnight Session", null, null, null, null, null, null);
-            case "body-hit" -> new PostSearchCriteria("bass player", null, null, null, null, null, null);
-            case "area-hit" -> new PostSearchCriteria("Shibuya", null, null, null, null, null, null);
-            case "no-hit" -> new PostSearchCriteria("definitely-no-result", null, null, null, null, null, null);
-            case "max-length" -> new PostSearchCriteria("検".repeat(500), null, null, null, null, null, null);
+            case "no-filter", "huge-cursor", "invalid-cursor" -> new PostSearchCriteria(null, null, null, null, null, null, null);
+            case "single-filter" -> new PostSearchCriteria(null, Set.of(1L), null, null, null, null, null);
+            case "multi-value-or" -> new PostSearchCriteria(null, Set.of(1L, 2L), null, null, null, null, null);
+            case "cross-field-and" -> new PostSearchCriteria(null, Set.of(1L), Set.of(1L), null, null, null, null);
+            case "all-filters" -> new PostSearchCriteria(null, Set.of(1L), Set.of(1L), Set.of(1L), Set.of(1L),
+                    Set.of(com.example.bandlink.entity.AgeRange.ANY), Set.of(com.example.bandlink.entity.ActivityFrequency.WEEKLY_1));
+            case "no-hit" -> new PostSearchCriteria(null, Set.of(Long.MAX_VALUE), null, null, null, null, null);
             default -> throw new AssertionError("Unhandled Search input " + state);
         };
     }

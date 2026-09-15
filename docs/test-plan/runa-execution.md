@@ -171,4 +171,4 @@ docs/test-results/<yyyyMMdd-HHmmss>/
 
 ## 8. 終了判定
 
-`release-test-plan.md` のリリース判定基準を適用します。現時点は全件NOT_RUNなので、リリース可とは判定できません。P0/P1のFAILまたはBLOCKEDが1件でも残れば「リリース不可」です。
+`release-test-plan.md` のリリース判定基準を適用します。2026-09-15時点でJUnit・結合・業務マトリクスはPASSですが、公式Playwright最新UI回帰、ユーザーテスト、NFT、同時投稿のDB一意性が未完了です。P0/P1のFAILまたは未解消BLOCKEDが1件でも残る間は「リリース不可」です。`r`n

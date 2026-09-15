@@ -16,7 +16,7 @@
   --control-line: #7f8577;   /* 3.80:1 on the shared canvas */
   --accent: #45643c;         /* 6.69:1 on --bg — moss, the dark theme's sage brought to light */
   --focus: #2e6fd8;          /* blue focus and selection state */
-  --accent-alt: #8a4a2a;    /* 6.79:1 on --bg — the second badge colour, so 募集 and 参加希望 differ by hue as well as words */
+  --accent-alt: #8a4a2a;    /* 6.79:1 on --bg — the second badge colour, so 募集 and 加入希望 differ by hue as well as words */
   --ink-hover: #3a3f36;      /* primary button hover; --bg text on it is 10.80:1 */
   --rule: #45643c;           /* the 3px rule that opens a profile, an auth panel, a contact block */
   --danger: #9c3025;         /* 7.33:1 on --bg */
@@ -25,9 +25,9 @@
   --success: #3f6b3a;        /* 6.22:1 on --bg */
   /* Presence is written beside the dot so color is not the only cue. */
   --online: #8db600;         /* 黄緑のオンライン表示 */
-  /* 募集と参加希望 are intent categories, separated from the green accent: blue/orange. */
+  /* 募集と加入希望 are intent categories, separated from the green accent: blue/orange. */
   --mark-wanted: #2864c7;    /* white on it is 5.72:1 */
-  --mark-join: #a94821;      /* --bg on it is 5.61:1 at the small single-character mark */
+  --mark-join: #b45309;      /* warm orange; --bg on it is 4.68:1 at the small single-character mark */
   --success-bg: #edf3ea;     /* --success on it is 5.51:1 */
   --notice-bg: #eaf0f6;
   --notice-line: #4a6f96;

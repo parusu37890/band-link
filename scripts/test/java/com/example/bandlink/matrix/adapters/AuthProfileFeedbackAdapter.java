@@ -104,7 +104,7 @@ public final class AuthProfileFeedbackAdapter {
                     ONE_ID, ONE_ID, ONE_ID, ONE_ID),
                     "videoUrl");
             case "max" -> assertValid(row, profile(
-                    "名".repeat(80), "女性", "紹".repeat(1000), 120, 100,
+                    "名".repeat(80), "女性", "紹".repeat(500), 120, 100,
                     "v".repeat(1000), "y".repeat(1000), "t".repeat(1000),
                     "s".repeat(1000), "p".repeat(1000), "a".repeat(1000),
                     Set.of(1L, 2L, 3L, 4L, 5L), Set.of(1L, 2L, 3L),
@@ -121,7 +121,7 @@ public final class AuthProfileFeedbackAdapter {
     private static void executeFeedback(ReleaseCase row) {
         switch (row.inputState()) {
             case "body-boundary" -> assertFeedbackAccepted(row, FeedbackType.CONTACT,
-                    new FeedbackRequest("お".repeat(3000), null));
+                    new FeedbackRequest("お".repeat(1000), null));
             case "contact" -> assertFeedbackAccepted(row, FeedbackType.CONTACT,
                     new FeedbackRequest("運営へのお問い合わせです。", null));
             case "feature" -> assertFeedbackAccepted(row, FeedbackType.FEATURE_REQUEST,
@@ -131,14 +131,14 @@ public final class AuthProfileFeedbackAdapter {
             case "invalid-url" -> assertFeedbackRejected(row,
                     new FeedbackRequest("お問い合わせ", "u".repeat(1001)), "imageUrl");
             case "jpeg" -> assertFeedbackAccepted(row, FeedbackType.CONTACT,
-                    new FeedbackRequest("JPEG添付", "/uploads/test.jpg"));
+                    new FeedbackRequest("JPEG添付", "/api/admin/feedback/images/test.jpg"));
             case "no-image" -> assertFeedbackAccepted(row, FeedbackType.CONTACT,
                     new FeedbackRequest("画像なし", null));
             case "oversize" -> assertOversizeImageRejected(row);
             case "png" -> assertFeedbackAccepted(row, FeedbackType.CONTACT,
-                    new FeedbackRequest("PNG添付", "/uploads/test.png"));
+                    new FeedbackRequest("PNG添付", "/api/admin/feedback/images/test.png"));
             case "webp" -> assertFeedbackAccepted(row, FeedbackType.CONTACT,
-                    new FeedbackRequest("WebP添付", "/uploads/test.webp"));
+                    new FeedbackRequest("WebP添付", "/api/admin/feedback/images/test.webp"));
             default -> throw unsupported(row, "Feedback inputState");
         }
     }

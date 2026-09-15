@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
     boolean existsByUserIdAndStatus(Long userId, PostStatus status);
+    boolean existsByUserIdAndStatusAndType(Long userId, PostStatus status, com.example.bandlink.entity.PostType type);
     Optional<Post> findByIdAndUserId(Long id, Long userId);
     List<Post> findByStatusOrderByRankUpdatedAtDesc(PostStatus status);
     List<Post> findByUserIdAndStatus(Long userId, PostStatus status);

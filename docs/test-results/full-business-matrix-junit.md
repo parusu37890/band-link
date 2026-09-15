@@ -1,6 +1,6 @@
 # Full business matrix JUnit
 
-実行日: 2026-09-14
+実行日: 2026-09-15
 
 `docs/test-plan/full-case-inventory.csv` のうち、JUnitで検証するAPI・入力・サービス・認可・保存処理14,227ケースを、ケースIDごとのJUnit DynamicTestとして実行した。
 
@@ -47,4 +47,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test/run-full-bu
 
 この結果は全14,659ケース中、JUnitで実行する14,227ケースの結果である。残る432ケースはPlaywright MCPまたは手動・非機能試験の対象であり、このJUnit結果には含めない。実PostgreSQL、実HTTPサーバー、実ブラウザーを必要とする確認は、結合試験とシステム試験の証跡を別に判定する。
 
-WindowsではJava compiler終了時にJAR解放の`AccessDeniedException`警告が表示される場合がある。コンパイラー終了コード、JUnit集計、結果CSV件数をすべて検査し、警告だけをテスト成功の根拠にはしていない。
+WindowsではJava compiler終了時にJAR解放の`AccessDeniedException`警告が表示される場合がある。コンパイラー終了コード、JUnit集計、結果CSV件数をすべて検査し、警告だけをテスト成功の根拠にはしていない。`r`n

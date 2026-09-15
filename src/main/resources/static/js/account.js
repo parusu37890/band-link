@@ -236,8 +236,8 @@ async function profileEdit(){
 async function feedbackPage(type){
   const feature=type==='FEATURE_REQUEST';
   const title=feature?'機能要望':'お問い合わせ';
-  const description=feature?'こうなったら使いやすい、を教えてください。':'困っていることや確認したいことを運営に知らせてください。';
-  showPage(`<div class="page feedback-page"><a class="back-link" href="/posts">${icon('back')}募集一覧へ</a><div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div></div><form id="feedback-form" class="feedback-form"><div class="form-field"><label for="feedback-message">${feature?'要望の内容':'お問い合わせ内容'}</label><textarea class="input" id="feedback-message" name="message" rows="9" maxlength="3000" required placeholder="自由にご記入ください。"></textarea><span class="hint">3000文字まで</span></div><div class="form-field"><label for="feedback-image">画像（任意）</label><input id="feedback-image" name="image" type="file" accept="image/jpeg,image/png,image/webp"><div class="feedback-attachment" data-feedback-attachment hidden></div><span class="hint">画面の状態が分かる画像を1枚添付できます（5MBまで）。</span></div><div id="feedback-status" aria-live="polite"></div><button class="button primary" type="submit">送信</button></form></div>`,title);
+  const description=feature?'新機能のアイデアやこうなったら使いやすい等を教えてください。':'困っていることや確認したいことを運営に知らせてください。';
+  showPage(`<div class="page feedback-page"><a class="back-link" href="/posts">${icon('back')}募集一覧へ</a><div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div></div><form id="feedback-form" class="feedback-form"><div class="form-field"><label for="feedback-message">${feature?'要望の内容':'お問い合わせ内容'}</label><textarea class="input" id="feedback-message" name="message" rows="9" maxlength="1000" required placeholder="自由にご記入ください。"></textarea><span class="hint">1000文字まで</span></div><div class="form-field"><label for="feedback-image">画像（任意）</label><input id="feedback-image" name="image" type="file" accept="image/jpeg,image/png,image/webp"><div class="feedback-attachment" data-feedback-attachment hidden></div><span class="hint">画面の状態が分かる画像を1枚添付できます（5MBまで）。</span></div><div id="feedback-status" aria-live="polite"></div><button class="button primary" type="submit">送信</button></form></div>`,title);
   const form=main.querySelector('#feedback-form');
   const imageInput=form.elements.image;
   const attachment=form.querySelector('[data-feedback-attachment]');
@@ -282,11 +282,10 @@ function supportPage(){
     ${helpSection('help-start', '使いはじめる', [
       ['募集を投稿できない、メッセージを送れない', 'メールアドレスの確認が終わっていない可能性があります。登録時のメール内リンクを開くと、投稿と送信ができるようになります。閲覧と検索は確認前でもできます。', ['メールアドレスを確認する', '/verify-email']],
       ['パスワードを忘れた', '登録したメールアドレスへ再設定用のトークンを送ります。届いたトークンと新しいパスワードを入力してください。', ['パスワードを再設定する', '/password-reset']],
-      ['プロフィールに何を書けばよいか', '担当パート・活動エリア・好きなジャンルが埋まっていると、相手が連絡するか判断できます。空の項目は相手の画面に表示されないので、書ける範囲で構いません。', ['プロフィールを編集する', '/settings/profile']],
     ])}
     ${helpSection('help-posts', '募集のきまり', [
-      ['公開できる募集は同時に1件', '2件目を出すには、いま公開中の募集を終了してください。終了した募集は自分の募集一覧に残り、あとから再公開できます。', ['自分の募集を見る', '/my/posts']],
-      ['投稿・編集した直後は変更できない', '投稿または編集してから12時間は、新しい募集の作成も編集もできません。画像の追加・削除・並べ替えも編集に含まれます。本文・条件・画像はまとめて保存してください。', null],
+      ['募集と加入は1件ずつ公開できる', '募集と加入希望は、それぞれ同時に1件ずつ公開できます。終了した投稿は自分の投稿一覧に残り、あとから再公開できます。', ['自分の投稿を見る', '/my/posts']],
+      ['投稿・編集した直後は変更できない', '新規投稿には時間制限はありません。投稿を編集してから12時間は、その投稿の本文・条件・画像を変更できません。', null],
       ['募集は30日で自動的に終了する', '公開から30日経つと掲載が終わります。再公開すると、その時点から30日に更新されます。募集の終了と再公開はいつでも操作できます。', null],
     ])}
     ${helpSection('help-people', '相手とのやりとり', [

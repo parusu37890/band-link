@@ -1,7 +1,7 @@
 # Band Link リリーステストケース
 
 生成元: `scripts/test/generate-release-test-catalog.ps1`  
-状態: 161件のリリースゲート用代表ケース（全件未実行）  
+状態: 161件のリリースゲート用代表ケース（自動化対象の単体・結合・業務マトリクスは別証跡で実行済み。UI/ユーザー/NFTは未完了）
 総数: 161件
 
 全組み合わせのケース台帳は `docs/test-plan/full-case-inventory.csv` に出力する。これは機能ごとの入力値・ユーザー状態・データ状態・操作を直積で列挙した14,659件の実行単位であり、161件の代表ケースで全網羅とみなしてはならない。再生成コマンドは `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test/generate-full-case-inventory.ps1`。
@@ -83,14 +83,14 @@
 - **後処理:** mock・一時dirをテスト終了時に破棄
 - **失敗時の切り分け方法:** 最初にassertion差分、次にservice分岐、最後にmock呼出し順を確認
 
-## UT-006 — 自由記述3000文字と画像URL1000文字の境界
+## UT-006 — 自由記述1000文字と画像URL1000文字の境界
 - **要件ID:** R-FBK-02
 - **テスト層:** 単体
 - **優先度:** P1
-- **目的:** 自由記述3000文字と画像URL1000文字の境界
+- **目的:** 自由記述1000文字と画像URL1000文字の境界
 - **前提条件:** 対象クラスをmock/固定Clock/一時dirで分離し、外部I/Oを行わない
 - **使用ユーザー:** U04
-- **使用データ:** 2999/3000/3001、999/1000/1001文字
+- **使用データ:** 999/1000/1001、999/1000/1001文字
 - **操作手順:** Bean Validationを実行
 - **期待結果:** 上限以下だけ制約違反0
 - **DB/API/UIで確認する内容:** constraint pathとmessage
@@ -728,17 +728,17 @@
 - **後処理:** transaction rollbackまたはseed再投入。生成画像を専用dirから削除
 - **失敗時の切り分け方法:** HTTP層、Security filter、Controller、Service、JPA/DB、filesystemの順に境界を特定
 
-## IT-014 — 同一利用者の公開投稿1件制限をDB境界で守る
+## IT-014 — 同一利用者の募集・加入希望を各1件に制限する
 - **要件ID:** R-POST-03
 - **テスト層:** 結合
 - **優先度:** P0
-- **目的:** 同一利用者の公開投稿1件制限をDB境界で守る
+- **目的:** 同じ種別の公開投稿は1件に制限し、募集と加入希望は各1件を同時公開できることをDB境界で守る
 - **前提条件:** 専用DBへseed済み。QA_RELEASE_IT=true。テスト用upload dir。対象利用者のsessionとCSRFを取得
 - **使用ユーザー:** U05
-- **使用データ:** 既存P001
-- **操作手順:** 別内容をPOST
-- **期待結果:** 競合応答、行追加0
-- **DB/API/UIで確認する内容:** posts count、status
+- **使用データ:** 既存の募集1件、同種別の募集、異種別の加入希望
+- **操作手順:** 同種別をPOSTした後、異種別をPOST
+- **期待結果:** 同種別は競合応答・行追加0、異種別は成功しOPENが種別ごとに1件
+- **DB/API/UIで確認する内容:** user_id/type/status別posts count、HTTP status
 - **証跡:** JUnit XML、MockMvc要求応答、匿名化DB照合、必要時file一覧
 - **後処理:** transaction rollbackまたはseed再投入。生成画像を専用dirから削除
 - **失敗時の切り分け方法:** HTTP層、Security filter、Controller、Service、JPA/DB、filesystemの順に境界を特定
@@ -773,17 +773,17 @@
 - **後処理:** transaction rollbackまたはseed再投入。生成画像を専用dirから削除
 - **失敗時の切り分け方法:** HTTP層、Security filter、Controller、Service、JPA/DB、filesystemの順に境界を特定
 
-## IT-017 — キーワードがタイトル・本文・補足エリアを部分一致する
+## IT-017 — 検索APIは選択式条件だけを扱う
 - **要件ID:** R-SRCH-01
 - **テスト層:** 結合
 - **優先度:** P0
-- **目的:** キーワードがタイトル・本文・補足エリアを部分一致する
+- **目的:** 検索APIの契約からキーワードを除き、選択式条件だけで結果を絞り込む
 - **前提条件:** 専用DBへseed済み。QA_RELEASE_IT=true。テスト用upload dir。対象利用者のsessionとCSRFを取得
 - **使用ユーザー:** 匿名
-- **使用データ:** P001/P002と固有語
-- **操作手順:** 3fieldの語でGET
-- **期待結果:** 対象だけ返す
-- **DB/API/UIで確認する内容:** SQL結果、JSON IDs
+- **使用データ:** 都道府県・パート・ジャンル・スタンス・年代・活動頻度・募集種別
+- **操作手順:** 各選択式条件でGETし、keyword付き要求も送る
+- **期待結果:** 選択式条件だけが検索結果へ作用し、keywordは公開検索条件・履歴に残らない
+- **DB/API/UIで確認する内容:** request contract、SQL条件、JSON IDs、search_histories
 - **証跡:** JUnit XML、MockMvc要求応答、匿名化DB照合、必要時file一覧
 - **後処理:** transaction rollbackまたはseed再投入。生成画像を専用dirから削除
 - **失敗時の切り分け方法:** HTTP層、Security filter、Controller、Service、JPA/DB、filesystemの順に境界を特定
@@ -840,7 +840,7 @@
 - **目的:** 検索履歴は認証時だけ全条件を重複なく直近5件に保つ
 - **前提条件:** 専用DBへseed済み。QA_RELEASE_IT=true。テスト用upload dir。対象利用者のsessionとCSRFを取得
 - **使用ユーザー:** U02/匿名
-- **使用データ:** keywordと全filters/type/sort、同条件、6条件、page cursor
+- **使用データ:** 全選択式filters/type/sort、同条件、6条件、page cursor
 - **操作手順:** 検索→同条件再検索→6条件検索→続きを取得→history取得
 - **期待結果:** 認証時だけ保存、同条件は最新へ移動、最大5、page追加0、条件欠落なし
 - **DB/API/UIで確認する内容:** search_histories件数/順序/hash/JSON
@@ -1253,26 +1253,26 @@
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
 - **失敗時の切り分け方法:** UI表示、browser console/network、API応答、server log、DB/filesの順で切り分け
 
-## ST-019 — オンライン中と最終ログイン表示を境界どおり示す
+## ST-019 — オンライン・最終ログイン・投稿時刻を境界どおり示す
 - **要件ID:** R-PRES-01
 - **テスト層:** システム
 - **優先度:** P1
-- **目的:** オンライン中と最終ログイン表示を境界どおり示す
+- **目的:** オンライン中、最終ログイン、投稿時刻の相対表示を境界どおり示す
 - **前提条件:** 専用DBへseed済み。テスト版アプリ起動済み。公式Playwright MCP接続済み
 - **使用ユーザー:** U05/U06/U02
-- **使用データ:** T0相対時刻
-- **操作手順:** 一覧とprofile表示
-- **期待結果:** 5分以内だけonline、正確時刻は非表示
+- **使用データ:** T0相対の5分境界と、投稿後1分・59分・1時間・1日・1週間・3週間・4週間・4週間超
+- **操作手順:** 募集一覧・投稿詳細・profileを表示
+- **期待結果:** 5分以内だけonline、正確なログイン時刻は非表示、投稿時刻は4週間以上を「4週間前」と表示
 - **DB/API/UIで確認する内容:** UI text、API fields
 - **証跡:** ケースID入りscreenshot、Playwright MCP操作記録、network status、匿名化DB照合
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
 - **失敗時の切り分け方法:** UI表示、browser console/network、API応答、server log、DB/filesの順で切り分け
 
-## ST-020 — メンバー募集を段階入力・preview・公開する
+## ST-020 — 募集を段階入力・preview・公開する
 - **要件ID:** R-POST-01
 - **テスト層:** システム
 - **優先度:** P1
-- **目的:** メンバー募集を段階入力・preview・公開する
+- **目的:** 募集を段階入力・preview・公開する
 - **前提条件:** 専用DBへseed済み。テスト版アプリ起動済み。公式Playwright MCP接続済み
 - **使用ユーザー:** U18
 - **使用データ:** 正常全fieldと画像2枚
@@ -1283,16 +1283,16 @@
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
 - **失敗時の切り分け方法:** UI表示、browser console/network、API応答、server log、DB/filesの順で切り分け
 
-## ST-021 — 参加希望の種別と見出しを明確に公開する
+## ST-021 — 加入希望の種別と見出しを明確に公開する
 - **要件ID:** R-POST-01
 - **テスト層:** システム
 - **優先度:** P1
-- **目的:** 参加希望の種別と見出しを明確に公開する
+- **目的:** 加入希望の種別と見出しを明確に公開する
 - **前提条件:** 専用DBへseed済み。テスト版アプリ起動済み。公式Playwright MCP接続済み
 - **使用ユーザー:** U06再seed後
 - **使用データ:** WANTS_TO_JOIN
 - **操作手順:** 作成し一覧・詳細を開く
-- **期待結果:** メンバー募集と混同せず大きく表示
+- **期待結果:** 募集と混同せず大きく表示
 - **DB/API/UIで確認する内容:** UI label、type API
 - **証跡:** ケースID入りscreenshot、Playwright MCP操作記録、network status、匿名化DB照合
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
@@ -1373,17 +1373,17 @@
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
 - **失敗時の切り分け方法:** UI表示、browser console/network、API応答、server log、DB/filesの順で切り分け
 
-## ST-027 — keywordを入力・Enter・clearして結果を更新する
-- **要件ID:** R-SRCH-01
+## ST-027 — キーワード欄とヘッダー直下の重複見出しを表示しない
+- **要件ID:** R-SRCH-01 / R-UI-03
 - **テスト層:** システム
 - **優先度:** P1
-- **目的:** keywordを入力・Enter・clearして結果を更新する
+- **目的:** 募集一覧から廃止したキーワード検索と重複するページ見出しを除き、条件検索へ直接進める
 - **前提条件:** 専用DBへseed済み。テスト版アプリ起動済み。公式Playwright MCP接続済み
 - **使用ユーザー:** 匿名
-- **使用データ:** タイトル/本文/補足固有語
-- **操作手順:** 検索・clear
-- **期待結果:** 該当結果、0件案内、復元
-- **DB/API/UIで確認する内容:** URL、API query、UI
+- **使用データ:** `/posts?keyword=廃止済み` と選択式条件
+- **操作手順:** desktop/mobileで一覧を開き、条件選択・解除を行う
+- **期待結果:** キーワード入力欄とヘッダー直下の重複見出しがなく、種別タブ・条件検索・一覧が表示される。keywordは次のURL/API要求に残らない
+- **DB/API/UIで確認する内容:** DOM、見出し階層、URL、API query、UI
 - **証跡:** ケースID入りscreenshot、Playwright MCP操作記録、network status、匿名化DB照合
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
 - **失敗時の切り分け方法:** UI表示、browser console/network、API応答、server log、DB/filesの順で切り分け
@@ -1793,16 +1793,16 @@
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
 - **失敗時の切り分け方法:** UI表示、browser console/network、API応答、server log、DB/filesの順で切り分け
 
-## ST-055 — 全25 routeの背景色・header・footerを一貫表示する
+## ST-055 — 全25 routeの背景色・header・footerと一覧冒頭を一貫表示する
 - **要件ID:** R-UI-03
 - **テスト層:** システム
 - **優先度:** P1
-- **目的:** 全25 routeの背景色・header・footerを一貫表示する
+- **目的:** 全25 routeの背景色・header・footerを一貫表示し、募集一覧ではヘッダー直下の重複見出しを置かない
 - **前提条件:** 専用DBへseed済み。テスト版アプリ起動済み。公式Playwright MCP接続済み
 - **使用ユーザー:** 全actor
 - **使用データ:** route一覧
 - **操作手順:** desktop/mobileで全route撮影
-- **期待結果:** 意図しない白/灰面なし、水平段差なし
+- **期待結果:** 意図しない白/灰面なし、水平段差なし。募集一覧はヘッダーの直後から種別タブ・検索操作を表示する
 - **DB/API/UIで確認する内容:** screenshots、computed background
 - **証跡:** ケースID入りscreenshot、Playwright MCP操作記録、network status、匿名化DB照合
 - **後処理:** 変更ケースはseed再投入。browser contextと添付画像を破棄
@@ -1838,11 +1838,11 @@
 - **後処理:** 作成データをseedで戻し、録画を管理領域へ移す
 - **失敗時の切り分け方法:** UI不具合と文言理解を分け、観察者の誘導有無、端末差、再現STを確認
 
-## UAT-003 — 募集と参加希望の違いを初見で判断する
+## UAT-003 — 募集と加入希望の違いを初見で判断する
 - **要件ID:** R-UX-02
 - **テスト層:** ユーザー
 - **優先度:** P1
-- **目的:** 募集と参加希望の違いを初見で判断する
+- **目的:** 募集と加入希望の違いを初見で判断する
 - **前提条件:** 専用環境と録画同意を準備。参加者へ操作方法を説明しない
 - **使用ユーザー:** 新規参加者
 - **使用データ:** P001/P002
@@ -2258,17 +2258,17 @@
 - **後処理:** 負荷・network interceptionを解除しseed再投入
 - **失敗時の切り分け方法:** 再現性を3回確認し、client/server/DB/filesystem/環境資源へ分解
 
-## NFT-003 — 同時投稿で公開1件制限を破らない
+## NFT-003 — 同時投稿で種別ごとの公開1件制限を破らない
 - **要件ID:** R-NFR-03
 - **テスト層:** 非機能
 - **優先度:** P1
-- **目的:** 同時投稿で公開1件制限を破らない
+- **目的:** 同種別の同時投稿では公開1件制限を守り、募集と加入希望の異種別同時投稿は両方を公開する
 - **前提条件:** 専用環境を固定し、他負荷を止める。時刻・viewport・試行回数を記録
 - **使用ユーザー:** U18
-- **使用データ:** 2 parallel requests
-- **操作手順:** barrierで同時POST
-- **期待結果:** 1成功1競合、OPEN 1件
-- **DB/API/UIで確認する内容:** responses、transaction log、DB
+- **使用データ:** 同種別2要求、募集1要求と加入希望1要求
+- **操作手順:** 2パターンをbarrierで同時POST
+- **期待結果:** 同種別は1成功1競合でOPEN 1件、異種別は2成功で各種別OPEN 1件
+- **DB/API/UIで確認する内容:** responses、transaction log、user_id/type/status別DB件数
 - **証跡:** 動画/画像、計測生データ、集計方法、DB件数、環境情報
 - **後処理:** 負荷・network interceptionを解除しseed再投入
 - **失敗時の切り分け方法:** 再現性を3回確認し、client/server/DB/filesystem/環境資源へ分解
@@ -2421,5 +2421,4 @@
 - **DB/API/UIで確認する内容:** SQLSTATE、constraint名、行数、API status/log
 - **証跡:** 動画/画像、計測生データ、集計方法、DB件数、環境情報
 - **後処理:** 負荷・network interceptionを解除しseed再投入
-- **失敗時の切り分け方法:** 再現性を3回確認し、client/server/DB/filesystem/環境資源へ分解
-
+- **失敗時の切り分け方法:** 再現性を3回確認し、client/server/DB/filesystem/環境資源へ分解`r`n

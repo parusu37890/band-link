@@ -1,6 +1,6 @@
 import {api,state,h,icon,showPage,notice} from './ui.js';
-import {discoveryPage} from './discovery.js';
-import {accountPage} from './account.js?v=20260913-6';
+import {discoveryPage} from './discovery.js?v=20260915-2';
+import {accountPage} from './account.js?v=20260915-1';
 import {communityPage} from './community.js?v=20260913-3';
 
 const path=()=>location.pathname.replace(/\/+$/,'')||'/';
@@ -15,7 +15,7 @@ function header(){
   return;
  }
  const feedbackLinks=state.user?`<a href="/contact" class="${here==='/contact'?'active':''}">お問い合わせ</a><a href="/feature-request" class="${here==='/feature-request'?'active':''}">機能要望</a>`:'';
- el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の募集</a>`:''}${feedbackLinks}</nav><div class="header-actions">${state.user?`<a class="icon-button" data-notif-link href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
+ el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の投稿</a>`:''}${feedbackLinks}</nav><div class="header-actions">${state.user?`<a class="icon-button" data-notif-link href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary" href="/register">新規登録</a>'}`}</div></div>`;
  // The unread dot is a colour-only cue for sighted users; without also updating the link's
  // accessible name, assistive tech announces a plain "通知" even when there is something new
  // (NFT-010: state must reach assistive tech, not just be shown as a colour/shape).

@@ -11,45 +11,36 @@ export async function listing(renderCard){
  const options=key=>{const source=keys.find(x=>x[0]===key)?.[2];return source?masters[source].map(x=>[String(x.id),x.name]):key==='ageRanges'?ages:frequencies;};
  const label=(key,value)=>options(key).find(x=>String(x[0])===String(value))?.[1]||value;
  const applied=keys.flatMap(([key,title])=>values(params,key).map(value=>({key,title,value,label:label(key,value)})));
- if(params.get('keyword'))applied.unshift({key:'keyword',title:'キーワード',value:null,label:params.get('keyword')});
- const typeLabels={'MEMBER_WANTED':'メンバー募集','WANTS_TO_JOIN':'参加希望'};
+ const typeLabels={'MEMBER_WANTED':'募集','WANTS_TO_JOIN':'加入'};
  const group=([key,title])=>`<details class="search-group" ${['prefectureIds','partIds'].includes(key)?'open':''}><summary><span>${title}</span><span data-choice-count="${key}">${values(params,key).length||'指定なし'}</span></summary><p class="choice-summary" data-choice-summary="${key}">${h(values(params,key).map(v=>label(key,v)).join('・'))}</p><div class="filter-options ${key==='prefectureIds'?'prefecture-options':''}">${options(key).map(([value,name])=>`<label class="filter-option"><input type="checkbox" name="${key}" value="${h(value)}" ${values(params,key).includes(String(value))?'checked':''}><span>${h(name)}</span></label>`).join('')}</div></details>`;
  const filterOpen=matchMedia('(min-width:1100px)').matches;
  showPage(`<div class="page discovery-page">
-  <header class="board-heading"><h1>バンドメンバー募集</h1></header>
   <div class="board-layout">
    <aside class="search-rail" aria-label="募集の検索"><form id="search-form">
-    <div class="search-keyword" id="search-keyword"><label for="keyword">キーワード</label><div class="search-bar"><input id="keyword" class="search-input" name="keyword" maxlength="100" placeholder="アーティスト・駅名など" value="${h(params.get('keyword'))}"><button type="submit" class="button quiet" aria-label="キーワードで検索">${icon('search')}</button></div></div>
-    <div class="search-actions"><button class="button secondary search-toggle" type="button" aria-controls="search-keyword" aria-expanded="false">${icon('search')}<span>キーワード</span></button><button class="button secondary filter-toggle" type="button" aria-controls="filters" aria-expanded="${filterOpen}">${icon('filter')}条件検索 <span>${applied.length?applied.length+'項目選択中':''}</span></button></div>
+    <div class="search-actions"><button class="button secondary filter-toggle" type="button" aria-controls="filters" aria-expanded="${filterOpen}">${icon('filter')}条件検索 <span>${applied.length?applied.length+'項目選択中':''}</span></button></div>
     <section id="filters" ${filterOpen?'':'hidden'}><div class="search-guide"><h2>条件検索</h2></div>${keys.map(group).join('')}<div class="filter-actions"><button type="submit" class="button primary full">この条件で検索</button><button type="button" class="button quiet full" id="reset-filters">選択をすべて解除</button></div></section>
    </form></aside>
-   <section class="board-results" aria-label="募集一覧"><div class="discover-tabs"><div class="tabs" role="group" aria-label="募集の種類">${[['','すべて'],...Object.entries(typeLabels)].map(([value,title])=>`<button type="button" class="tab" data-type="${value}" aria-pressed="${(params.get('type')||'')===value}">${title}</button>`).join('')}</div>${button('募集を掲載する',state.user?'/posts/new':'/register')}</div>
+   <section class="board-results" aria-label="募集一覧"><div class="discover-tabs"><div class="tabs" role="group" aria-label="投稿の種類">${[['','すべて'],...Object.entries(typeLabels)].map(([value,title])=>`<button type="button" class="tab" data-type="${value}" aria-pressed="${(params.get('type')||'')===value}">${title}</button>`).join('')}</div>${button('投稿する',state.user?'/posts/new':'/register')}</div>
     ${applied.length?`<div class="applied-conditions"><p>検索中の条件</p><div class="active-filters">${applied.map(x=>`<a class="active-filter" href="${h(removeUrl(params,x.key,x.value))}" aria-label="${h(x.title+'：'+x.label)}を外して検索"><span><small>${h(x.title)}</small>${h(x.label)}</span>${icon('close')}</a>`).join('')}<a class="clear-search" href="/posts">すべて解除</a></div></div>`:''}
     <div class="results-heading"><strong id="result-count" role="status">募集を読み込み中…</strong><label class="sort-control"><span class="sr-only">募集の並び順</span><select id="post-sort" aria-label="募集の並び順"><option value="recent" ${params.get('sort')!=='login'?'selected':''}>新しい掲載順</option><option value="login" ${params.get('sort')==='login'?'selected':''}>投稿者のログイン順</option></select></label></div>
     <div id="results" class="post-grid" aria-busy="true"></div><div class="load-more" id="load-sentinel"><p id="page-status" class="hint" role="status"></p><button class="button secondary" id="load-more" hidden>さらに表示</button></div>
    </section>
-  </div></div>`,'バンドメンバー募集');
+  </div></div>`,'募集');
  const form=main.querySelector('#search-form');let type=params.get('type')||'';
- const search=()=>{const fd=new FormData(form);const next=new URLSearchParams();for(const key of ['keyword',...keys.map(x=>x[0])]){const list=fd.getAll(key).map(v=>String(v).trim()).filter(Boolean);if(list.length)next.set(key,list.join(','));}const sort=main.querySelector('#post-sort')?.value;if(sort&&sort!=='recent')next.set('sort',sort);if(type)next.set('type',type);navigate('/posts'+(next.size?'?'+next:''));};
+ const search=()=>{const fd=new FormData(form);const next=new URLSearchParams();for(const key of keys.map(x=>x[0])){const list=fd.getAll(key).map(v=>String(v).trim()).filter(Boolean);if(list.length)next.set(key,list.join(','));}const sort=main.querySelector('#post-sort')?.value;if(sort&&sort!=='recent')next.set('sort',sort);if(type)next.set('type',type);navigate('/posts'+(next.size?'?'+next:''));};
  form.addEventListener('submit',event=>{event.preventDefault();search();});
  main.querySelectorAll('[data-type]').forEach(el=>el.onclick=()=>{type=el.dataset.type;search();});
  main.querySelector('#post-sort').addEventListener('change',event=>{const next=new URLSearchParams(location.search);if(event.target.value==='login')next.set('sort','login');else next.delete('sort');next.delete('cursor');navigate('/posts'+(next.size?'?'+next:''));});
- // On a phone the keyword field opened above the posts, pushing the first row off the screen.
- // It sits behind this toggle instead; the field is always present for desktop and for assistive
- // tech, and .searching is what reveals it under the mobile rules.
- const rail=main.querySelector('.search-rail');
- const searchToggle=main.querySelector('.search-toggle');
- searchToggle.onclick=()=>{const open=!rail.classList.toggle('searching');searchToggle.setAttribute('aria-expanded',String(!open));if(!open)main.querySelector('#keyword').focus();};
  const toggle=main.querySelector('.filter-toggle');toggle.onclick=()=>{const filters=main.querySelector('#filters');filters.hidden=!filters.hidden;toggle.setAttribute('aria-expanded',String(!filters.hidden));};
  const updateSelections=()=>{let count=0;for(const [key] of keys){const list=[...form.querySelectorAll(`[name="${key}"]:checked`)].map(x=>x.value);count+=list.length;form.querySelector(`[data-choice-count="${key}"]`).textContent=list.length?list.length+'件':'指定なし';form.querySelector(`[data-choice-summary="${key}"]`).textContent=list.map(v=>label(key,v)).join('・');}};
  form.addEventListener('change',updateSelections);
  main.querySelector('#reset-filters').onclick=()=>{form.querySelectorAll('input[type=checkbox]').forEach(x=>x.checked=false);updateSelections();};
  const results=main.querySelector('#results'),more=main.querySelector('#load-more'),status=main.querySelector('#page-status');
- const request=new URLSearchParams(params);request.delete('cursor');request.set('limit','12');
+ const request=new URLSearchParams(params);request.delete('keyword');request.delete('cursor');request.set('limit','12');
  let cursor=null,total=0,loading=false,hasNext=true,failed=false;const seen=new Set();
  const emptyResults=()=>{
   const relax=keys.filter(([key])=>params.has(key)).map(([key,title])=>`<a href="${h(removeUrl(params,key))}">${h(title)}の指定を外す ${icon('arrow')}</a>`).join('');
-  return `<div class="search-empty"><h2>${applied.length||type?'条件に合う募集はありません':'公開中の募集はまだありません'}</h2><p>${applied.length||type?'条件を一つ広げると、活動できる相手が見つかるかもしれません。残したい条件はそのまま検索できます。':'メンバー募集だけでなく、参加したいパートや活動場所を書いて、自分から募集を出せます。'}</p>${relax?`<nav class="relax-search" aria-label="条件を広げて探す">${relax}</nav>`:''}<div class="row">${button('すべての募集を見る','/posts','secondary')}${button('自分の募集を書く',state.user?'/posts/new':'/register')}</div></div>`;
+  return `<div class="search-empty"><h2>${applied.length||type?'条件に合う投稿はありません':'公開中の投稿はまだありません'}</h2><p>${applied.length||type?'条件を一つ広げると、活動できる相手が見つかるかもしれません。残したい条件はそのまま検索できます。':'募集だけでなく、加入したいパートや活動場所を書いて、自分から投稿を出せます。'}</p>${relax?`<nav class="relax-search" aria-label="条件を広げて探す">${relax}</nav>`:''}<div class="row">${button('すべての投稿を見る','/posts','secondary')}${button('自分の投稿を書く',state.user?'/posts/new':'/register')}</div></div>`;
  };
  const append=async()=>{if(loading||!hasNext)return;loading=true;failed=false;more.disabled=true;results.setAttribute('aria-busy','true');status.textContent='募集を読み込んでいます…';try{
   if(cursor)request.set('cursor',cursor);const raw=await api('/api/posts/page?'+request);if(!Array.isArray(raw.items))throw new Error('募集の読み込みに失敗しました。');

@@ -1,6 +1,6 @@
 # UI・API・永続化インベントリ
 
-状態: 2026-09-14の作業ツリーを静的棚卸し。認可欄はリリース期待値です。
+状態: 2026-09-15の作業ツリーを静的棚卸し。認可欄はリリース期待値です。
 
 ## UI route（25）
 
@@ -49,8 +49,8 @@ PageControllerは同じHTML shellを返し、`app.js`、`account.js`、`discover
 |`PUT /api/posts/{id}`|確認済ACTIVE所有者|投稿編集|IT-013、ST-023|
 |`PATCH /api/posts/{id}/close`|確認済ACTIVE所有者|募集終了|IT-013、ST-024|
 |`PATCH /api/posts/{id}/reopen`|確認済ACTIVE所有者|再公開|IT-013/015、ST-024/025|
-|`GET /api/posts`|全員|旧一覧・認証時履歴|IT-021|
-|`GET /api/posts/page`|全員|filter/sort/cursor一覧|IT-017..020、ST-027..032|
+|`GET /api/posts`|全員|旧一覧・認証時の選択式条件履歴（keyword対象外）|IT-021|
+|`GET /api/posts/page`|全員|選択式filter/sort/cursor一覧（keyword対象外）|IT-017..020、ST-027..032|
 |`GET /api/posts/mine`|確認済ACTIVE|本人投稿管理|ST-023..025|
 |`GET /api/posts/{id}`|全員|投稿詳細|IT-015、ST-033|
 |`GET /api/posts/{postId}/images`|全員|投稿画像一覧|ST-026|

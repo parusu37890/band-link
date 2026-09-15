@@ -31,8 +31,7 @@ public class SearchHistoryService {
     }
 
     public List<SearchHistory> recent(Long userId) { return histories.findTop5ByUserIdOrderBySearchedAtDesc(userId); }
-    private String canonical(PostSearchCriteria c) { return "keyword=" + val(c.keyword()) + "|prefectures=" + sorted(c.prefectureIds()) + "|parts=" + sorted(c.partIds()) + "|genres=" + sorted(c.genreIds()) + "|stances=" + sorted(c.stanceIds()) + "|ages=" + sorted(c.ageRanges()) + "|frequency=" + sorted(c.activityFrequencies()); }
-    private String val(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
+    private String canonical(PostSearchCriteria c) { return "prefectures=" + sorted(c.prefectureIds()) + "|parts=" + sorted(c.partIds()) + "|genres=" + sorted(c.genreIds()) + "|stances=" + sorted(c.stanceIds()) + "|ages=" + sorted(c.ageRanges()) + "|frequency=" + sorted(c.activityFrequencies()); }
     private String sorted(Collection<?> values) { if (values == null) return ""; return values.stream().map(String::valueOf).sorted().reduce((a,b) -> a + "," + b).orElse(""); }
     private String sha256(String value) { try { byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)); StringBuilder out = new StringBuilder(); for (byte b : digest) out.append(String.format("%02x", b)); return out.toString(); } catch (Exception e) { throw new IllegalStateException(e); } }
 }

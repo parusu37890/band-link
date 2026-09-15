@@ -70,8 +70,23 @@ SELECT 910000+n,'QA_RELEASE_'||label,'qa-release-'||label||'@example.test',q.pas
  CASE WHEN n IN(3,24,25) THEN NULL WHEN n=15 THEN 0 WHEN n=16 THEN 100 ELSE 5 END,
  CASE WHEN n=17 THEN q.anchor-interval '1 hour' WHEN n=18 THEN q.anchor-interval '13 hours' ELSE NULL END,
  CASE WHEN n=19 THEN q.anchor-interval '1 hour' WHEN n=20 THEN q.anchor-interval '13 hours' ELSE NULL END,
- q.anchor-(n||' days')::interval,
- CASE WHEN n=5 THEN q.anchor-interval '1 minute' WHEN n=6 THEN q.anchor-interval '10 minutes' ELSE NULL END,
+ CASE n
+   WHEN 5 THEN q.anchor-interval '1 minute'       -- online presence fixture
+   WHEN 6 THEN q.anchor-interval '10 minutes'     -- minutes bucket
+   WHEN 7 THEN q.anchor-interval '3 hours'        -- hours bucket
+   WHEN 8 THEN q.anchor-interval '2 days'         -- days bucket
+   WHEN 9 THEN q.anchor-interval '2 weeks'        -- weeks bucket
+   WHEN 10 THEN q.anchor-interval '4 weeks'       -- first month bucket
+   WHEN 13 THEN q.anchor-interval '30 days'       -- 1 month
+   WHEN 14 THEN q.anchor-interval '60 days'       -- 2 months
+   WHEN 15 THEN q.anchor-interval '90 days'       -- 3 months
+   WHEN 16 THEN q.anchor-interval '120 days'      -- 4 months
+   WHEN 17 THEN q.anchor-interval '150 days'      -- 5 months
+   WHEN 18 THEN q.anchor-interval '180 days'      -- 6 months
+   WHEN 19 THEN q.anchor-interval '210 days'      -- capped at 6 months
+   ELSE q.anchor-(n||' days')::interval
+ END,
+ CASE WHEN n=5 THEN q.anchor-interval '1 minute' WHEN n=6 THEN q.anchor-interval '6 minutes' ELSE NULL END,
  q.anchor-interval '40 days' FROM qa_actors CROSS JOIN qa_config q;
 INSERT INTO users(id,username,email,password_hash,email_verified_at,status,role,age,gender,bio,experience_years,last_login_at,created_at)
 SELECT 910100+n,'QA_RELEASE_page_'||lpad(n::text,3,'0'),
@@ -88,8 +103,9 @@ INSERT INTO user_stances SELECT u.id,s.id FROM users u CROSS JOIN stances s
 INSERT INTO user_prefectures SELECT u.id,p.id FROM users u CROSS JOIN prefectures p
  WHERE u.id NOT IN(910003,910024,910025) AND p.name='東京都';
 INSERT INTO user_prefectures SELECT 910004,id FROM prefectures WHERE name IN('大阪府','神奈川県');
-UPDATE users SET profile_image_url='/uploads/97000000-0000-4000-8000-000000000001.png' WHERE id=910004;
-UPDATE users SET profile_image_url='/uploads/97000000-0000-4000-8000-000000000008.png' WHERE id=910022;
+-- Every disposable QA user gets the same reviewable profile icon so profile and post-list
+-- checks never fall back to an initial letter or depend on generated 1x1 placeholder bytes.
+UPDATE users SET profile_image_url='/uploads/qa-bear-icon.jpg' WHERE username LIKE 'QA_RELEASE_%';
 INSERT INTO line_accounts(id,user_id,line_user_id,created_at)
  SELECT 990001,910025,'QA_RELEASE_LINE_SUBJECT_001',anchor FROM qa_config;
 CREATE TEMP TABLE qa_posts(n integer,owner_n integer,status text,reason text) ON COMMIT DROP;

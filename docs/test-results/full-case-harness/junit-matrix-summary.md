@@ -1,7 +1,7 @@
 ﻿# JUnit release case matrix
 
 Inventory: C:\Users\parus\Desktop\band\docs\test-plan\full-case-inventory.csv
-Generated: 2026-09-14T02:59:41.3325423+09:00
+Generated: 2026-09-15T09:16:20.2833300+09:00
 Cases executed: 14227
 
 - INTEGRATION_REQUIRED: 12477

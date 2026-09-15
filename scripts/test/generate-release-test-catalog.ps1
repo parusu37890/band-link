@@ -52,14 +52,14 @@ IT-010§R-PROF-04§結合§profile更新で関連集合を置換し未知IDを�
 IT-011§R-IMG-01§結合§profile画像差替えで新規保存後に旧画像を削除する§U04§既存PNGと新JPEG§multipart POST§URL更新、旧file削除、新file存在§users、filesystem、MIME
 IT-012§R-POST-01§結合§2種別の投稿をAPI契約どおり作成する§U05/U06§全必須field§POST /api/posts§201、型・30日期限・関連保存§response、posts、関連表
 IT-013§R-POST-02§結合§他人の投稿編集・終了・再公開を拒否する§U07§P001/P005§PUT/PATCH§全て403相当、DB不変§status/body/updatedAt
-IT-014§R-POST-03§結合§同一利用者の公開投稿1件制限をDB境界で守る§U05§既存P001§別内容をPOST§競合応答、行追加0§posts count、status
+IT-014§R-POST-03§結合§同一利用者の募集・加入希望を各1件に制限する§U05§既存の募集1件、同種別の募集、異種別の加入希望§同種別POST→異種別POST§同種別は競合・異種別は成功、OPENが種別ごとに1件§user/type/status別posts count、status
 IT-015§R-POST-06§結合§期限到来時に一覧から消え詳細は扱いどおりになる§U21§P007、T0前後§一覧・詳細取得§期限後一覧非表示、状態と理由整合§posts status/reason、API
 IT-016§R-POST-08§結合§本文と画像の一括保存・5枚上限・並べ替え・削除をDBとfilesで一致させる§U14§P009、追加画像、途中upload失敗§本文+複数画像作成→6枚目追加→並替→削除§一括成功または全rollback、上限拒否、順序一意、削除fileなし§posts/post_images、filesystem、orphan
-IT-017§R-SRCH-01§結合§キーワードがタイトル・本文・補足エリアを部分一致する§匿名§P001/P002と固有語§3fieldの語でGET§対象だけ返す§SQL結果、JSON IDs
+IT-017§R-SRCH-01§結合§検索APIは選択式条件だけを扱う§匿名§全選択式条件とkeyword付き要求§各条件でGET§選択式条件だけが作用しkeywordは契約・履歴に残らない§request contract、SQL、JSON IDs、history
 IT-018§R-SRCH-02§結合§同一条件OR・異種条件ANDで検索する§匿名§複数masterのP001§複数query parameter§集合論どおり重複なし§IDs、件数、distinct
 IT-019§R-SRCH-03§結合§最新順・ログイン順のtie breakが安定する§匿名§同時刻fixture§各sortで2回取得§順序安定、欠落重複なし§ID列、rank/login時刻
 IT-020§R-SRCH-04§結合§cursorの正常・不正・巨大・limit境界§匿名§74投稿§cursor null/12/abc/巨大、limit0/1/50/51§500なし、規定件数、連結で全件一度§status、nextCursor、ID集合
-IT-021§R-SRCH-05§結合§検索履歴は認証時だけ全条件を重複なく直近5件に保つ§U02/匿名§keywordと全filters/type/sort、同条件、6条件、page cursor§検索→同条件再検索→6条件検索→続きを取得→history取得§認証時だけ保存、同条件は最新へ移動、最大5、page追加0、条件欠落なし§search_histories件数/順序/hash/JSON
+IT-021§R-SRCH-05§結合§検索履歴は認証時だけ全条件を重複なく直近5件に保つ§U02/匿名§全選択式filters/type/sort、同条件、6条件、page cursor§検索→同条件再検索→6条件検索→続きを取得→history取得§認証時だけ保存、同条件は最新へ移動、最大5、page追加0、条件欠落なし§search_histories件数/順序/hash/JSON
 IT-022§R-MSG-02§結合§双方向の初回同時送信でも会話を1件にする§U07/U08§barrier付き2要求§同時POST§会話1件、message2件、500なし§unique制約、response
 IT-023§R-MSG-03§結合§DM送信と通知保存を同一transactionにする§U07/U08§通知save障害§POST send§失敗時messageもrollback§messages/notifications count
 IT-024§R-MSG-05§結合§DM画像は当事者と対象通報を見る管理者だけ取得できる§U07/U08/U13/U23§C001画像、報告有無画像§各sessionでGET§当事者200、該当管理者200、第三者403、未報告管理者403§status、byte/MIME
@@ -87,15 +87,15 @@ ST-015§R-PROF-03§システム§性別は男性・女性の二択で単一選�
 ST-016§R-PROF-04§システム§地域最大3件と各マスタ必須を画面で止める§U04§0/1/3/4選択§選択・解除・保存§0と4を明示、1..3保存§UI count、API、DB
 ST-017§R-PROF-05§システム§profile画像を選択・preview・差替え・削除する§U04§PNG/JPEG/不正画像§各操作後reload§正常画像だけ反映し旧画像残存なし§UI、API、files
 ST-018§R-PROF-06§システム§YouTube/TikTok/SoundCloud/Spotify/Apple Musicを安全に表示する§U04§正常、短縮、不正host、javascript URL§保存して公開profile表示§対応URLだけembed/安全link、不正は実行不可§DOM src/href、console
-ST-019§R-PRES-01§システム§オンライン中と最終ログイン表示を境界どおり示す§U05/U06/U02§T0相対時刻§一覧とprofile表示§5分以内だけonline、正確時刻は非表示§UI text、API fields
-ST-020§R-POST-01§システム§メンバー募集を段階入力・preview・公開する§U18§正常全fieldと画像2枚§newで全stepをkeyboard操作§確認内容一致、公開後detail§UI、POST body、DB
-ST-021§R-POST-01§システム§参加希望の種別と見出しを明確に公開する§U06再seed後§WANTS_TO_JOIN§作成し一覧・詳細を開く§メンバー募集と混同せず大きく表示§UI label、type API
+ST-019§R-PRES-01§システム§オンライン・最終ログイン・投稿時刻を境界どおり示す§U05/U06/U02§5分境界と投稿後1分・59分・1時間・1日・1週間・3週間・4週間・4週間超§一覧・詳細・profile表示§5分以内だけonline、投稿時刻は4週間前を表示上限にする§UI text、API fields
+ST-020§R-POST-01§システム§募集を段階入力・preview・公開する§U18§正常全fieldと画像2枚§newで全stepをkeyboard操作§確認内容一致、公開後detail§UI、POST body、DB
+ST-021§R-POST-01§システム§加入希望の種別と見出しを明確に公開する§U06再seed後§WANTS_TO_JOIN§作成し一覧・詳細を開く§募集と混同せず大きく表示§UI label、type API
 ST-022§R-POST-04§システム§投稿の空・文字数超過・不足選択と活動頻度6択をstep内で確認する§U18§境界値、週2回以上/週1回/月2〜3回/月1回/不定期/相談§各値を選び各stepで次へ/公開§6択が選べ、違反時は進行を止め該当fieldへfocus、入力保持§UI options、request enum、API未作成
 ST-023§R-POST-02§システム§自分の募集を編集し12時間制限を説明する§U18/U17§P003/P004§edit→保存§U18成功、U17は理由と次の可能時刻§UI、PUT status、DB
 ST-024§R-POST-06§システム§募集終了確認と再公開後も既存DMを継続する§U20/U07§P006と既存会話§終了→既存DM送受信→再公開をconfirm含め操作§状態表示と一覧反映、終了中もDM成功、二重操作なし§UI、API、posts/messages DB
 ST-025§R-POST-06§システム§本人削除と管理削除・停止終了を区別し不正再公開を防ぐ§U06/U11§本人所有投稿、P008/P014§my/postsで削除確認後、各終了理由の再公開を画面と直APIで試す§本人だけ削除可能、管理削除/停止はCTAなし・直API拒否、理由保持§UI、API status、posts/画像
 ST-026§R-POST-08§システム§投稿画像5枚のpreview・並替え・拡大・削除§U14§P009§drag/keyboard代替、画像click、delete§順序保存、modal拡大、削除反映、6枚目拒否§DOM、API、DB/files
-ST-027§R-SRCH-01§システム§keywordを入力・Enter・clearして結果を更新する§匿名§タイトル/本文/補足固有語§検索・clear§該当結果、0件案内、復元§URL、API query、UI
+ST-027§R-SRCH-01 / R-UI-03§システム§キーワード欄とheader直下の重複見出しを表示しない§匿名§keyword付きURLと選択式条件§desktop/mobileで一覧表示・条件選択・解除§keyword欄と重複見出しなし、keywordはURL/APIに残らない§DOM、見出し階層、URL、API query
 ST-028§R-SRCH-02§システム§全filterのAND/ORと年齢不問の一致規則を理解できる§匿名§全master、年代複数、ANY、任意未入力§同項目複数・異項目・ANYを選択して解除§OR/ANDとANY規則どおり、summary・件数・結果が同期§UI、query、IDs
 ST-029§R-SRCH-03§システム§最新順・ログイン順切替に不要な青枠を残さない§匿名§74投稿§selectをmouse/keyboardで切替§順序更新、focusは見失わず不要な線なし§screenshot、ID順
 ST-030§R-SRCH-04§システム§下端scrollの自動追加で重複・飛び・scroll jumpがない§匿名§74投稿§下端へ繰り返しscrollして最後まで読む§自動で次頁を追加し全74件が一度、操作位置維持§DOM ID集合、API cursors、scroll位置
@@ -123,10 +123,10 @@ ST-051§R-FBK-03§システム§未login headerに問い合わせ・機能要望
 ST-052§R-FBK-04§システム§管理者が問い合わせと要望の本文・画像を識別する§U13§F001/F002§admin一覧§新しい順、種別、投稿者、本文、画像表示§UI、API
 ST-053§R-NOT-01§システム§通知の自動追加・filter・個別既読・一括既読を操作する§U07/U08§既読未読混在、別contextから新規DM§通知画面中に相手が送信→自動反映後に各control操作§再読込なしで追加され、件数・badge・dot・focusが同期§UI、poll/network、API、DB
 ST-054§R-ERR-01§システム§全主要画面が401/403/404/409/422/500から回復できる§各状態§response interception§各代表画面で失敗→retry§白画面にならず原因別案内、draft保持§UI、console、network
-ST-055§R-UI-03§システム§全25 routeの背景色・header・footerを一貫表示する§全actor§route一覧§desktop/mobileで全route撮影§意図しない白/灰面なし、水平段差なし§screenshots、computed background
+ST-055§R-UI-03§システム§全25 routeの背景色・header・footerと一覧冒頭を一貫表示する§全actor§route一覧§desktop/mobileで全route撮影§意図しない白/灰面なし、募集一覧はheader直後から種別タブ・検索操作§screenshots、computed background、見出し階層
 UAT-001§R-UX-01§ユーザー§初見利用者が登録後に次の行動を説明できる§新規参加者§シナリオだけ提示§「仲間を探すため登録する」と依頼§5分以内、確認mailの必要性を自力理解§観察票、発話、時間
 UAT-002§R-UX-01§ユーザー§初見利用者が自分に合う募集を探す§新規参加者§探す条件を口頭提示§検索方法は教えず依頼§3分以内、filterとsortを説明できる§経路、迷い回数、結果ID
-UAT-003§R-UX-02§ユーザー§募集と参加希望の違いを初見で判断する§新規参加者§P001/P002§2カードを比較して説明してもらう§種別と次行動を正答§発話、誤認箇所
+UAT-003§R-UX-02§ユーザー§募集と加入希望の違いを初見で判断する§新規参加者§P001/P002§2カードを比較して説明してもらう§種別と次行動を正答§発話、誤認箇所
 UAT-004§R-UX-03§ユーザー§公開前に投稿内容と公開条件を確認できる§新規参加者§投稿シナリオ§作成を依頼し最後に確認質問§公開内容・30日・制限を理解§所要時間、戻り操作
 UAT-005§R-UX-04§ユーザー§プロフィールから安全にDMを開始できる§新規参加者§U08 profile§質問を送りたいと依頼§2分以内、宛先を誤らず送信§経路、迷い、送信結果
 UAT-006§R-UX-05§ユーザー§画像送信失敗から本文を失わず回復する§新規参加者§5MB超→正常PNG§画像付きDMを依頼§原因理解、再選択、本文維持§発話、回復時間
@@ -154,7 +154,7 @@ SEC-017§R-SEC-15§セキュリティ§request IDへ改行・長大値を入れ�
 SEC-018§R-SEC-16§セキュリティ§password・token・mail本文・画像pathをlogへ残さない§各actor§認証/失敗/画像操作§一連操作後log検索§secret一致0、必要なrequest metadataのみ§application/Filebeat/Kibana log
 NFT-001§R-NFR-01§非機能§74投稿の一覧初回と主要API p95を基準内にする§匿名/U02§seed全件§各API30回、cold/warm分離§一覧3秒以内、API p95 1秒以内、error0§trace、duration、DB query count
 NFT-002§R-NFR-02§非機能§二重click・Enter連打で重複登録しない§各作成者§遅延response§register/post/DM/report/feedbackを連打§業務上1件、button busy§HTTP count、unique rows
-NFT-003§R-NFR-03§非機能§同時投稿で公開1件制限を破らない§U18§2 parallel requests§barrierで同時POST§1成功1競合、OPEN 1件§responses、transaction log、DB
+NFT-003§R-NFR-03§非機能§同時投稿で種別ごとの公開1件制限を破らない§U18§同種別2要求、募集と加入希望各1要求§2パターンをbarrierで同時POST§同種別は1成功1競合、異種別は2成功、各種別OPEN 1件§responses、transaction log、user/type/status別DB
 NFT-004§R-NFR-03§非機能§同時画像追加で5枚上限を破らない§U14§P009が4枚、2画像§parallel upload§合計5以下、orphan0§responses、DB/files
 NFT-005§R-NFR-03§非機能§同時初回DMで会話一意制約エラーを利用者へ露出しない§U07/U08§双方同時send§barrierで送信§会話1、message2、5xx0§responses、DB、log
 NFT-006§R-NFR-04§非機能§seed再投入を3回行い同じ固定状態へ戻す§専用DB§seed SQL§各実行後manifest/count/checksum§全回成功、84 users/74 posts、重複0§psql log、集計checksum

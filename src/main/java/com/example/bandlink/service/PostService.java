@@ -44,8 +44,8 @@ public class PostService {
     @Transactional
     public Post create(Long userId, PostRequests.Create request) {
         User user = activeVerifiedUser(userId);
-        checkEditLock(user);
-        if (postRepository.existsByUserIdAndStatus(userId, PostStatus.OPEN)) throw new RuleViolationException("公開中の募集は1件までです");
+        if (postRepository.existsByUserIdAndStatusAndType(userId, PostStatus.OPEN, request.type()))
+            throw new RuleViolationException(request.type() == PostType.WANTS_TO_JOIN ? "公開中の加入投稿は1件までです" : "公開中の募集投稿は1件までです");
         LocalDateTime now = now();
         Post post = new Post(user, request.type(), request.title().trim(), request.content().trim(), request.areaSub(), request.activityFrequency(), now);
         assign(post, request.partIds(), request.genreIds(), request.stanceIds(), request.prefectureIds(), request.ageRanges());
@@ -71,7 +71,8 @@ public class PostService {
         User user = activeVerifiedUser(userId); Post post = owned(postId, userId);
         if (post.getStatus() != PostStatus.CLOSED || (post.getClosedReason() != ClosedReason.MANUAL && post.getClosedReason() != ClosedReason.EXPIRED))
             throw new RuleViolationException("この投稿は再公開できません");
-        if (postRepository.existsByUserIdAndStatus(userId, PostStatus.OPEN)) throw new RuleViolationException("公開中の募集は1件までです");
+        if (postRepository.existsByUserIdAndStatusAndType(userId, PostStatus.OPEN, post.getType()))
+            throw new RuleViolationException(post.getType() == PostType.WANTS_TO_JOIN ? "公開中の加入投稿は1件までです" : "公開中の募集投稿は1件までです");
         LocalDateTime now = now(); post.reopen(now);
         if (user.getLastRankBoostedAt() == null || !user.getLastRankBoostedAt().isAfter(now.minusHours(EDIT_LOCK_HOURS))) { post.boostRank(now); user.setLastRankBoostedAt(now); }
         return post;
@@ -124,10 +125,6 @@ public class PostService {
     public List<Post> search(PostSearchCriteria criteria) {
         LocalDateTime now = now();
         Specification<Post> spec = (root, query, cb) -> cb.and(cb.equal(root.get("status"), PostStatus.OPEN), cb.equal(root.get("user").get("status"), UserStatus.ACTIVE));
-        if (criteria != null && criteria.keyword() != null && !criteria.keyword().isBlank()) {
-            String keyword = "%" + criteria.keyword().trim().toLowerCase(java.util.Locale.ROOT) + "%";
-            spec = spec.and((root, query, cb) -> cb.or(cb.like(cb.lower(root.get("title")), keyword), cb.like(cb.lower(root.get("content")), keyword), cb.like(cb.lower(root.get("areaSub")), keyword)));
-        }
         if (criteria != null && criteria.activityFrequencies() != null && !criteria.activityFrequencies().isEmpty())
             spec = spec.and((root, query, cb) -> root.get("activityFrequency").in(criteria.activityFrequencies()));
         if (criteria != null && criteria.ageRanges() != null && !criteria.ageRanges().isEmpty()) {
@@ -192,7 +189,7 @@ public class PostService {
         if (user.getLastEditedAt() == null) return;
         LocalDateTime availableAt = user.getLastEditedAt().plusHours(EDIT_LOCK_HOURS);
         if (availableAt.isAfter(now())) {
-            throw new RuleViolationException("投稿の作成・編集は12時間に1回までです。次に編集できるのは"
+            throw new RuleViolationException("投稿の編集は12時間に1回までです。次に編集できるのは"
                     + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
         }
     }

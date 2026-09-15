@@ -20,7 +20,7 @@ class PostServiceTest {
     @Mock StanceRepository stances; @Mock PrefectureRepository prefectures; @Mock BlockRepository blocks;
 
     @Test
-    void createRequiresVerifiedEmailAndAppliesEditLock() {
+    void createRequiresVerifiedEmailAndAllowsOneOpenPostPerType() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
         PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
         User user = new User("u", "u@example.com", "hash");
@@ -29,7 +29,7 @@ class PostServiceTest {
 
         assertThrows(PostService.RuleViolationException.class, () -> service.create(1L, request));
         user.setEmailVerifiedAt(LocalDateTime.now(clock).minusHours(13));
-        when(posts.existsByUserIdAndStatus(1L, PostStatus.OPEN)).thenReturn(false);
+        when(posts.existsByUserIdAndStatusAndType(1L, PostStatus.OPEN, PostType.MEMBER_WANTED)).thenReturn(false, true);
         when(posts.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
         Post created = service.create(1L, request);
 
@@ -54,8 +54,10 @@ class PostServiceTest {
         user.setLastEditedAt(LocalDateTime.now(clock).minusHours(1));
         when(users.findById(1L)).thenReturn(Optional.of(user));
 
+        PostRequests.Update update = new PostRequests.Update("New", "New body", null,
+                Set.of(), Set.of(), Set.of(), Set.of(), Set.of(AgeRange.ANY), ActivityFrequency.WEEKLY_1);
         PostService.RuleViolationException ex = assertThrows(PostService.RuleViolationException.class,
-                () -> service.create(1L, request()));
+                () -> service.update(1L, 1L, update));
         assertTrue(ex.getMessage().contains("次に編集できるのは9月5日 23:00以降です"),
                 () -> "unexpected message: " + ex.getMessage());
     }

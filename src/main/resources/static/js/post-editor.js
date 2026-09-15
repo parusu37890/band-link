@@ -24,18 +24,17 @@ export async function postEditor(id) {
     const options=inputChoices(key,m[source],p?.[source]?.map(x=>x.id)||[],max===1);
     return `<fieldset class="editor-fieldset" data-selection="${key}" data-max="${max}"><legend>${label}<span class="required">必須</span></legend><p class="editor-selection-status" id="${key}-status" aria-live="polite"></p>${source==='prefectures'?`<details class="editor-area-options"><summary>都道府県を選ぶ・変更する</summary>${options}</details>`:options}</fieldset>`;
   };
-  showPage(`<div class="page post-editor-page guided-editor"><a class="back-link" href="/my/posts">${icon('back')}自分の募集へ</a>
-    <div class="page-heading"><div><h1>バンドメンバー募集</h1></div></div>
+  showPage(`<div class="page post-editor-page guided-editor"><a class="back-link" href="/my/posts">${icon('back')}自分の投稿へ</a>
+    <div class="page-heading"><div><h1>募集・加入投稿</h1></div></div>
     <nav class="editor-progress" aria-label="募集の入力手順"><ol>${labels.map((label,index)=>`<li><button type="button" data-editor-go="${index}" ${index===0?'aria-current="step"':''}><span class="editor-step-number" aria-hidden="true">${index+1}</span><span>${label}</span></button></li>`).join('')}</ol></nav>
     ${verificationNotice()}<form id="post-form" novalidate>
       <div class="form-error" tabindex="-1" role="alert" id="editor-error"></div>
       <section class="editor-step" data-editor-step="0" aria-labelledby="editor-heading-0">
         <div class="editor-step-heading"><h2 id="editor-heading-0" tabindex="-1">活動条件</h2></div>
         <div class="editor-form-content">
-          ${!id?`<fieldset class="editor-fieldset"><legend>募集の種類<span class="required">必須</span></legend>${inputChoices('type',[['MEMBER_WANTED','メンバーを募集したい'],['WANTS_TO_JOIN','バンドに参加したい']],['MEMBER_WANTED'],true)}</fieldset>`:`<p class="hint">募集の種類：${p.type==='WANTS_TO_JOIN'?'参加希望':'メンバー募集'}</p>`}
+          ${!id?`<fieldset class="editor-fieldset"><legend>投稿の種類<span class="required">必須</span></legend>${inputChoices('type',[['MEMBER_WANTED','募集'],['WANTS_TO_JOIN','加入希望']],['MEMBER_WANTED'],true)}</fieldset>`:`<p class="hint">投稿の種類：${p.type==='WANTS_TO_JOIN'?'加入希望':'募集'}</p>`}
           ${fieldGroup(groups[0])}
-          <div class="form-field"><label for="areaSub">市区町村・駅など<span class="optional">任意</span></label><input id="areaSub" name="areaSub" maxlength="100" value="${h(p?.areaSub)}" placeholder="例：新宿駅"></div>
-          ${fieldGroup(groups[1])}<p class="hint" data-part-hint>メンバー募集では募集するパート、参加希望では自分が担当したいパートを選びます。</p>
+          ${fieldGroup(groups[1])}<p class="hint" data-part-hint>募集では探しているパート、加入希望では自分が担当したいパートを選びます。</p>
           ${fieldGroup(groups[2])}${fieldGroup(groups[3])}
         </div>
       </section>
@@ -51,9 +50,9 @@ export async function postEditor(id) {
       <section class="editor-step" data-editor-step="2" aria-labelledby="editor-heading-2" hidden>
         <div class="editor-step-heading"><h2 id="editor-heading-2" tabindex="-1">この内容で${id?'保存':'公開'}しますか？</h2><p>タイトル・本文・条件・画像を確認してください。各項目に戻って直せます。</p></div>
         <div id="editor-preview"></div>
-        <p class="editor-publish-note">${id?'変更を保存した後':'公開した後'}12時間は、新規投稿・編集ができません。${id?'編集では掲載順位・掲載期限は変わりません。':'掲載期間は30日です。'}募集の終了はいつでもできます。</p>
+        <p class="editor-publish-note">${id?'変更を保存した後は12時間、同じ投稿を編集できません。':'募集と加入はそれぞれ1件ずつ公開できます。新規投稿に時間制限はありません。'}${id?'編集では掲載順位・掲載期限は変わりません。':'掲載期間は30日です。'}投稿の終了はいつでもできます。</p>
       </section>
-      <div class="editor-actions"><div><a class="button quiet" href="/my/posts">キャンセル</a><button type="button" class="button secondary" data-editor-back hidden>前に戻る</button></div><button type="button" class="button primary" data-editor-next>募集を書く ${icon('arrow')}</button><button type="submit" class="button primary" data-editor-submit hidden ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'募集を公開する'}</button></div>
+      <div class="editor-actions"><div><a class="button quiet" href="/my/posts">キャンセル</a><button type="button" class="button secondary" data-editor-back hidden>前に戻る</button></div><button type="button" class="button primary" data-editor-next>内容を書く ${icon('arrow')}</button><button type="submit" class="button primary" data-editor-submit hidden ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'投稿を公開する'}</button></div>
     </form></div>`,id?'募集の編集':'募集の作成');
 
   const form=main.querySelector('#post-form');
@@ -88,7 +87,6 @@ export async function postEditor(id) {
         const count=values(name).length;
         if(!count||count>max)return error(`${label}を1〜${max}つ選択してください。`,form.querySelector(`[name="${name}"]`));
       }
-      if(!form.elements.areaSub.checkValidity())return error('市区町村・駅などは100文字以内で入力してください。',form.elements.areaSub);
     }
     if(index===1){
       for(const [name,label] of [['title','募集タイトル'],['content','募集の本文']]){
@@ -105,7 +103,7 @@ export async function postEditor(id) {
   }
   function preview() {
     const line=(label,text)=>text?`<div><dt>${h(label)}</dt><dd>${h(text)}</dd></div>`:'';
-    form.querySelector('#editor-preview').innerHTML=`<article class="editor-preview-article"><div class="row spread"><span class="post-type">${(p?.type||values('type')[0])==='WANTS_TO_JOIN'?'参加希望':'メンバー募集'}</span><button type="button" class="button quiet small" data-editor-go="1">本文・画像を修正</button></div><h3>${h(form.elements.title.value.trim())}</h3><div class="body-text">${h(form.elements.content.value.trim())}</div>${saved.length+imagePreviews.length?`<div class="editor-preview-images">${saved.map((image,i)=>`<img src="${h(image.imageUrl)}" alt="保存済みの募集画像 ${i+1}枚目">`).join('')}${imagePreviews.map((url,i)=>`<img src="${h(url)}" alt="新しく追加する募集画像 ${i+1}枚目">`).join('')}</div>`:''}</article><section class="editor-preview-conditions"><div class="row spread"><h3>活動条件</h3><button type="button" class="button quiet small" data-editor-go="0">条件を修正</button></div><dl>${groups.map(([name,label,source])=>line(label,chosenNames(name,source))).join('')}${line('市区町村・駅など',form.elements.areaSub.value.trim())}${line('活動頻度',frequencyLabel(form.elements.activityFrequency.value))}${line('希望年齢層',values('ageRanges').map(v=>ages.find(x=>x[0]===v)?.[1]).filter(Boolean).join('・'))}</dl></section>`;
+    form.querySelector('#editor-preview').innerHTML=`<article class="editor-preview-article"><div class="row spread"><span class="post-type">${(p?.type||values('type')[0])==='WANTS_TO_JOIN'?'加入希望':'募集'}</span><button type="button" class="button quiet small" data-editor-go="1">本文・画像を修正</button></div><h3>${h(form.elements.title.value.trim())}</h3><div class="body-text">${h(form.elements.content.value.trim())}</div>${saved.length+imagePreviews.length?`<div class="editor-preview-images">${saved.map((image,i)=>`<img src="${h(image.imageUrl)}" alt="保存済みの募集画像 ${i+1}枚目">`).join('')}${imagePreviews.map((url,i)=>`<img src="${h(url)}" alt="新しく追加する募集画像 ${i+1}枚目">`).join('')}</div>`:''}</article><section class="editor-preview-conditions"><div class="row spread"><h3>活動条件</h3><button type="button" class="button quiet small" data-editor-go="0">条件を修正</button></div><dl>${groups.map(([name,label,source])=>line(label,chosenNames(name,source))).join('')}${line('活動頻度',frequencyLabel(form.elements.activityFrequency.value))}${line('希望年齢層',values('ageRanges').map(v=>ages.find(x=>x[0]===v)?.[1]).filter(Boolean).join('・'))}</dl></section>`;
   }
   function setStep(index,focus=true) {
     step=index;
@@ -114,7 +112,7 @@ export async function postEditor(id) {
       if(Number(el.dataset.editorGo)===step)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');
     });
     back.hidden=step===0;next.hidden=step===2;submit.hidden=step!==2;
-    next.innerHTML=step===0?`募集を書く ${icon('arrow')}`:`内容を確認する ${icon('arrow')}`;
+    next.innerHTML=step===0?`内容を書く ${icon('arrow')}`:`内容を確認する ${icon('arrow')}`;
     if(step===2)preview();
     if(focus)form.querySelector('#editor-heading-'+step).focus();
   }
@@ -194,7 +192,7 @@ export async function postEditor(id) {
     for(let i=0;i<2;i++){setStep(i,false);if(!validate(i))return;}
     setStep(2,false);
     const fd=new FormData(form);
-    const body={title:fd.get('title').trim(),content:fd.get('content').trim(),areaSub:fd.get('areaSub').trim(),activityFrequency:fd.get('activityFrequency'),ageRanges:fd.getAll('ageRanges')};
+    const body={title:fd.get('title').trim(),content:fd.get('content').trim(),areaSub:null,activityFrequency:fd.get('activityFrequency'),ageRanges:fd.getAll('ageRanges')};
     groups.forEach(([name])=>body[name]=fd.getAll(name).map(Number));
     if(!id)body.type=fd.get('type');
     const files=[...form.elements.images.files];
