@@ -44,7 +44,9 @@ async function ownPosts(){
  // are variable-width flex items whose left edge shifts with font, locale and zoom.
  main.querySelectorAll('[data-close]').forEach(el=>{
   const editBtn=el.closest('.panel')?.querySelector('.row:not(.spread) a.button')?.nextElementSibling;
-  if(editBtn)el.style.marginLeft=Math.max(0,editBtn.offsetLeft-2)+'px';
+  if(!editBtn)return;
+  const delta=editBtn.getBoundingClientRect().left-2-el.getBoundingClientRect().left;
+  el.style.marginLeft=Math.max(0,delta)+'px';
  });
  main.querySelectorAll('[data-reopen]').forEach(el=>el.onclick=async()=>{el.disabled=true;try{await api('/api/posts/'+el.dataset.reopen+'/reopen',{method:'PATCH'});await ownPosts();toast('募集を再公開しました。');}catch(e){toast(e.message);el.disabled=false;}});
  main.querySelectorAll('[data-boost]').forEach(el=>el.onclick=async()=>{el.disabled=true;try{await api('/api/posts/'+el.dataset.boost+'/boost',{method:'PATCH'});await ownPosts();toast('募集を更新し、一覧の上位に表示されるようにしました。');}catch(e){toast(e.message);el.disabled=false;}});
