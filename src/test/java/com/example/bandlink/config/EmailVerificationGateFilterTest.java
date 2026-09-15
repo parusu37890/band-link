@@ -47,6 +47,25 @@ class EmailVerificationGateFilterTest {
         assertTrue(response.getContentAsString().contains("EMAIL_NOT_VERIFIED"));
     }
 
+    // Locks in the behavior described by /support's help copy: browsing and search are NOT
+    // reachable before verification (requirements.md 3: an unverified session shows only the
+    // verification screen, nothing else). The /support page used to claim the opposite
+    // ("閲覧と検索は確認前でもできます") until this was found to contradict the filter - see
+    // docs/test-results/2026-09-15-nft-004-005-006-013.md.
+    @Test
+    void unverifiedBrowsingAndSearchApisAreBlockedTooNotJustPostingAndMessaging() throws Exception {
+        authenticatedUnverifiedUser();
+        MockHttpServletResponse listResponse = new MockHttpServletResponse();
+        MockHttpServletResponse pageResponse = new MockHttpServletResponse();
+
+        filter.doFilter(request("/api/posts/page"), listResponse, mock(FilterChain.class));
+        filter.doFilter(request("/posts"), pageResponse, mock(FilterChain.class));
+
+        assertEquals(403, listResponse.getStatus());
+        assertTrue(listResponse.getContentAsString().contains("EMAIL_NOT_VERIFIED"));
+        assertEquals("/verify-email", pageResponse.getRedirectedUrl());
+    }
+
     @Test
     void verificationPageRemainsReachable() throws Exception {
         authenticatedUnverifiedUser();
