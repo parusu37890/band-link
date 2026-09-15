@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**", "/admin").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**", "/api/csrf", "/api/masters", "/login", "/register",
                     "/verify-email", "/password-reset", "/password-reset/confirm", "/css/**", "/js/**", "/assets/**", "/uploads/**",
-                    "/", "/posts", "/support", "/contact", "/feature-request", "/error").permitAll()
+                    "/", "/posts", "/support", "/contact", "/feature-request", "/robots.txt", "/sitemap.xml", "/error").permitAll()
                 .requestMatchers("/posts/new", "/posts/*/edit").authenticated()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/posts/*", "/users/*").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**", "/api/users/*").permitAll()
