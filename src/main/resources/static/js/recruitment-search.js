@@ -1,4 +1,4 @@
-import {api,h,state,main,showPage,icon,button,empty,navigate,ages,frequencies} from './ui.js';
+import {api,h,state,main,showPage,icon,button,empty,navigate,ages,frequencies} from './ui.js?v=20260915-3';
 export const readListing=()=>{try{return JSON.parse(sessionStorage.getItem('band-link:list-return')||'null');}catch{return null;}};
 export const writeListing=value=>{try{sessionStorage.setItem('band-link:list-return',JSON.stringify(value));}catch{}};
 const keys=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances'],['ageRanges','希望年齢層',null],['activityFrequency','活動頻度',null]];
@@ -40,7 +40,7 @@ export async function listing(renderCard){
  const request=new URLSearchParams(params);request.delete('keyword');request.delete('cursor');request.set('limit','12');
  let cursor=null,total=0,loading=false,hasNext=true,failed=false;const seen=new Set();
  const emptyResults=()=>{
-  const relax=keys.filter(([key])=>params.has(key)).map(([key,title])=>`<a href="${h(removeUrl(params,key))}">${h(title)}の指定を外す ${icon('arrow')}</a>`).join('');
+  const relax=keys.filter(([key])=>params.has(key)).map(([key,title])=>`<a href="${h(removeUrl(params,key))}">${h(title)}の指定を外す </a>`).join('');
   return `<div class="search-empty"><h2>${applied.length||type?'条件に合う投稿はありません':'公開中の投稿はまだありません'}</h2><p>${applied.length||type?'条件を一つ広げると、活動できる相手が見つかるかもしれません。残したい条件はそのまま検索できます。':'募集だけでなく、加入したいパートや活動場所を書いて、自分から投稿を出せます。'}</p>${relax?`<nav class="relax-search" aria-label="条件を広げて探す">${relax}</nav>`:''}<div class="row">${button('すべての投稿を見る','/posts','secondary')}${button('自分の投稿を書く',state.user?'/posts/new':'/register')}</div></div>`;
  };
  const append=async()=>{if(loading||!hasNext)return;loading=true;failed=false;more.disabled=true;results.setAttribute('aria-busy','true');status.textContent='募集を読み込んでいます…';try{

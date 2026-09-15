@@ -29,6 +29,7 @@
 - Java / Spring Boot / Spring Security / Spring Data JPA・Hibernate / PostgreSQL。
 - Thymeleaf画面と `/api/**` のJSON APIを併存させる。素のCSSを使用する。
 - セッション認証、BCryptによるパスワード保存。
+- ログインセッションは最終操作から3か月間（90日）保持し、ブラウザを閉じても期間内は再ログインを求めない。明示的なログアウトで直ちに無効化する。
 - Controller → Service → Repositoryに分離し、業務ルールとトランザクション制御はServiceに集約する。
 - DTOのBean Validationと例外ハンドラにより入力エラーを統一する。
 - エラーは機械判定用コードと表示メッセージを持つ構造化レスポンスとする。

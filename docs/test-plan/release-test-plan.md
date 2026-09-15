@@ -149,3 +149,6 @@ FAIL修正後は、該当ケース、同じ要件IDの全P0/P1、隣接する状
 |P0+P1|156|
 
 要件IDは92個に正規化し、全92件が1件以上のケースへ対応しています。設計対応率100%です。単体98/98、PostgreSQL結合19/19、業務状態マトリクス14,227/14,227はPASS。公式Playwrightシステムテスト、ユーザーテスト、最新変更分の実機回帰は未完了です。`r`n
+
+### 2026-09-15公式Playwright最終再実行追記
+現行コードで公式 @playwright/mcp を用いたライブ再実行を実施した。認証・認可、DM送受信、画像公開範囲、contrast、重複送信、相対時刻はPASS。検索履歴分離、小ターゲット、管理feedback画像、unicode編集経路はFAIL、通知SSEを含むアクセシビリティ専用バッチはBLOCKED。詳細: docs/test-results/2026-09-15-playwright-p0p1-rerun.md。未解消FAIL/BLOCKEDがあるためリリース判定はNO-GO。

@@ -7,3 +7,28 @@
 @import url('./community.css?v=20260913-9');
 
 @import url('./post-editor.css?v=20260913-9');
+
+/* Profile images are avatars everywhere in the product. Keep the deterministic QA bear and
+   user-uploaded profile photos circular at every size, including the large listing thumbnail. */
+.avatar.large,
+.post-card .post-thumb .avatar { border-radius: 50%; }
+
+/* Keep the square recruitment mark and its title on the same visual rhythm. Lower only the
+   title's inline box; the anchor stays unpositioned so the card-wide stretched-link hit area
+   continues to be positioned against .post-card. */
+.post-card h2 > a { display: inline-block; vertical-align: -4px; }
+
+/* The listing is read as four stacked facts. One shared gap keeps the space below the title,
+   type/parts, prefectures, and the person/time row consistent across desktop and phone rules. */
+.post-card .post-content { display: flex; flex-direction: column; gap: 3px !important; }
+.post-card .post-content > * { margin-block: 0 !important; }
+.post-card .post-content > h2 { order: 1; margin: 0; }
+.post-card .post-content > .post-roles { order: 2; margin: 0; }
+.post-card .post-content > .post-location { order: 3; margin: 0; }
+.post-card .post-content > .post-person { order: 4; margin: 0; }
+.post-card .post-person { min-height: 0; }
+.post-card .post-person .person { min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 640px) {
+  .post-card .post-content { gap: 3px; }
+  .post-card .post-person { row-gap: 3px; }
+}

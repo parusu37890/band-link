@@ -1,4 +1,4 @@
-import {api,h,icon,state,main,showPage,notice,button,toast,confirmAction,navigate,frequencies,ages,frequencyLabel,counter,verificationNotice} from './ui.js';
+import {api,h,icon,state,main,showPage,notice,button,toast,confirmAction,navigate,frequencies,ages,frequencyLabel,counter,verificationNotice} from './ui.js?v=20260915-3';
 
 const groups = [
   ['prefectureIds','活動エリア','prefectures',3],
@@ -24,7 +24,7 @@ export async function postEditor(id) {
     const options=inputChoices(key,m[source],p?.[source]?.map(x=>x.id)||[],max===1);
     return `<fieldset class="editor-fieldset" data-selection="${key}" data-max="${max}"><legend>${label}<span class="required">必須</span></legend><p class="editor-selection-status" id="${key}-status" aria-live="polite"></p>${source==='prefectures'?`<details class="editor-area-options"><summary>都道府県を選ぶ・変更する</summary>${options}</details>`:options}</fieldset>`;
   };
-  showPage(`<div class="page post-editor-page guided-editor"><a class="back-link" href="/my/posts">${icon('back')}自分の投稿へ</a>
+  showPage(`<div class="page post-editor-page guided-editor"><a class="back-link" href="/my/posts">自分の投稿へ</a>
     <div class="page-heading"><div><h1>募集・加入投稿</h1></div></div>
     <nav class="editor-progress" aria-label="募集の入力手順"><ol>${labels.map((label,index)=>`<li><button type="button" data-editor-go="${index}" ${index===0?'aria-current="step"':''}><span class="editor-step-number" aria-hidden="true">${index+1}</span><span>${label}</span></button></li>`).join('')}</ol></nav>
     ${verificationNotice()}<form id="post-form" novalidate>
@@ -52,7 +52,7 @@ export async function postEditor(id) {
         <div id="editor-preview"></div>
         <p class="editor-publish-note">${id?'変更を保存した後は12時間、同じ投稿を編集できません。':'募集と加入はそれぞれ1件ずつ公開できます。新規投稿に時間制限はありません。'}${id?'編集では掲載順位・掲載期限は変わりません。':'掲載期間は30日です。'}投稿の終了はいつでもできます。</p>
       </section>
-      <div class="editor-actions"><div><a class="button quiet" href="/my/posts">キャンセル</a><button type="button" class="button secondary" data-editor-back hidden>前に戻る</button></div><button type="button" class="button primary" data-editor-next>内容を書く ${icon('arrow')}</button><button type="submit" class="button primary" data-editor-submit hidden ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'投稿を公開する'}</button></div>
+      <div class="editor-actions"><div><a class="button quiet" href="/my/posts">キャンセル</a><button type="button" class="button secondary" data-editor-back hidden>前に戻る</button></div><button type="button" class="button primary" data-editor-next>内容を書く </button><button type="submit" class="button primary" data-editor-submit hidden ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'投稿を公開する'}</button></div>
     </form></div>`,id?'募集の編集':'募集の作成');
 
   const form=main.querySelector('#post-form');
@@ -112,7 +112,7 @@ export async function postEditor(id) {
       if(Number(el.dataset.editorGo)===step)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');
     });
     back.hidden=step===0;next.hidden=step===2;submit.hidden=step!==2;
-    next.innerHTML=step===0?`内容を書く ${icon('arrow')}`:`内容を確認する ${icon('arrow')}`;
+    next.innerHTML=step===0?`内容を書く `:`内容を確認する `;
     if(step===2)preview();
     if(focus)form.querySelector('#editor-heading-'+step).focus();
   }

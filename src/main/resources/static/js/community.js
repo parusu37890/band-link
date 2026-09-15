@@ -1,5 +1,5 @@
 import { api, h, icon, avatar, state, main, showPage, notice, empty, button, toast,
-  bindForm, report, confirmAction, time, poll } from './ui.js';
+  bindForm, report, confirmAction, time, poll } from './ui.js?v=20260915-3';
 
 const positiveId = value => /^[1-9]\d*$/.test(String(value ?? '')) ? String(value) : null;
 const personName = user => user?.status === 'WITHDRAWN' ? '退会済みユーザー' : user?.status === 'SUSPENDED' ? '利用停止中ユーザー' : (user?.username || 'ユーザー');
@@ -150,7 +150,7 @@ async function messagesPage(path) {
     // correct for the inbox, but it must not hide the composer when a profile supplied ?to=...
     // and we already resolved the recipient.
     shell.classList.remove('is-empty');
-    header.innerHTML = `<header class="chat-header"><a class="button secondary mobile-back" href="/messages" aria-label="会話一覧に戻る">${icon('arrow-left')}<span>会話一覧</span></a><div class="row">${avatar(peer)}<div><h2>${h(personName(peer))}</h2>${peer.status === 'WITHDRAWN' || peer.status === 'SUSPENDED' ? '<span class="muted">現在連絡できません</span>' : `<a href="/users/${positiveId(peer.id)}">プロフィールを見る</a>`}</div></div></header>`;
+    header.innerHTML = `<header class="chat-header"><a class="button secondary mobile-back" href="/messages" aria-label="会話一覧に戻る"><span>会話一覧</span></a><div class="row">${avatar(peer)}<div><h2>${h(personName(peer))}</h2>${peer.status === 'WITHDRAWN' || peer.status === 'SUSPENDED' ? '<span class="muted">現在連絡できません</span>' : `<a href="/users/${positiveId(peer.id)}">プロフィールを見る</a>`}</div></div></header>`;
     const unavailable = peer.status === 'WITHDRAWN' || peer.status === 'SUSPENDED' || blocked;
     if (unavailable) {
       composer.innerHTML = `<div class="panel">${notice(blocked ? 'ブロック中のため、メッセージを送信できません。過去の会話は引き続き確認できます。' : 'このユーザーには現在メッセージを送信できません。過去の会話は引き続き確認できます。')}${blocked ? button('ブロックを管理する', '/blocks', 'secondary') : ''}</div>`;
@@ -388,7 +388,7 @@ async function notificationsPage() {
       const anchor = [...container.children].find(node => node.getBoundingClientRect().bottom > 0);
       const anchorId = anchor?.dataset.rowId;
       const anchorTop = anchor?.getBoundingClientRect().top;
-      const markup = item => `<article class="notification-item${!item.readAt ? ' is-unread' : ''}" tabindex="-1"><div class="notification-copy"><div class="notification-meta"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : '<span class="muted">既読</span>'}<time datetime="${h(item.createdAt)}">${h(time(item.createdAt))}</time></div><p>${h(item.content)}</p><div class="notification-actions">${item.type === 'NEW_MESSAGE' ? `<a href="${positiveId(item.relatedId) ? `/messages/${positiveId(item.relatedId)}` : '/messages'}">メッセージを開く ${icon('arrow')}</a>` : ''}${!item.readAt && positiveId(item.id) ? `<button type="button" class="button quiet small" data-read-notification="${positiveId(item.id)}">既読にする</button>` : ''}</div></div></article>`;
+      const markup = item => `<article class="notification-item${!item.readAt ? ' is-unread' : ''}" tabindex="-1"><div class="notification-copy"><div class="notification-meta"><strong>${item.type === 'NEW_MESSAGE' ? '新しいメッセージ' : 'お知らせ'}</strong>${!item.readAt ? '<span class="badge">未読</span>' : '<span class="muted">既読</span>'}<time datetime="${h(item.createdAt)}">${h(time(item.createdAt))}</time></div><p>${h(item.content)}</p><div class="notification-actions">${item.type === 'NEW_MESSAGE' ? `<a href="${positiveId(item.relatedId) ? `/messages/${positiveId(item.relatedId)}` : '/messages'}">メッセージを開く </a>` : ''}${!item.readAt && positiveId(item.id) ? `<button type="button" class="button quiet small" data-read-notification="${positiveId(item.id)}">既読にする</button>` : ''}</div></div></article>`;
       if (visible.length) reconcileRows(container, visible, markup);
       else container.innerHTML = filter === 'unread' && items.length ? empty('未読の通知はありません') : empty('まだ通知はありません');
       const nextAnchor = anchorId ? [...container.children].find(node => node.dataset.rowId === anchorId) : null;

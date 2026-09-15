@@ -28,7 +28,7 @@ foreach ($c in $commands) {
     $env:DB_PASSWORD='Ryou6341'
     if ($c.Name -eq 'integration') {
       $oldQa = $env:QA_RELEASE_IT; $oldPwd = $env:QA_RELEASE_PASSWORD; $oldDb = $env:QA_RELEASE_DB_PASSWORD
-      $env:QA_RELEASE_IT='true'; $env:QA_RELEASE_PASSWORD='BandLink-QA-2026!'; $env:QA_RELEASE_DB_PASSWORD='Ryou6341'
+      $env:QA_RELEASE_IT='true'; $env:QA_RELEASE_PASSWORD='BandLink-QA-ST-2026-PWBE!'; $env:QA_RELEASE_DB_PASSWORD='Ryou6341'
     }
     $oldNativePreference = $PSNativeCommandUseErrorActionPreference
     $PSNativeCommandUseErrorActionPreference = $false

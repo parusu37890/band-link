@@ -1,6 +1,6 @@
 # 2026-09-15 最新仕様との差分
 
-状態: 2026-09-15時点で単体98/98、PostgreSQL結合19/19、業務状態マトリクス14,227/14,227を実行済み。公式Playwright MCPによる最新UI回帰・NFT-003の同時実行DB検証・本ドキュメントの4項目のUI/文書フォローアップも完了しました（下表参照）。NFT-004/005/006/013（同時実行・DB制約系の残りの非機能試験）と`/support`文言修正も完了済みです（`docs/test-results/2026-09-15-nft-004-005-006-013.md`）。NFT-008（375/390/768/1440幅×25 route）も同日中に別セッションで公式Playwright MCPによる全網羅を完了しました（`docs/test-results/2026-09-15-nft-008-full-matrix.md`）。募集カードのタイトル・投稿者リンクのタップ領域不足（44px未満）を1件発見・修正済みです。実機ブラウザ（Safari、実iOS/Android）、実スクリーンリーダーによる確認は依然未着手です（このドキュメントのスコープ外、`HANDOFF.md`参照）。
+状態: 単体98/98、PostgreSQL結合19/19、業務状態マトリクス14,227/14,227はPASS。2026-09-15の公式Playwright最終再実行では、認証・認可、DM、画像分離、contrast、重複送信、相対時刻はPASSした一方、検索履歴分離、小ターゲット、管理feedback画像、unicode編集経路がFAIL、通知SSEを含むアクセシビリティ専用バッチがBLOCKEDとなった。詳細は`docs/test-results/2026-09-15-playwright-p0p1-rerun.md`および`docs/test-results/release-result-2026-09-15.md`を参照。実機ブラウザ（Safari、実iOS/Android）、実スクリーンリーダーは未実施。
 
 この文書は、キーワード検索削除、投稿時刻の4週間表示上限、募集一覧のheader直下見出し削除、募集・加入希望の各1件制限を基準に、現行実装・既存テスト・設計記録へ残る不整合を整理します。過去の実行証跡は書き換えず、再実行結果で更新します。
 
@@ -12,7 +12,7 @@
 |header直下見出し削除|画面実装は `recruitment-search.js` から重複見出しを削除済みだったが、削除の結果`/posts`ページに`<h1>`が一つも存在しない状態になっていた（未発見の不具合）。`DESIGN.md` は画面タイトル「バンドメンバー募集」を残す方針の記載のまま。|**解決済み**（2026-09-15）。`recruitment-search.js`に非表示`<h1 class="sr-only">`を追加して修正、`docs/decisions/0012-listing-page-hidden-h1.md`に判断記録、`DESIGN.md`に追記節。Playwright MCPで1440×900・390×844の両方で見出し階層とビジュアル非表示を確認。証跡: `docs/test-results/2026-09-15-post-spec-followup.md`3節|
 |募集・加入希望を各1件|`PostService` と `PostRepository` は種別単位の存在確認へ更新済み。通常のPostgreSQL結合と業務状態マトリクスはPASS。|**DB一意性は解決済み**（`9873c36`・`60622cc`、`ux_posts_user_type_open`部分一意インデックス＋`PostConcurrencyIntegrationTest`の実2スレッド競合テスト、CI組み込み済み）。**UI確認も完了**（2026-09-15）: 同種別2件目は409＋「公開中の募集投稿は1件までです」を画面表示、異種別は成功することをPlaywright MCPで確認。証跡: `docs/test-results/2026-09-15-post-spec-followup.md`4節|
 |画像5枚上限・初回DMの同時実行|`PostImageService`（画像追加）と`MessageService`（会話作成）にも`PostService`と同型のcheck-then-insert競合があった。|**解決済み**（2026-09-15、NFT-004/005）。`post_images`へのBEFORE INSERTトリガー、会話作成の`REQUIRES_NEW`分離＋復旧でそれぞれ修正。`ApiExceptionHandler`にDB制約違反全般の409フォールバックも追加（NFT-013で発見した`AuthService.register`/`BlockService.block`の同型競合も解消）。証跡: `docs/test-results/2026-09-15-nft-004-005-006-013.md`|
-|現行リリース判定|単体・結合・業務マトリクスは2026-09-15に現行コードで再実行しPASS。公式Playwright MCPによる本ドキュメント記載4項目のUI回帰、NFT-002..013、NFT-008の25 route×4 viewport全網羅もすべて2026-09-15に完了。|判定は`docs/test-results/release-result-2026-09-15.md`を参照。実機ブラウザ・スクリーンリーダー・パフォーマンスSLOなど、本ドキュメントのスコープ外の項目が残るためGOにはしていない|
+|現行リリース判定|単体・結合・業務マトリクスはPASS。公式Playwrightは2026-09-15にライブ再実行した範囲でFAIL/BLOCKEDが残る。|判定は`docs/test-results/release-result-2026-09-15.md`を参照。P0/P1の未解消FAIL/BLOCKED、実機ブラウザ、実スクリーンリーダー、パフォーマンスSLOが残るためNO-GO|
 
 ## 未確定事項（更新後）
 

@@ -1,4 +1,4 @@
-import {api,state,h,icon,showPage,notice} from './ui.js';
+import {api,state,h,icon,showPage,notice} from './ui.js?v=20260915-3';
 import {discoveryPage} from './discovery.js?v=20260915-2';
 import {accountPage} from './account.js?v=20260915-1';
 import {communityPage} from './community.js?v=20260913-3';
@@ -7,7 +7,7 @@ const path=()=>location.pathname.replace(/\/+$/,'')||'/';
 async function loadUser(){try{state.user=await api('/api/auth/me');}catch{state.user=null;}}
 function header(){
  const el=document.querySelector('#header');const here=path();
- const brand=(tag,attrs='')=>`<${tag} class="wordmark" ${attrs}><img class="brand-mark" src="/assets/mark.svg?v=20260913-1" alt=""><span>Band Link</span></${tag}>`;
+ const brand=(tag,attrs='')=>`<${tag} class="wordmark" ${attrs}><span>Band Link</span></${tag}>`;
  if(state.user?.status==='SUSPENDED'){el.innerHTML=`<div class="header-inner">${brand('a','href="/support" aria-label="Band Link"')}</div>`;return;}
  if(state.user && !state.user.emailVerified){
   el.innerHTML=`<div class="header-inner">${brand('span','aria-label="Band Link"')}<button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>`;
