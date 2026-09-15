@@ -29,6 +29,16 @@ spring:
     multipart:
       max-file-size: 6MB
       max-request-size: 20MB
+  # Sessions were in-memory only, so a deploy's fresh container silently logged every signed-in
+  # person out even though the cookie itself was set to last 90 days. Storing them in the same
+  # Postgres database the app already has means a session outlives a restart. Schema is created by
+  # SessionSchemaInitializer (idempotent, matches this project's no-Flyway pattern) rather than
+  # Spring Boot's own initialize-schema=always, whose bundled script has no IF NOT EXISTS and would
+  # fail on the second startup.
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
   output:
     ansi:
       enabled: never
