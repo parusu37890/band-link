@@ -67,6 +67,8 @@ app:
   # mail-from が空、または spring.mail.host が空のあいだは送信しない。
   mail-from: ${MAIL_FROM:}
   base-url: ${APP_BASE_URL:http://localhost:8080}
+  # GA4の測定ID（例: G-XXXXXXXXXX）。未設定のあいだはトラッキングスクリプトを出力しない。
+  google-analytics-id: ${GOOGLE_ANALYTICS_ID:}
   upload-dir: uploads/profile-images
   post-upload-dir: uploads/post-images
   message-upload-dir: uploads/message-images
