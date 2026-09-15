@@ -4,10 +4,13 @@
 .wordmark { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 25px; font-weight: 750; line-height: 1; letter-spacing: -1.3px; white-space: nowrap; }
 .brand-mark { display: block; width: 30px; height: 30px; }
 .wordmark span { font-size: 26px; font-weight: 400; }
-.main-nav { display: flex; align-self: stretch; flex-wrap: wrap; gap: 28px; }
+.main-nav { display: flex; align-self: stretch; flex-wrap: wrap; gap: 28px; order: 2; }
 .main-nav a { display: flex; align-items: center; min-height:44px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
 .main-nav a.active { border-color: var(--accent); color: var(--ink); }
-.header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; order: 3; }
+/* X sits right after the wordmark on every width; .header-actions keeps the far-right edge via its
+   own margin-left: auto, same as always. */
+.header-inner > .x-link { order: 1; }
 .header-profile { max-width: 160px; overflow: hidden; white-space: nowrap !important; text-overflow: ellipsis; }
 .icon { display: inline-block; width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
 .icon-button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); position: relative; flex: none; }
@@ -106,10 +109,9 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 @media (max-width: 640px) {
   .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 12px; padding-top: 10px; }
   .wordmark { font-size: 22px; } .brand-mark { width: 24px; height: 24px; }
-  .header-actions { order: 2; gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
+  .header-actions { gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
   .header-profile { max-width: 98px; } .header-actions .icon-button { width: 44px; }
-  .header-inner > .x-link { order: 1; margin-left: auto; }
-  .main-nav { order: 3; width: 100%; margin-top: 4px; gap: 4px 20px; }
+  .main-nav { order: 4; width: 100%; margin-top: 4px; gap: 4px 20px; }
   .main-nav a { min-height: 40px; }
   .main-nav a { min-height: 44px; font-size: 13px; }
   .form-grid { grid-template-columns: 1fr; } .form-section > legend { font-size: 19px; }
