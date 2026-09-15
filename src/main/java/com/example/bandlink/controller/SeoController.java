@@ -34,6 +34,13 @@ public class SeoController {
                 + "Allow: /\n"
                 + "Allow: /posts\n"
                 + "Allow: /users/\n"
+                // Public pages are client-rendered: the browser fetches these three read-only
+                // endpoints to fill in the content after the initial (empty) HTML load. Blocking
+                // all of /api/ blocked Googlebot's own renderer from fetching them too, so it only
+                // ever saw the loading placeholder and flagged every page as a soft 404.
+                + "Allow: /api/posts/\n"
+                + "Allow: /api/users/\n"
+                + "Allow: /api/masters\n"
                 + "Disallow: /api/\n"
                 + "Disallow: /admin\n"
                 + "Disallow: /settings\n"

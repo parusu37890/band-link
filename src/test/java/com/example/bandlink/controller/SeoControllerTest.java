@@ -19,6 +19,9 @@ class SeoControllerTest {
 
         assertThat(body).contains("Allow: /posts", "Allow: /users/", "Disallow: /api/",
                 "Disallow: /messages", "Sitemap: https://band-link.example/sitemap.xml");
+        // The client-rendered pages fetch these at load time; blocking them left Googlebot's
+        // renderer seeing only the loading placeholder, which it flags as a soft 404.
+        assertThat(body).contains("Allow: /api/posts/", "Allow: /api/users/", "Allow: /api/masters");
     }
 
     @Test
