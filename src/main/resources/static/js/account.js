@@ -71,7 +71,7 @@ async function authPage(path){
     : `<a href="/login">ログインへ戻る</a>`;
   const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。':'';
   const login=path==='/login';
-  const authMark=login?'':`<a class="auth-mark" href="/" aria-label="Band Link ホーム"><img src="/assets/mark.svg?v=20260913-1" alt=""> <span>Band Link</span></a>`;
+  const authMark=(login||register)?'':`<a class="auth-mark" href="/" aria-label="Band Link ホーム"><img src="/assets/mark.svg?v=20260913-1" alt=""> <span>Band Link</span></a>`;
   showPage(`<div class="page auth-page${register?' register-page':''}${login?' login-page':''}"><section class="auth-panel">${authMark}<h1>${h(config[0])}</h1><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
