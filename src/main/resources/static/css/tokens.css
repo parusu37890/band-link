@@ -2,7 +2,7 @@
    interrupts the reading surface. */
 :root {
   color-scheme: light;
-  --bg: #f8f7f3;             /* page canvas — shared by profile and settings */
+  --bg: #ffffff;             /* page canvas — shared by profile and settings */
   --surface: var(--bg);      /* static surfaces share the page canvas */
   --raised: var(--bg);       /* active rows, hovers, and file buttons keep the same canvas */
   --ink: #1b1d19;            /* 16.98:1 on --bg */

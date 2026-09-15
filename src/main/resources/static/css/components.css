@@ -14,6 +14,8 @@
 .icon-button:hover { background: var(--raised); }
 .icon-button.x-link { background: #000; border-color: #000; color: #fff; }
 .icon-button.x-link:hover { background: #1a1a1a; }
+.button.primary.register-cta { background: var(--focus); border-color: var(--focus); color: #fff; }
+.button.primary.register-cta:hover { background: #2660bd; border-color: #2660bd; }
 .dot { position: absolute; width: 6px; height: 6px; right: 7px; top: 7px; background: var(--accent); border-radius: 50%; }
 /* An outline button is read as a button by its border, so that border is a control boundary
    and takes --control-line like the inputs do (WCAG 1.4.11). --line was 1.31:1. */
@@ -107,6 +109,6 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
   .main-nav a { min-height: 40px; }
   .main-nav a { min-height: 44px; font-size: 13px; }
   .form-grid { grid-template-columns: 1fr; } .form-section > legend { font-size: 19px; }
-  .site-footer { flex-wrap: wrap; gap: 18px; } .site-footer p { display: none; } .copyright { width: 100%; }
+  .site-footer { flex-wrap: wrap; gap: 18px; } .site-footer .wordmark { flex-basis: 100%; } .site-footer p { display: none; } .copyright { width: 100%; }
   .sticky-actions .button.primary { flex: 1; } .mobile-only { display: inline-flex; }
 }
