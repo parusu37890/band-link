@@ -28,7 +28,7 @@
 .media-link { margin-top: 12px; font-size: 14px; }
 .settings-layout { display: grid; grid-template-columns: 210px minmax(0,1fr); gap: 64px; }
 .settings-nav { display: flex; flex-direction: column; align-self: start; position: sticky; top: 28px; border-top: 1px solid var(--line); }
-.settings-nav a { display:block; min-width:44px; min-height:44px; padding:14px 4px; border-bottom:1px solid var(--line); font-size:14px; color:var(--muted); }
+.settings-nav a { display:block; min-width:44px; min-height:44px; padding:14px 4px; border-bottom:1px solid var(--line); font-size:14px; color:var(--muted); text-align:center; }
 .settings-nav a[aria-current=page] { color: var(--ink); border-left: 3px solid var(--accent); padding-left: 12px; }
 .settings-content { min-width: 0; max-width: 720px; background: var(--bg); padding: 28px 0 32px; }
 .settings-links { display: grid; }
@@ -94,7 +94,7 @@
   .profile-identity { padding-top: 24px; } .profile-identity h1 { font-size: 28px; }
   .profile-contact { flex-direction: row; flex-wrap: wrap; } .profile-contact .button { width: auto; flex: 1; }
   .profile-intro .body-text { font-size: 16px; }
-  .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: 0 20px; }
+  .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0 20px; }
   .settings-nav a { border: none; } .settings-nav a[aria-current=page] { border: 0; border-bottom: 2px solid var(--accent); padding-left: 0; }
   .profile-image-editor { grid-template-columns: 80px minmax(0,1fr); gap: 16px; } .profile-image-editor .avatar.large { width: 80px; height: 80px; }
   .auth-page { padding-top: 28px; }
