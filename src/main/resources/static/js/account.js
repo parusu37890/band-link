@@ -1,5 +1,5 @@
 import {mediaHref,mediaEmbed,mediaProvider} from './media-embed.js';
-import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice} from './ui.js';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper} from './ui.js';
 
 const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
 
@@ -209,12 +209,15 @@ async function profileEdit(){
   window.addEventListener('pagehide',releasePreview,{once:true});
   form.querySelector('#choose-profile-image').onclick=()=>imageInput.click();
   clearSelection.onclick=resetSelection;
-  imageInput.addEventListener('change',()=>{
+  imageInput.addEventListener('change',async()=>{
     const image=imageInput.files?.[0];
     if(!image){resetSelection();return;}
     if(!image.size){resetSelection();fileName.textContent='このファイルは空です。別の画像を選んでください。';return;}
     if(image.size>5*1024*1024||!['image/jpeg','image/png','image/webp'].includes(image.type)){resetSelection();fileName.textContent='5MB以下のJPEG・PNG・WebP画像を選んでください。';return;}
-    releasePreview();previewUrl=URL.createObjectURL(image);
+    const cropped=await openImageCropper(image);
+    if(!cropped){resetSelection();return;}
+    const transfer=new DataTransfer();transfer.items.add(cropped);imageInput.files=transfer.files;
+    releasePreview();previewUrl=URL.createObjectURL(cropped);
     preview.innerHTML=`<span class="avatar large"><img src="${h(previewUrl)}" alt="保存するプロフィール画像のプレビュー"></span>`;
     fileName.textContent=`${image.name} — 保存すると公開されます`;clearSelection.hidden=false;
   });

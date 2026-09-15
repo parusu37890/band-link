@@ -76,6 +76,56 @@ export function openImageViewer(url,alt) {
   const dialog=document.querySelector('#dialog');dialog.innerHTML=`<form method="dialog" class="image-dialog"><button type="submit" class="button secondary small">閉じる</button><img src="${h(url)}" alt="${h(alt||'拡大表示')}"></form>`;
   dialog.showModal();
 }
+/** Drag to reposition, slider to zoom, inside a circular guide matching how the avatar is shown
+    everywhere. Exports a square JPEG so the existing `.avatar { object-fit: cover }` display never
+    has to crop it further. Resolves with the cropped File, or null if the person cancels. */
+export function openImageCropper(file) {
+  const VP=280, OUT=480, MAX_ZOOM=3;
+  return new Promise(resolve=>{
+    const url=URL.createObjectURL(file);
+    const dialog=document.querySelector('#dialog');
+    dialog.innerHTML=`<h2 id="dialog-title">画像の位置を調整</h2><p>ドラッグで位置を、スライダーで拡大を調整できます。</p>
+      <div class="crop-viewport"><img class="crop-image" src="${h(url)}" alt="" draggable="false"></div>
+      <div class="form-field"><label for="crop-zoom">拡大</label><input id="crop-zoom" type="range" min="1" max="${MAX_ZOOM}" step="0.01" value="1"></div>
+      <div class="dialog-actions"><button type="button" class="button secondary" data-cancel>キャンセル</button><button type="button" class="button primary" data-crop-confirm disabled>この位置で保存</button></div>`;
+    const img=dialog.querySelector('.crop-image'),viewport=dialog.querySelector('.crop-viewport'),zoomInput=dialog.querySelector('#crop-zoom'),confirmButton=dialog.querySelector('[data-crop-confirm]');
+    let baseScale=1,zoom=1,offsetX=0,offsetY=0,naturalWidth=0,naturalHeight=0;
+    const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
+    const apply=()=>{
+      const scale=baseScale*zoom;
+      const displayedWidth=naturalWidth*scale,displayedHeight=naturalHeight*scale;
+      const maxOffsetX=Math.max(0,(displayedWidth-VP)/2),maxOffsetY=Math.max(0,(displayedHeight-VP)/2);
+      offsetX=clamp(offsetX,-maxOffsetX,maxOffsetX);offsetY=clamp(offsetY,-maxOffsetY,maxOffsetY);
+      img.style.width=`${displayedWidth}px`;img.style.height=`${displayedHeight}px`;
+      img.style.transform=`translate(${(VP-displayedWidth)/2+offsetX}px, ${(VP-displayedHeight)/2+offsetY}px)`;
+    };
+    const finish=result=>{URL.revokeObjectURL(url);dialog.close();resolve(result);};
+    img.onload=()=>{
+      naturalWidth=img.naturalWidth;naturalHeight=img.naturalHeight;
+      baseScale=Math.max(VP/naturalWidth,VP/naturalHeight);
+      apply();confirmButton.disabled=false;
+    };
+    img.onerror=()=>finish(null);
+    zoomInput.addEventListener('input',()=>{zoom=Number(zoomInput.value);apply();});
+    let dragging=false,startX=0,startY=0,startOffsetX=0,startOffsetY=0;
+    viewport.addEventListener('pointerdown',event=>{dragging=true;startX=event.clientX;startY=event.clientY;startOffsetX=offsetX;startOffsetY=offsetY;viewport.setPointerCapture(event.pointerId);});
+    viewport.addEventListener('pointermove',event=>{if(!dragging)return;offsetX=startOffsetX+(event.clientX-startX);offsetY=startOffsetY+(event.clientY-startY);apply();});
+    viewport.addEventListener('pointerup',()=>{dragging=false;});
+    viewport.addEventListener('pointercancel',()=>{dragging=false;});
+    dialog.querySelector('[data-cancel]').onclick=()=>finish(null);
+    dialog.querySelector('[data-crop-confirm]').onclick=()=>{
+      const scale=baseScale*zoom;
+      const displayedWidth=naturalWidth*scale,displayedHeight=naturalHeight*scale;
+      const imgLeft=(VP-displayedWidth)/2+offsetX,imgTop=(VP-displayedHeight)/2+offsetY;
+      const canvas=document.createElement('canvas');canvas.width=OUT;canvas.height=OUT;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,-imgLeft/scale,-imgTop/scale,VP/scale,VP/scale,0,0,OUT,OUT);
+      canvas.toBlob(blob=>finish(blob?new File([blob],'avatar.jpg',{type:'image/jpeg'}):null),'image/jpeg',0.92);
+    };
+    dialog.addEventListener('close',()=>finish(null),{once:true});
+    dialog.showModal();
+  });
+}
 export function report(type,id) {
   const dialog=document.querySelector('#dialog');dialog.innerHTML=`<h2 id="dialog-title">運営に通報する</h2><p>困ったことや問題のある内容をお知らせください。相手に通報者の名前は表示されません。</p><form class="stack" style="margin-top:24px"><div class="form-field"><label for="reason">通報理由</label><textarea id="reason" name="reason" required maxlength="1000" placeholder="どのような問題があったか、具体的にご記入ください。"></textarea></div><div class="dialog-actions"><button type="button" class="button secondary" data-cancel>キャンセル</button><button type="submit" class="button primary">通報を送信</button></div></form>`;
   dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();bindForm(dialog.querySelector('form'),async data=>{await api('/api/reports',{method:'POST',body:{targetType:type,targetId:Number(id),reason:data.get('reason')}});dialog.close();toast('通報を受け付けました。');});dialog.showModal();
