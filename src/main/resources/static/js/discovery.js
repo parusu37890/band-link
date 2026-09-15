@@ -45,7 +45,7 @@ async function ownPosts(){
  main.querySelectorAll('[data-close]').forEach(el=>{
   const editBtn=el.closest('.panel')?.querySelector('.row:not(.spread) a.button')?.nextElementSibling;
   if(!editBtn)return;
-  const delta=editBtn.getBoundingClientRect().left-2-el.getBoundingClientRect().left;
+  const delta=editBtn.getBoundingClientRect().left-4-el.getBoundingClientRect().left;
   el.style.marginLeft=Math.max(0,delta)+'px';
  });
  main.querySelectorAll('[data-reopen]').forEach(el=>el.onclick=async()=>{el.disabled=true;try{await api('/api/posts/'+el.dataset.reopen+'/reopen',{method:'PATCH'});await ownPosts();toast('募集を再公開しました。');}catch(e){toast(e.message);el.disabled=false;}});
