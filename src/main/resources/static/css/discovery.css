@@ -207,9 +207,12 @@
   .post-card { padding:13px 0; }
   .post-card h2 { font-size:14.5px; }
   .post-person { display:grid; grid-template-columns:minmax(0,1fr); gap:2px; align-items:start; }
-  /* Here the timestamp stacks directly under the name instead of sitting beside it, so bottom-align
-     the name text within its 44px tap target to close that gap instead of the one above it. */
-  .post-person .person { align-items:flex-end; }
+  /* Bottom-aligning (or top-aligning) the name text inside the 44px tap target only moves the
+     padding from one neighbour to the other — .post-location and .post-times can't both sit close
+     to it that way. Instead, size .person to its own text and grow the tap target invisibly with
+     a ::before that overlaps into the rows above and below, so neither gap has to absorb it. */
+  .post-person .person { min-height:0; align-items:flex-start; }
+  .post-person .person::before { content:''; position:absolute; inset:-14px 0; }
   .post-times { font-size:11px; white-space:normal; line-height:1.45; }
   .post-person .person-gender { font-size:11.5px; }
 }
