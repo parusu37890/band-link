@@ -18,10 +18,12 @@
 
 1. Renderダッシュボードで **New > Blueprint** を選び、このリポジトリを選択する。
 2. `render.yaml`が自動検出され、以下が作成される：
-   - Webサービス `band-link`（`Dockerfile`からビルド）
-   - PostgreSQL `band-link-db`（無料プラン）
-   - 永続ディスク `band-link-uploads`（`/app/uploads`にマウント。プロフィール・募集・メッセージ画像の保存先）
+   - Webサービス `band-link`（`Dockerfile`からビルド、`0.5c-512mb`プラン、$7/月）
+   - PostgreSQL `band-link-db`（`0.1c-256mb`プラン、$6/月）— 無料プランは作成から30日で自動削除されるため、本番運用は最初から有料プランにしている
+   - 永続ディスク `band-link-uploads`（`/app/uploads`にマウント、1GB、$0.25/月。プロフィール・募集・メッセージ画像の保存先）
 3. `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USERNAME`/`DB_PASSWORD`はDBサービスから自動注入される（`render.yaml`の`fromDatabase`）。
+
+**概算費用**: 約$13.25/月(ワークスペース自体はHobbyプランで無料)。ビルド時間・帯域は無料枠(500分/月・5GB/月)を超えなければ追加費用なし。
 
 ## 3. 手動で設定する環境変数
 
