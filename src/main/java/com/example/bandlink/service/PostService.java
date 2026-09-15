@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +23,12 @@ public class PostService {
     // for a post's own dates; used here because this message is plain server-formatted Japanese text,
     // not a raw timestamp field the client reformats.
     private static final DateTimeFormatter EDIT_LOCK_UNTIL_FORMAT = DateTimeFormatter.ofPattern("M月d日 H:mm", Locale.JAPAN);
+    // now() is Clock.systemDefaultZone(), which is UTC in the container (see JacksonDateTimeConfig) -
+    // a LocalDateTime from it has no zone of its own but always represents a UTC instant. Formatting
+    // it directly into this message printed the raw UTC hour as if it were already JST, e.g. telling
+    // someone "next available at 4:00" nine hours before the real, later JST time. Reinterpret it as
+    // UTC and convert to JST before formatting.
+    private static final ZoneId JST = ZoneId.of("Asia/Tokyo");
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PartRepository partRepository;
@@ -84,8 +92,9 @@ public class PostService {
         LocalDateTime now = now();
         if (!rankBoostEligible(user, now)) {
             LocalDateTime availableAt = user.getLastRankBoostedAt().plusHours(EDIT_LOCK_HOURS);
+            LocalDateTime availableAtJst = availableAt.atZone(ZoneOffset.UTC).withZoneSameInstant(JST).toLocalDateTime();
             throw new RuleViolationException("投稿の更新は12時間に1回までです。次に更新できるのは"
-                    + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
+                    + availableAtJst.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
         }
         post.boostRank(now);
         user.setLastRankBoostedAt(now);

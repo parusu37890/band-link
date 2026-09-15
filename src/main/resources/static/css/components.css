@@ -106,7 +106,7 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 @media (max-width: 640px) {
   .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 12px; padding-top: 10px; }
   .wordmark { font-size: 22px; } .brand-mark { width: 24px; height: 24px; }
-  .header-actions { order: 2; flex-basis: 100%; gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
+  .header-actions { order: 2; gap: 4px; } .header-actions .button { font-size: 12px; padding: 10px; }
   .header-profile { max-width: 98px; } .header-actions .icon-button { width: 44px; }
   .header-inner > .x-link { order: 1; margin-left: auto; }
   .main-nav { order: 3; width: 100%; margin-top: 4px; gap: 4px 20px; }

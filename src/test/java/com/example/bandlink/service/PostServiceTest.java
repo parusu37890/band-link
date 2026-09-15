@@ -70,7 +70,11 @@ class PostServiceTest {
      */
     @Test
     void boostLockMessageNamesWhenUpdatingBecomesAvailableAgain() {
-        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
+        // UTC, not Asia/Tokyo: matches Clock.systemDefaultZone() in the actual container
+        // (confirmed live - see JacksonDateTimeConfig). now() from a JST-zoned fixed clock here
+        // would silently mask the bug this test exists to catch: the service converts to JST
+        // before formatting, so feeding it a value that is already JST-labelled double-shifts it.
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneOffset.UTC);
         PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
         User user = new User("u", "u@example.com", "hash");
         user.setEmailVerifiedAt(LocalDateTime.now(clock).minusDays(1));
