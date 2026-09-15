@@ -1,0 +1,43 @@
+databases:
+  - name: band-link-db
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: band-link
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /robots.txt
+    disk:
+      name: band-link-uploads
+      mountPath: /app/uploads
+      sizeGB: 1
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: band-link-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: band-link-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: band-link-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: band-link-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: band-link-db
+          property: password
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      # 以下は Render ダッシュボードで手動設定する（秘密情報・環境固有の値のためこのファイルには書かない）:
+      # APP_BASE_URL        - 初回デプロイ後にRenderが払い出すURL（例: https://band-link.onrender.com）
+      # MAIL_HOST / MAIL_PORT / MAIL_USERNAME / MAIL_PASSWORD / MAIL_FROM - 実SMTPプロバイダの値
+      # LINE_CHANNEL_ID / LINE_CHANNEL_SECRET / LINE_REDIRECT_URI - LINE Loginを使う場合のみ

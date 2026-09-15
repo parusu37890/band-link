@@ -1,0 +1,14 @@
+target/
+uploads/
+logs/
+*.log
+.git/
+.claude/
+.idea/
+.vscode/
+.mvn/wrapper/maven-wrapper.jar
+docs/
+docker-compose.observability.yml
+docker/
+*.png
+.playwright-mcp/

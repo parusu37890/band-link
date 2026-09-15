@@ -12,7 +12,7 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/band_link
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:band_link}}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD}
   jpa:
