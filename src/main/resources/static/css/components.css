@@ -12,6 +12,8 @@
 .icon { display: inline-block; width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
 .icon-button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); position: relative; flex: none; }
 .icon-button:hover { background: var(--raised); }
+.icon-button.x-link { background: #000; border-color: #000; color: #fff; }
+.icon-button.x-link:hover { background: #1a1a1a; }
 .dot { position: absolute; width: 6px; height: 6px; right: 7px; top: 7px; background: var(--accent); border-radius: 50%; }
 /* An outline button is read as a button by its border, so that border is a control boundary
    and takes --control-line like the inputs do (WCAG 1.4.11). --line was 1.31:1. */
