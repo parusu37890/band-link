@@ -12,7 +12,7 @@ class MailServiceTest {
     @Test
     void verificationMailContainsOneTimeLink() {
         JavaMailSender sender = mock(JavaMailSender.class);
-        MailService service = new MailService(sender, "smtp.example", "no-reply@bandlink.local", "https://bandlink.example/");
+        MailService service = new MailService(sender, "smtp.example", "no-reply@bandlink.local", "https://bandlink.example/", "");
 
         service.sendVerification("member@example.com", "verification-token");
 

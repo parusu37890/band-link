@@ -1,5 +1,6 @@
 package com.example.bandlink.service;
 
+import com.example.bandlink.entity.FeedbackType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,15 +28,18 @@ public class MailService {
     private final String from;
     private final String baseUrl;
     private final boolean configured;
+    private final String adminEmail;
 
     public MailService(JavaMailSender sender,
                        @Value("${spring.mail.host:}") String host,
                        @Value("${app.mail-from:}") String from,
-                       @Value("${app.base-url:http://localhost:8080}") String baseUrl) {
+                       @Value("${app.base-url:http://localhost:8080}") String baseUrl,
+                       @Value("${app.admin-email:}") String adminEmail) {
         this.sender = sender;
         this.from = from;
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.configured = !host.isBlank() && !from.isBlank();
+        this.adminEmail = adminEmail;
     }
 
     public void sendVerification(String to, String token) {
@@ -60,6 +64,20 @@ public class MailService {
                         + "心当たりがない場合は、このメールを破棄してください。\n"
                         + "その場合、いまのパスワードはそのまま使えます。\n",
                 "password reset");
+    }
+
+    public void sendFeedbackNotification(FeedbackType type, String username, String userEmail, String message) {
+        if (adminEmail.isBlank()) {
+            log.warn("feedback notification mail not sent: set app.admin-email to enable delivery");
+            return;
+        }
+        String kindLabel = type == FeedbackType.FEATURE_REQUEST ? "機能要望" : "お問い合わせ";
+        send(adminEmail, "【Band Link】" + kindLabel + "が届きました",
+                "送信者: " + username + "（" + userEmail + "）\n\n"
+                        + message + "\n\n"
+                        + "管理画面で確認してください。\n"
+                        + baseUrl + "/admin\n",
+                "feedback notification");
     }
 
     private void send(String to, String subject, String body, String kind) {

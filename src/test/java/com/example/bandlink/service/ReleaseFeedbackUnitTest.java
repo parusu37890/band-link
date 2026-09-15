@@ -16,13 +16,15 @@ import static org.mockito.ArgumentMatchers.any;
 class ReleaseFeedbackUnitTest {
     final UserRepository users = mock(UserRepository.class);
     final FeedbackRepository feedback = mock(FeedbackRepository.class);
+    final MailService mail = mock(MailService.class);
     final Clock clock = Clock.fixed(Instant.parse("2026-09-13T03:00:00Z"), ZoneOffset.UTC);
-    final FeedbackService service = new FeedbackService(users, feedback, clock);
+    final FeedbackService service = new FeedbackService(users, feedback, clock, mail);
 
     @Test void codeUt001_springSelectsInjectableConstructorWithoutClockBean() {
         try (var context = new AnnotationConfigApplicationContext()) {
             context.registerBean(UserRepository.class, () -> users);
             context.registerBean(FeedbackRepository.class, () -> feedback);
+            context.registerBean(MailService.class, () -> mail);
             context.register(FeedbackService.class);
             context.refresh();
             when(users.findById(1L)).thenReturn(Optional.of(new User("QA", "qa@example.invalid", "hash")));

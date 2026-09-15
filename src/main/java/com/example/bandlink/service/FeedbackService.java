@@ -16,16 +16,18 @@ public class FeedbackService {
     private final UserRepository users;
     private final FeedbackRepository feedback;
     private final Clock clock;
+    private final MailService mail;
 
     @Autowired
-    public FeedbackService(UserRepository users, FeedbackRepository feedback) {
-        this(users, feedback, Clock.systemDefaultZone());
+    public FeedbackService(UserRepository users, FeedbackRepository feedback, MailService mail) {
+        this(users, feedback, Clock.systemDefaultZone(), mail);
     }
 
-    FeedbackService(UserRepository users, FeedbackRepository feedback, Clock clock) {
+    FeedbackService(UserRepository users, FeedbackRepository feedback, Clock clock, MailService mail) {
         this.users = users;
         this.feedback = feedback;
         this.clock = clock == null ? Clock.systemDefaultZone() : clock;
+        this.mail = mail;
     }
 
     @Transactional
@@ -44,7 +46,9 @@ public class FeedbackService {
             throw new IllegalArgumentException("添付画像を確認してください。");
         }
         var user = users.findById(userId).orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません。"));
-        return feedback.save(new Feedback(user, type, message,
+        Feedback saved = feedback.save(new Feedback(user, type, message,
                 image == null || image.isBlank() ? null : image, LocalDateTime.now(clock)));
+        mail.sendFeedbackNotification(type, user.getUsername(), user.getEmail(), message);
+        return saved;
     }
 }
