@@ -8,9 +8,11 @@
 .main-nav a { display: flex; align-items: center; min-height:44px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
 .main-nav a.active { border-color: var(--accent); color: var(--ink); }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; order: 3; }
-/* X sits right after the wordmark on every width; .header-actions keeps the far-right edge via its
-   own margin-left: auto, same as always. */
-.header-inner > .x-link { order: 1; }
+/* Logged out: X sits right after the wordmark, header-actions (login/register) keeps the far-right
+   edge via its own margin-left: auto. Logged in: X moves back to the far right, after the
+   notifications/messages/profile icons, since there's no title-adjacent slot to fight for then. */
+.header-inner.is-guest > .x-link { order: 1; }
+.header-inner.is-authed > .x-link { order: 4; }
 .header-profile { max-width: 160px; overflow: hidden; white-space: nowrap !important; text-overflow: ellipsis; }
 .icon { display: inline-block; width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
 .icon-button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); position: relative; flex: none; }
