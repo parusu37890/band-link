@@ -102,4 +102,4 @@ jobs:
           QA_RELEASE_IT: 'true'
           QA_RELEASE_DB_USERNAME: postgres
           QA_RELEASE_DB_PASSWORD: postgres
-        run: ./mvnw -B -Dtest=ReleaseApiIntegrationTest,PostConcurrencyIntegrationTest test
+        run: ./mvnw -B -Dtest=ReleaseApiIntegrationTest,PostConcurrencyIntegrationTest,PostImageConcurrencyIntegrationTest,MessageConversationConcurrencyIntegrationTest,DatabaseConstraintDefenseIntegrationTest test
