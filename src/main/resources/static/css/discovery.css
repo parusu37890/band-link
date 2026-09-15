@@ -191,11 +191,10 @@
 .post-card .post-thumb, .post-card .post-classification { display:none; }
 .post-content { display:block; }
 .post-card h2 { width:auto; margin:0 0 4px; line-height:1.5; }
-.post-card h2 a { position:relative; top:4px; }
 .post-roles { margin:0 0 4px; line-height:1.7; }
 .post-location { margin:0 0 4px; line-height:1.7; }
-.post-person { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-height:30px; padding:0; }
-.post-person .person { position:relative; z-index:1; min-height:30px; }
+.post-person { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:0; }
+.post-person .person { position:relative; z-index:1; }
 .post-person .person > span:last-child { display:flex; align-items:baseline; min-width:0; flex-wrap:wrap; }
 .post-person .person-gender { flex:none; margin-left:8px; font-size:13px; color:var(--muted); white-space:nowrap; }
 .post-person .person .avatar { display:inline-flex; width:28px; height:28px; margin-right:8px; border-radius:50%; font-size:12px; }
