@@ -62,20 +62,20 @@ class PostImageConcurrencyIntegrationTest {
     private final Path uploadsRoot = Paths.get(
             System.getenv().getOrDefault("BANDLINK_UPLOAD_DIR", "uploads")).toAbsolutePath().normalize();
 
-    private Row removedThirdImage;
+    private Row removedFourthImage;
     private Set<Long> baselineImageIds;
     private Set<String> filesBefore;
 
     private record Row(long id, long postId, String imageUrl, int sortOrder, Timestamp createdAt) {}
 
     @BeforeEach
-    void bringPostDownToTwoImagesAndSnapshotTheUploadsDirectory() throws IOException {
+    void bringPostDownToThreeImagesAndSnapshotTheUploadsDirectory() throws IOException {
         assertEquals("band_link_release_test", jdbc.queryForObject("select current_database()", String.class));
         assertEquals(1, jdbc.queryForObject(
                 "select count(*) from qa_release_fixture where singleton=true and suite='Band Link disposable release QA'",
                 Integer.class));
-        // The seed fixture gives P009 3 images already (its cap); NFT-004's stated precondition is
-        // 2, so a single concurrent upload has a real free slot to race over. Removing the row (not
+        // The seed fixture gives P009 4 images already (its cap); NFT-004's stated precondition is
+        // 3, so a single concurrent upload has a real free slot to race over. Removing the row (not
         // its file) is enough - the physical fixture file it pointed to is never touched or checked.
         var top = jdbc.queryForObject(
                 "select id, post_id, image_url, sort_order, created_at from post_images "
@@ -83,21 +83,21 @@ class PostImageConcurrencyIntegrationTest {
                 (rs, i) -> new Row(rs.getLong("id"), rs.getLong("post_id"), rs.getString("image_url"),
                         rs.getInt("sort_order"), rs.getTimestamp("created_at")),
                 POST_ID);
-        removedThirdImage = top;
+        removedFourthImage = top;
         jdbc.update("delete from post_images where id=?", top.id());
         baselineImageIds = new HashSet<>(jdbc.queryForList("select id from post_images where post_id=?", Long.class, POST_ID));
-        assertEquals(2, baselineImageIds.size(), "precondition: P009 must have exactly 2 images before the race");
+        assertEquals(3, baselineImageIds.size(), "precondition: P009 must have exactly 3 images before the race");
         filesBefore = listUploadsRootFiles();
     }
 
     @AfterEach
-    void undoWhateverTheRaceCommittedAndRestoreTheSeededThirdImage() throws IOException {
+    void undoWhateverTheRaceCommittedAndRestoreTheSeededFourthImage() throws IOException {
         List<Long> newIds = jdbc.queryForList("select id from post_images where post_id=?", Long.class, POST_ID)
                 .stream().filter(id -> !baselineImageIds.contains(id)).toList();
         for (Long id : newIds) jdbc.update("delete from post_images where id=?", id);
         jdbc.update("insert into post_images(id, post_id, image_url, sort_order, created_at) values (?,?,?,?,?)",
-                removedThirdImage.id(), removedThirdImage.postId(), removedThirdImage.imageUrl(),
-                removedThirdImage.sortOrder(), removedThirdImage.createdAt());
+                removedFourthImage.id(), removedFourthImage.postId(), removedFourthImage.imageUrl(),
+                removedFourthImage.sortOrder(), removedFourthImage.createdAt());
         // Delete every file this test run wrote to the uploads directory, successful or not - none
         // of them are part of the seeded fixture the rest of the suite depends on.
         Set<String> filesAfter = listUploadsRootFiles();
@@ -106,7 +106,7 @@ class PostImageConcurrencyIntegrationTest {
     }
 
     @Test
-    void nft004_concurrentUploadsNeverExceedThreeImagesAndLeaveNoOrphanFile() throws Exception {
+    void nft004_concurrentUploadsNeverExceedFourImagesAndLeaveNoOrphanFile() throws Exception {
         List<MvcResult> results = fireConcurrently();
         long created = results.stream().filter(r -> r.getResponse().getStatus() == 201).count();
         long rejected = results.stream().filter(r -> r.getResponse().getStatus() >= 400 && r.getResponse().getStatus() < 500).count();
@@ -114,10 +114,10 @@ class PostImageConcurrencyIntegrationTest {
 
         assertEquals(0, serverErrors, "neither request may surface a raw 500");
         assertEquals(1, created, "exactly one of the two concurrent uploads should fill the last slot");
-        assertEquals(1, rejected, "the loser must get a 4xx RuleViolation, not a 500 or a silent 4th image");
+        assertEquals(1, rejected, "the loser must get a 4xx RuleViolation, not a 500 or a silent 5th image");
 
         int finalCount = jdbc.queryForObject("select count(*) from post_images where post_id=?", Integer.class, POST_ID);
-        assertEquals(3, finalCount, "total images must never exceed the 3-image cap");
+        assertEquals(4, finalCount, "total images must never exceed the 4-image cap");
 
         // Orphan check: the only new file the uploads directory may contain after the race is the
         // one file backing the single successful DB row - proving the loser's DataIntegrityViolation

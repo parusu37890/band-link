@@ -44,7 +44,7 @@ export async function postEditor(id) {
           <div class="form-field"><label for="title">募集タイトル<span class="required">必須</span></label><input id="title" name="title" required maxlength="30" value="${h(p?.title)}" placeholder="例：新宿でドラム募集"><span class="hint" data-count="title"></span></div>
           <div class="form-field"><label for="content">募集の本文<span class="required">必須</span></label><p class="hint" id="content-help">好きなアーティスト、現在のメンバー、練習の曜日、ライブの予定などを書いてみましょう</p><textarea id="content" name="content" required maxlength="500" rows="9" aria-describedby="content-help" placeholder="どんな音楽を、どんな仲間とやってみたいですか？">${h(p?.content)}</textarea><span class="hint" data-count="content"></span></div>
           <div class="editor-extra-fields"><h3>活動のペースと希望</h3><div class="form-field"><label for="frequency">活動頻度</label><select id="frequency" name="activityFrequency">${frequencies.map(([value,label])=>`<option value="${value}" ${(p?.activityFrequency||'MONTHLY_1')===value?'selected':''}>${h(label)}</option>`).join('')}</select></div><fieldset class="editor-fieldset"><legend>希望年齢層</legend>${inputChoices('ageRanges',ages,p?.ageRanges?.length?p.ageRanges:['ANY'])}</fieldset></div>
-          <div class="editor-extra-fields"><h3>募集画像<span class="optional">任意</span></h3><p class="hint">3枚まで入れられます。1枚5MBまで、jpg / png / webp対応</p><label class="sr-only" for="images">募集画像を選択</label><input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><div id="image-selection" class="image-selection" aria-live="polite"></div><button type="button" class="button quiet small" data-clear-images hidden>選択した画像を取り消す</button><div id="saved-images" class="saved-images" aria-live="polite"></div></div>
+          <div class="editor-extra-fields"><h3>募集画像<span class="optional">任意</span></h3><p class="hint">4枚まで入れられます。1枚5MBまで、jpg / png / webp対応</p><label class="sr-only" for="images">募集画像を選択</label><input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><div id="image-selection" class="image-selection" aria-live="polite"></div><button type="button" class="button quiet small" data-clear-images hidden>選択した画像を取り消す</button><div id="saved-images" class="saved-images" aria-live="polite"></div></div>
         </div>
       </section>
       <section class="editor-step" data-editor-step="2" aria-labelledby="editor-heading-2" hidden>
@@ -96,7 +96,7 @@ export async function postEditor(id) {
       }
       if(!values('ageRanges').length)return error('希望年齢層を選択してください。指定しない場合は「年齢不問」を選べます。',form.querySelector('[name="ageRanges"]'));
       const files=[...form.elements.images.files];
-      if(saved.length+files.length>3)return error('画像は保存済みと合わせて3枚までです。選択を取り消すか、枚数を減らしてください。',form.elements.images);
+      if(saved.length+files.length>4)return error('画像は保存済みと合わせて4枚までです。選択を取り消すか、枚数を減らしてください。',form.elements.images);
       if(files.some(file=>file.size>5*1024*1024||!['image/jpeg','image/png','image/webp'].includes(file.type)))return error('画像はjpg / png / webp、1枚5MBまでです。選び直してください。',form.elements.images);
     }
     return true;
@@ -179,7 +179,7 @@ export async function postEditor(id) {
       return `<figure><img src="${h(url)}" alt="新しく選んだ募集画像"><figcaption>${h(file.name)}</figcaption></figure>`;
     }).join('');
     form.querySelector('[data-clear-images]').hidden=!files.length;
-    if(files.length+saved.length>3)error('画像は保存済みと合わせて3枚までです。選び直してください。');
+    if(files.length+saved.length>4)error('画像は保存済みと合わせて4枚までです。選び直してください。');
   }
   form.elements.images.addEventListener('change',renderSelectedImages);
   form.querySelector('[data-clear-images]').onclick=()=>{form.elements.images.value='';renderSelectedImages();clearError();form.elements.images.focus();};

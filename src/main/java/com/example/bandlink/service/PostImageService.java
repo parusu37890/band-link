@@ -14,9 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PostImageService {
-    // Kept in sync by hand with enforce_post_images_limit()'s own "current_count >= 3"
+    // Kept in sync by hand with enforce_post_images_limit()'s own "current_count >= 4"
     // (DatabaseConstraintInitializer) - the trigger has no way to read a Java constant.
-    private static final int MAX_IMAGES = 3;
+    private static final int MAX_IMAGES = 4;
     private final PostRepository posts;
     private final PostImageRepository images;
     private final ImageStorageService storage;
