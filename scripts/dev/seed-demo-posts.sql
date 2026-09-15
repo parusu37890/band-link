@@ -14,10 +14,8 @@ BEGIN
   ON CONFLICT (email) DO UPDATE SET email_verified_at = COALESCE(users.email_verified_at, now()), status = 'ACTIVE';
 
   -- Demo profiles. Without these every public profile renders as six "未設定" rows,
-  -- which makes the profile screen impossible to judge. Use the deterministic QA bear icon
-  -- for local review so the profile and post-list image layout can be checked consistently.
-  UPDATE users u SET bio = v.bio, age = v.age, gender = v.gender, experience_years = v.years,
-                     video_url = v.video, profile_image_url = '/uploads/qa-bear-icon.jpg'
+  -- which makes the profile screen impossible to judge. Photos are left unset on purpose.
+  UPDATE users u SET bio = v.bio, age = v.age, gender = v.gender, experience_years = v.years, video_url = v.video
   FROM (VALUES
     -- video_url is left NULL: demo accounts should not link to a real person's video.
     ('demo01@bandlink.local','平日は会社員、金曜の夜から日曜にかけてスタジオにこもっています。90年代のオルタナやグランジが原点で、最近は轟音の中にメロディが残る曲を作りたいと思っています。演奏の上手さより、同じ音量で長く続けられる相手を探しています。',29,'男性',8,NULL),

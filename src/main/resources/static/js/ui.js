@@ -30,28 +30,7 @@ export function loginRelativeTime(value, online = false) {
 }
 export const notice = (message,type='info') => `<div class="notice ${h(type)}"${type==='error'?' role="alert"':''}>${h(message)}</div>`;
 export const empty = (title,body='',actionHtml='') => `<div class="empty-state">${icon('music')}<h2>${h(title)}</h2>${body?`<p>${h(body)}</p>`:''}${actionHtml}</div>`;
-const defaultDescription='募集・加入希望の掲示板です。都道府県・パート・ジャンルから音楽仲間を探せます。';
-function meta(name,content,property=false){const selector=property?`meta[property="${name}"]`:`meta[name="${name}"]`;let el=document.head.querySelector(selector);if(!el){el=document.createElement('meta');el.setAttribute(property?'property':'name',name);document.head.append(el);}el.setAttribute('content',content);}
-function updateSeo(title,description=''){
- const pathname=location.pathname.replace(/\/+$/,'')||'/';
- const publicPage=pathname==='/'||pathname==='/posts'||/^\/posts\/\d+$/.test(pathname)||/^\/users\/\d+$/.test(pathname);
- const safeTitle=title?`${title} — Band Link`:'Band Link — 募集・加入希望の掲示板';
- const safeDescription=String(description||defaultDescription).replace(/\s+/g,' ').trim().slice(0,160)||defaultDescription;
- const canonical=`${location.origin}${pathname==='/'?'/posts':pathname}`;
- document.title=safeTitle;
- meta('description',safeDescription);
- meta('robots',publicPage?'index,follow':'noindex,nofollow');
- const canonicalLink=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(Object.assign(document.createElement('link'),{rel:'canonical'}));
- canonicalLink.href=canonical;
- meta('og:type',pathname.match(/^\/posts\/\d+$/)?'article':'website',true);
- meta('og:site_name','Band Link',true);meta('og:locale','ja_JP',true);meta('og:title',safeTitle,true);meta('og:description',safeDescription,true);meta('og:url',canonical,true);
- meta('twitter:title',safeTitle);meta('twitter:description',safeDescription);
- let structured=document.head.querySelector('#band-link-seo-jsonld');
- if(!structured){structured=document.createElement('script');structured.id='band-link-seo-jsonld';structured.type='application/ld+json';document.head.append(structured);}
- const postDetail=pathname.match(/^\/posts\/\d+$/),profileDetail=pathname.match(/^\/users\/\d+$/);
- structured.textContent=JSON.stringify(publicPage?postDetail?{'@context':'https://schema.org','@type':'Article','headline':title||'募集','description':safeDescription,'url':canonical}:profileDetail?{'@context':'https://schema.org','@type':'ProfilePage','name':title||'公開プロフィール','description':safeDescription,'url':canonical}:{'@context':'https://schema.org','@type':'WebSite','name':'Band Link','url':`${location.origin}/posts`}:{});
-}
-export function showPage(html,title,description='') { main.innerHTML=html; updateSeo(title,description); }
+export function showPage(html,title) { main.innerHTML=html; document.title=`${title} — Band Link`; }
 // Search and filter submits go through the router too rather than reloading the shell.
 export const navigate = url => { history.pushState(null, '', url); dispatchEvent(new PopStateEvent('popstate')); scrollTo(0, 0); };
 export function toast(message) { const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,4500); }

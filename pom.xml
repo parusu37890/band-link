@@ -83,29 +83,7 @@
 	</dependencies>
 
 	<build>
-		<!-- JDK 26's Windows compiler does not reliably split a semicolon-delimited
-		     -sourcepath. Test compilation therefore uses one generated source root
-		     containing both application and test sources. -->
-		<testSourceDirectory>${project.build.directory}/generated-test-sources/aggregate</testSourceDirectory>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>aggregate-test-sources</id>
-						<phase>generate-test-sources</phase>
-						<goals><goal>copy-resources</goal></goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/generated-test-sources/aggregate</outputDirectory>
-							<resources>
-								<resource><directory>${project.build.sourceDirectory}</directory></resource>
-								<resource><directory>${basedir}/src/test/java</directory></resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

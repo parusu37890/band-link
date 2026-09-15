@@ -59,7 +59,7 @@ $env:SPRING_DATASOURCE_PASSWORD = $env:DB_PASSWORD
 共通テストpassword例は `BandLink-QA-2026!` です。外部環境で使い回しません。hash生成用classをプロジェクトの依存classpathで一時compileします。
 
 ```powershell
-$env:QA_RELEASE_PASSWORD = 'BandLink-QA-ST-2026-PWBE!'
+$env:QA_RELEASE_PASSWORD = 'BandLink-QA-2026!'
 & .\mvnw.cmd -q dependency:build-classpath '-Dmdep.outputFile=target\qa-release-classpath.txt'
 $qaClasspath = Get-Content -Raw 'target\qa-release-classpath.txt'
 New-Item -ItemType Directory -Force 'target\qa-fixture-tool' | Out-Null

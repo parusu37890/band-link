@@ -43,11 +43,7 @@ logging:
 server:
   servlet:
     session:
-      # Login sessions remain available for 90 days of inactivity so users do not
-      # have to authenticate again every time they reopen the browser.
-      timeout: 90d
       cookie:
-        max-age: 90d
         # SEC-014: neither attribute was set anywhere, so JSESSIONID relied entirely on
         # Tomcat/Spring Boot defaults - confirmed live (Set-Cookie: JSESSIONID=...; Path=/;
         # HttpOnly, nothing else). HttpOnly was already present by default; same-site was not,

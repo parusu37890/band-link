@@ -38,13 +38,8 @@ async (page) => {
   const meB = await json(await contexts.recipient.request.get(base + '/api/auth/me'));
   const cookiesA = await contexts.user.cookies(base);
   const cookiesB = await contexts.recipient.cookies(base);
-  // Keyword search was intentionally removed from the product. Use distinct structured
-  // conditions so this isolation assertion exercises the current contract instead of a
-  // retired query parameter.
-  const conditionA = 'prefectureIds=13';
-  const conditionB = 'prefectureIds=27';
-  await contexts.user.request.get(base + '/api/posts/page?' + conditionA);
-  await contexts.recipient.request.get(base + '/api/posts/page?' + conditionB);
+  const keyword = 'PW-I-U07-ONLY-' + Date.now();
+  await contexts.user.request.get(base + '/api/posts/page?keyword=' + encodeURIComponent(keyword));
   const historyA = await json(await contexts.user.request.get(base + '/api/search-history'));
   const historyB = await json(await contexts.recipient.request.get(base + '/api/search-history'));
   const notificationsA = await json(await contexts.user.request.get(base + '/api/notifications'));
@@ -62,11 +57,7 @@ async (page) => {
   const sessionIsolation = {
     identitiesDistinct: meA.id === 910007 && meB.id === 910008,
     cookiesDistinct: cookiesA.find(c => c.name === 'JSESSIONID')?.value !== cookiesB.find(c => c.name === 'JSESSIONID')?.value,
-    searchIsolated: Array.isArray(historyA) && Array.isArray(historyB)
-      && historyA.some(item => String(item.conditions || '').includes('prefectures=13'))
-      && !historyA.some(item => String(item.conditions || '').includes('prefectures=27'))
-      && historyB.some(item => String(item.conditions || '').includes('prefectures=27'))
-      && !historyB.some(item => String(item.conditions || '').includes('prefectures=13')),
+    searchIsolated: Array.isArray(historyA) && historyA.some(item => JSON.stringify(item).toLowerCase().includes(keyword.toLowerCase())) && !JSON.stringify(historyB).toLowerCase().includes(keyword.toLowerCase()),
     notificationOwnersIsolated: Array.isArray(notificationsA) && Array.isArray(notificationsB) && notificationsA.every(item => !item.userId || item.userId === 910007) && notificationsB.every(item => !item.userId || item.userId === 910008),
     draftsIsolated: drafts.user === draftA && drafts.recipient === draftB && drafts.user !== drafts.recipient,
     ids: [meA.id, meB.id],
@@ -98,10 +89,7 @@ async (page) => {
     const focusables = [...document.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')]
       .filter(el => visible(el) && !el.disabled && el.getAttribute('tabindex') !== '-1');
     const smallTargets = focusables.map(el => {
-      let target = ['checkbox','radio'].includes(el.type) && el.closest('label') ? el.closest('label') : el;
-      // The title is a stretched link; its visual text box is intentionally smaller
-      // than the card, but the card is the actual 44px+ hit area.
-      if (el.matches('.post-card h2 a')) target = el.closest('.post-card');
+      const target = ['checkbox','radio'].includes(el.type) && el.closest('label') ? el.closest('label') : el;
       const r = target.getBoundingClientRect();
       return { tag: el.tagName, text: (el.getAttribute('aria-label') || el.textContent || el.getAttribute('name') || '').trim().slice(0, 60), width: Math.round(r.width), height: Math.round(r.height) };
     }).filter(x => x.width < 44 || x.height < 44);
@@ -151,10 +139,7 @@ async (page) => {
       p.setDefaultNavigationTimeout(12000);
       await p.setViewportSize({ width, height: width < 500 ? 844 : 900 });
       const errors=[]; const listener=msg=>{if(msg.type()==='error')errors.push(msg.text())}; p.on('console',listener);
-      // Some pages keep a long-lived notification/SSE request open. Waiting for the
-      // browser's `load` event makes the audit hang even though the document and UI are
-      // ready, so use the observable DOM readiness gate instead.
-      try { await p.goto(base + route, { waitUntil: 'commit', timeout: 12000 }); await waitForPage(p); }
+      try { await p.goto(base + route, { waitUntil: 'domcontentloaded' }); await waitForPage(p); }
       catch (error) { navigationFailures.push({width,actor,route,error:String(error)}); p.off('console',listener); continue; }
       const dom=await auditDom(p);
       geometry.push({ width, actor, route, ...dom });
@@ -180,8 +165,7 @@ async (page) => {
     ['user','/messages/930001',768,'pw-i-messages-768.png'], ['user','/my/posts',1440,'pw-i-my-posts-1440.png'],
     ['admin','/admin',1440,'pw-i-admin-1440.png']
   ];
-  const screenshotFailures=[];
-  for(const [actor,route,width,name] of screenshots){const p=pages[actor];try{await p.setViewportSize({width,height:900});await p.goto(base+route,{waitUntil:'commit',timeout:12000});await waitForPage(p);await p.screenshot({path:`C:/Users/parus/Desktop/band/docs/test-results/playwright-harness/${name}`,fullPage:true,timeout:12000});}catch(error){screenshotFailures.push({actor,route,width,name,error:String(error)});}}
+  for(const [actor,route,width,name] of screenshots){const p=pages[actor];await p.setViewportSize({width,height:900});await p.goto(base+route);await waitForPage(p);await p.screenshot({path:`C:/Users/parus/Desktop/band/docs/test-results/playwright-harness/${name}`,fullPage:true});}
 
   const result = {
     generatedAt: new Date().toISOString(), tool: '@playwright/mcp',
@@ -189,8 +173,7 @@ async (page) => {
     responsive: { combinations: geometry.length, navigationFailures, overflowFailures: geometry.filter(x=>x.horizontalOverflow>1), clippedFailures: geometry.filter(x=>x.clipped.length), smallTargetCombinations: geometry.filter(x=>x.smallTargetCount>0).length, smallTargetExamples: geometry.filter(x=>x.smallTargetCount>0).slice(0,20).map(x=>({width:x.width,route:x.route,count:x.smallTargetCount,examples:x.smallTargets.slice(0,5)})), backgroundColors:[...new Set(geometry.flatMap(x=>x.backgrounds.map(b=>b.color)))], consoleErrors },
     keyboard: { routes:keyboard.length, failures:keyboard.filter(x=>x.missingVisible>0||x.unique<Math.min(x.focusableCount,2)), details:keyboard },
     accessibility: { routes:accessibility.length, unnamed:accessibility.filter(x=>x.unnamed.length), missingAlt:accessibility.filter(x=>x.imagesWithoutAlt.length), headingFailures:accessibility.filter(x=>x.h1Count!==1||x.headingJumps.length), details:accessibility },
-    contrast: { routes:contrast.length, checked:contrast.reduce((n,x)=>n+x.checked,0), failingRoutes:contrast.filter(x=>x.failureCount), details:contrast },
-    screenshotFailures
+    contrast: { routes:contrast.length, checked:contrast.reduce((n,x)=>n+x.checked,0), failingRoutes:contrast.filter(x=>x.failureCount), details:contrast }
   };
   for(const context of Object.values(contexts)) await context.close();
   return result;

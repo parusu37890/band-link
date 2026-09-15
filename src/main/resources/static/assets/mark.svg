@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="band-link-mark-title">
-  <title id="band-link-mark-title">Band Link</title>
-  <path d="M9 8v32m0-32h7.5c6.1 0 9.7 2.8 9.7 7.5s-3.6 7.5-9.7 7.5H9m0 0h8.2c6.2 0 10 3 10 8.5S23.4 40 17.2 40H9" fill="none" stroke="#1b1d19" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M34 8v32h12" fill="none" stroke="#1b1d19" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img">
+  <rect x="1.5" y="1.5" width="37" height="37" rx="5" fill="#f8f7f3" stroke="#1b1d19" stroke-width="2"/>
+  <path d="M10 9.5v21M10 10h6.5c4.2 0 6.5 1.8 6.5 4.8s-2.3 4.7-6.5 4.7H10m0 0h7c4.5 0 7 1.9 7 5.2s-2.5 5.3-7 5.3H10" fill="none" stroke="#1b1d19" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M29 10v20h7" fill="none" stroke="#1b1d19" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="26" cy="20" r="2" fill="#2e6fd8"/>
 </svg>
