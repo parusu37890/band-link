@@ -141,7 +141,7 @@ INSERT INTO post_parts SELECT 920001,id FROM parts WHERE name='ベース';
 INSERT INTO post_prefectures SELECT 920001,id FROM prefectures WHERE name IN('大阪府','神奈川県');
 INSERT INTO post_images(id,post_id,image_url,sort_order,created_at)
 SELECT 980000+n,920009,'/uploads/97000000-0000-4000-8000-'||lpad((n+1)::text,12,'0')||'.png',n-1,q.anchor
-FROM generate_series(1,5)s(n) CROSS JOIN qa_config q;
+FROM generate_series(1,3)s(n) CROSS JOIN qa_config q;
 INSERT INTO conversations(id,user_a_id,user_b_id,created_at,last_message_at)
 SELECT 930000+n,a,b,q.anchor-interval '1 day',q.anchor-(n||' minutes')::interval
 FROM (VALUES(1,910007,910008),(2,910009,910010),(3,910007,910011),(4,910007,910022))v(n,a,b) CROSS JOIN qa_config q;

@@ -6,12 +6,18 @@ export const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="
 export const button = (label, href, kind='primary') => `<a class="button ${h(kind)}" href="${h(href)}">${h(label)}</a>`;
 export function safeUrl(value) { try { const u = new URL(value, location.origin); return ['http:','https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } }
 export function avatar(user, large=false) { const url = user?.profileImageUrl; const local = url && /^\/(?:uploads|api\/images)\/[a-zA-Z0-9/_.-]+$/.test(url); return `<span class="avatar${large?' large':''}" aria-hidden="true">${local ? `<img src="${h(url)}" alt="" loading="lazy">` : h((user?.username || '♪').slice(0,1))}</span>`; }
-export function time(value) { if (!value) return ''; const d=new Date(value); return Number.isNaN(d.valueOf())?'':new Intl.DateTimeFormat('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(d); }
+// The server sends LocalDateTime values, which carry no zone by construction. They are always UTC
+// (Clock.systemDefaultZone() in the container) and JacksonDateTimeConfig appends Z to say so, but
+// this guards any timestamp that somehow arrives without one: a bare "2026-09-15T15:33:23" is
+// ECMAScript-ambiguous and gets silently parsed as local time on a non-UTC system clock, which
+// showed a brand-new post as "9時間前" on JST devices.
+function parseServerDate(value) { return new Date(/[Zz]|[+-]\d\d:?\d\d$/.test(value) ? value : value + 'Z'); }
+export function time(value) { if (!value) return ''; const d=parseServerDate(value); return Number.isNaN(d.valueOf())?'':new Intl.DateTimeFormat('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(d); }
 // Posts and login activity share the minute/hour/day/week buckets. Posts expire after 30 days,
 // so their display stops at "4週間前"; login activity continues into month buckets.
 function activityRelativeTime(value, post = false) {
   if (!value) return '—';
-  const then = new Date(value);
+  const then = parseServerDate(value);
   if (Number.isNaN(then.valueOf())) return '—';
   const minutes = Math.max(0, Math.floor((Date.now() - then.getTime()) / 60000));
   if (minutes < 60) return `${Math.max(1, minutes)}分前`;

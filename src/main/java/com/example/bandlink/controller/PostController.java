@@ -45,6 +45,11 @@ public class PostController {
         return PostResponse.from(postService.reopen(userId(authentication), id));
     }
 
+    @PatchMapping("/{id}/boost")
+    public PostResponse boost(Authentication authentication, @PathVariable Long id) {
+        return PostResponse.from(postService.boost(userId(authentication), id));
+    }
+
     @GetMapping
     public List<PostResponse> list(@RequestParam(required = false) String keyword,
                                    @RequestParam(required = false) java.util.Set<Long> prefectureIds,

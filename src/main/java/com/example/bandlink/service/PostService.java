@@ -49,7 +49,6 @@ public class PostService {
         LocalDateTime now = now();
         Post post = new Post(user, request.type(), request.title().trim(), request.content().trim(), request.areaSub(), request.activityFrequency(), now);
         assign(post, request.partIds(), request.genreIds(), request.stanceIds(), request.prefectureIds(), request.ageRanges());
-        user.setLastEditedAt(now);
         try {
             return postRepository.saveAndFlush(post);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
@@ -63,12 +62,33 @@ public class PostService {
 
     @Transactional
     public Post update(Long userId, Long postId, PostRequests.Update request) {
-        User user = activeVerifiedUser(userId); checkEditLock(user);
+        activeVerifiedUser(userId);
         Post post = owned(postId, userId);
         if (post.getStatus() != PostStatus.OPEN) throw new RuleViolationException("公開中の投稿のみ編集できます");
         post.update(request.title().trim(), request.content().trim(), request.areaSub(), request.activityFrequency(), now());
         assign(post, request.partIds(), request.genreIds(), request.stanceIds(), request.prefectureIds(), request.ageRanges());
-        user.setLastEditedAt(now());
+        return post;
+    }
+
+    /**
+     * "更新" - a deliberate, rate-limited bump to the top of the listing (rankUpdatedAt), separate
+     * from editing the post's own content. Editing used to share this same 12-hour lock, which
+     * meant fixing a typo could block you from touching the post again for half a day; now content
+     * edits are unrestricted and only this explicit action is throttled.
+     */
+    @Transactional
+    public Post boost(Long userId, Long postId) {
+        User user = activeUser(userId);
+        Post post = owned(postId, userId);
+        if (post.getStatus() != PostStatus.OPEN) throw new RuleViolationException("公開中の投稿のみ更新できます");
+        LocalDateTime now = now();
+        if (!rankBoostEligible(user, now)) {
+            LocalDateTime availableAt = user.getLastRankBoostedAt().plusHours(EDIT_LOCK_HOURS);
+            throw new RuleViolationException("投稿の更新は12時間に1回までです。次に更新できるのは"
+                    + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
+        }
+        post.boostRank(now);
+        user.setLastRankBoostedAt(now);
         return post;
     }
 
@@ -82,7 +102,7 @@ public class PostService {
         if (postRepository.existsByUserIdAndStatusAndType(userId, PostStatus.OPEN, post.getType()))
             throw duplicateOpenPost(post.getType());
         LocalDateTime now = now(); post.reopen(now);
-        if (user.getLastRankBoostedAt() == null || !user.getLastRankBoostedAt().isAfter(now.minusHours(EDIT_LOCK_HOURS))) { post.boostRank(now); user.setLastRankBoostedAt(now); }
+        if (rankBoostEligible(user, now)) { post.boostRank(now); user.setLastRankBoostedAt(now); }
         try {
             return postRepository.saveAndFlush(post);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
@@ -200,13 +220,8 @@ public class PostService {
             throw new RuleViolationException("投稿が見つかりません");
         });
     }
-    private void checkEditLock(User user) {
-        if (user.getLastEditedAt() == null) return;
-        LocalDateTime availableAt = user.getLastEditedAt().plusHours(EDIT_LOCK_HOURS);
-        if (availableAt.isAfter(now())) {
-            throw new RuleViolationException("投稿の編集は12時間に1回までです。次に編集できるのは"
-                    + availableAt.format(EDIT_LOCK_UNTIL_FORMAT) + "以降です。");
-        }
+    private boolean rankBoostEligible(User user, LocalDateTime now) {
+        return user.getLastRankBoostedAt() == null || !user.getLastRankBoostedAt().isAfter(now.minusHours(EDIT_LOCK_HOURS));
     }
     private void assign(Post p, java.util.Set<Long> partIds, java.util.Set<Long> genreIds, java.util.Set<Long> stanceIds, java.util.Set<Long> prefectureIds, java.util.Set<AgeRange> ages) {
         p.getParts().clear(); p.getParts().addAll(partRepository.findAllById(partIds)); p.getGenres().clear(); p.getGenres().addAll(genreRepository.findAllById(genreIds));

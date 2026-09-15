@@ -62,27 +62,52 @@ class PostServiceTest {
     }
 
     /**
-     * Regression for ST-023: the 12-hour edit-lock message used to only say "投稿の作成・編集は
+     * Regression for ST-023: the 12-hour lock message used to only say "投稿の作成・編集は
      * 12時間に1回までです" with no indication of when the person could try again, even though the
-     * exact moment (lastEditedAt + 12h) was already known server-side. Now it must name that moment.
+     * exact moment (lastRankBoostedAt + 12h) was already known server-side. Now it must name that
+     * moment. Editing content itself is unrestricted (see editingIsUnrestrictedEvenRightAfterAnEdit
+     * below) - only the explicit "更新" rank boost is throttled.
      */
     @Test
-    void editLockMessageNamesWhenEditingBecomesAvailableAgain() {
+    void boostLockMessageNamesWhenUpdatingBecomesAvailableAgain() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
         PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
         User user = new User("u", "u@example.com", "hash");
         user.setEmailVerifiedAt(LocalDateTime.now(clock).minusDays(1));
         user.touchLogin(LocalDateTime.now(clock));
-        // Edited 1 hour ago: 11 hours still remain of the 12-hour lock, available again at 23:00.
-        user.setLastEditedAt(LocalDateTime.now(clock).minusHours(1));
+        // Boosted 1 hour ago: 11 hours still remain of the 12-hour lock, available again at 23:00.
+        user.setLastRankBoostedAt(LocalDateTime.now(clock).minusHours(1));
         when(users.findById(1L)).thenReturn(Optional.of(user));
+        Post post = new Post(user, PostType.MEMBER_WANTED, "T", "C", null, ActivityFrequency.WEEKLY_1, LocalDateTime.now(clock).minusDays(1));
+        when(posts.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(post));
+
+        PostService.RuleViolationException ex = assertThrows(PostService.RuleViolationException.class,
+                () -> service.boost(1L, 1L));
+        assertTrue(ex.getMessage().contains("次に更新できるのは9月5日 23:00以降です"),
+                () -> "unexpected message: " + ex.getMessage());
+    }
+
+    /**
+     * Editing used to share the same 12-hour lock as the rank boost, which meant fixing a typo
+     * could block a person from touching their own post again for half a day. Content edits are
+     * unrestricted now: only the explicit "更新" action (boost, above) is throttled.
+     */
+    @Test
+    void editingIsUnrestrictedEvenRightAfterAnEdit() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-05T03:00:00Z"), ZoneId.of("Asia/Tokyo"));
+        PostService service = new PostService(posts, users, parts, genres, stances, prefectures, blocks, clock);
+        User user = new User("u", "u@example.com", "hash");
+        user.setEmailVerifiedAt(LocalDateTime.now(clock).minusDays(1));
+        when(users.findById(1L)).thenReturn(Optional.of(user));
+        Post post = new Post(user, PostType.MEMBER_WANTED, "Old", "Old body", null, ActivityFrequency.WEEKLY_1, LocalDateTime.now(clock));
+        when(posts.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(post));
 
         PostRequests.Update update = new PostRequests.Update("New", "New body", null,
                 Set.of(), Set.of(), Set.of(), Set.of(), Set.of(AgeRange.ANY), ActivityFrequency.WEEKLY_1);
-        PostService.RuleViolationException ex = assertThrows(PostService.RuleViolationException.class,
-                () -> service.update(1L, 1L, update));
-        assertTrue(ex.getMessage().contains("次に編集できるのは9月5日 23:00以降です"),
-                () -> "unexpected message: " + ex.getMessage());
+        Post first = service.update(1L, 1L, update);
+        Post second = service.update(1L, 1L, update);
+        assertEquals("New", first.getTitle());
+        assertEquals("New", second.getTitle());
     }
 
     @Test
