@@ -7,3 +7,9 @@
 @import url('./community.css?v=20260913-9');
 
 @import url('./post-editor.css?v=20260913-9');
+
+/* The 募集/加入 mark is an 18-20px square block; the title link next to it defaults to baseline
+   inline alignment, which sat its top ~3-4px above the mark's own top instead of level with it.
+   Lower only the title's inline box; the anchor stays unpositioned so the card-wide stretched-link
+   hit area continues to be positioned against .post-card. */
+.post-card h2 > a { display: inline-block; vertical-align: -4px; }
