@@ -113,7 +113,7 @@
 .post-person .person-age { display:inline; font-size:13px; color:var(--muted); margin-left:8px; }
 /* The label remains text for accessibility; the dot is only a compact visual cue. */
 .post-person .person-online { display:inline-flex; align-items:center; gap:6px; margin-left:10px; font-size:13px; color:var(--muted); }
-.post-person .online-dot { width:9px; height:9px; border-radius:50%; background:var(--online); flex:none; display:inline-block; vertical-align:middle; margin-left:5px; position:relative; top:-3px; }
+.post-person .online-dot { width:9px; height:9px; border-radius:50%; background:var(--online); flex:none; display:inline-block; vertical-align:middle; margin-left:5px; position:relative; top:-1px; }
 .post-contact { display:none; }
 /* Tapping anywhere on the row opens the post; the poster's name still goes to their profile. */
 .post-card h2 a::after { content:''; position:absolute; inset:0; }
