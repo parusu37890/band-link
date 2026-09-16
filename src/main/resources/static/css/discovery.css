@@ -160,7 +160,7 @@
    box always carries some leading space above the visible glyphs - the mark, with no such
    leading of its own, reads as sitting a few pixels above the title's actual ink. Nudge it down
    to match what's visually there rather than what the boxes report. */
-.own-posts-page h2 .post-mark { margin-top: 4px; }
+.own-posts-page h2 .post-mark { margin-top: 10px; }
 @media(max-width:1099px) {
  .board-layout { grid-template-columns:1fr; gap:24px; } .search-rail { border:0; padding:0; }
  .search-keyword { display:flex; align-items:center; gap:20px; } .search-keyword > label { margin:0; flex:none; } .search-bar { flex:1; }
