@@ -2,7 +2,7 @@
 .messages-page { padding-top: 32px; }
 .messages-page .page-heading { margin-bottom: 24px; }
 .messages-page .page-heading h1 { font-size: 30px; }
-.chat-shell { display: grid; grid-template-columns: 285px minmax(0,1fr); border: 1px solid var(--line); background: var(--bg); height: 700px; max-height: calc(100dvh - 190px); min-height: 500px; }
+.chat-shell { display: grid; grid-template-columns: 285px minmax(0,1fr); border: 1px solid var(--line); background: var(--bg); height: calc(100dvh - 190px); min-height: 500px; }
 /* Reading the thread is the point of this screen, so an open conversation gives the heading back
    to the messages instead of keeping a description the reader has already acted on. */
 .messages-page:has(.has-conversation) .page-heading { margin-bottom: 12px; }
@@ -83,7 +83,7 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
 .feedback-image-button { display: inline-flex; min-width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; }
 @media (max-width: 1000px) { .chat-shell { grid-template-columns: 230px minmax(0,1fr); }.admin-layout { grid-template-columns: 1fr; }.admin-tools { border-left: 0; border-top: 1px solid var(--line); padding-inline: 0; } }
 @media (max-width: 640px) {
-  .chat-shell { grid-template-columns: 1fr; height: calc(100dvh - 250px); min-height: 360px; max-height: none; }
+  .chat-shell { grid-template-columns: 1fr; height: calc(100dvh - 200px); min-height: 360px; max-height: none; }
   /* An open conversation on a phone is the one thing on screen, the way a DM app works - the site's
      own logo/nav bar and the redundant "メッセージ" heading were eating most of a small viewport,
      leaving two lines of the actual conversation visible above the fold. .chat-header already

@@ -17,6 +17,7 @@
 .button.primary.register-cta { background: var(--focus); border-color: var(--focus); color: #fff; }
 .button.primary.register-cta:hover { background: #2660bd; border-color: #2660bd; }
 .dot { position: absolute; width: 6px; height: 6px; right: 7px; top: 7px; background: var(--accent); border-radius: 50%; }
+.badge-count { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; display: flex; align-items: center; justify-content: center; background: var(--danger); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
 /* An outline button is read as a button by its border, so that border is a control boundary
    and takes --control-line like the inputs do (WCAG 1.4.11). --line was 1.31:1. */
 .button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border: 1px solid var(--control-line); border-radius: var(--radius); background: transparent; color: var(--ink); font-size: 14px; font-weight: 600; line-height: 1.5; text-align: center; white-space: normal; }

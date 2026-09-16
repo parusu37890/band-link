@@ -15,11 +15,11 @@ function header(){
   return;
  }
  const feedbackLinks=state.user?`<a href="/contact" class="${here==='/contact'?'active':''}">お問い合わせ</a><a href="/feature-request" class="${here==='/feature-request'?'active':''}">機能要望</a>`:'';
- el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の投稿</a>`:''}${feedbackLinks}</nav><div class="header-actions">${state.user?`<a class="icon-button" data-notif-link href="/notifications" aria-label="通知">${icon('bell')}<span data-unread-dot class="dot" hidden></span></a><a class="icon-button" href="/messages" aria-label="メッセージ">${icon('message')}</a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary register-cta" href="/register">新規登録</a>'}`}</div></div>`;
- // The unread dot is a colour-only cue for sighted users; without also updating the link's
- // accessible name, assistive tech announces a plain "通知" even when there is something new
+ el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の投稿</a>`:''}${feedbackLinks}</nav><div class="header-actions">${state.user?`<a class="icon-button" data-message-link href="/messages" aria-label="メッセージ">${icon('message')}<span data-unread-badge class="badge-count" hidden></span></a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary register-cta" href="/register">新規登録</a>'}`}</div></div>`;
+ // The unread count is a colour-only cue for sighted users; without also updating the link's
+ // accessible name, assistive tech announces a plain "メッセージ" even when there is something new
  // (NFT-010: state must reach assistive tech, not just be shown as a colour/shape).
- if(state.user){api('/api/notifications/unread-count').then(x=>{const count=x?.count||0;const d=el.querySelector('[data-unread-dot]');if(d)d.hidden=!count;const link=el.querySelector('[data-notif-link]');if(link)link.setAttribute('aria-label',count?`通知（未読${count}件）`:'通知');}).catch(()=>{});}
+ if(state.user){api('/api/notifications/unread-count?type=NEW_MESSAGE').then(x=>{const count=x?.count||0;const b=el.querySelector('[data-unread-badge]');if(b){b.hidden=!count;b.textContent=count>99?'99+':String(count);}const link=el.querySelector('[data-message-link]');if(link)link.setAttribute('aria-label',count?`メッセージ（未読${count}件）`:'メッセージ');}).catch(()=>{});}
 }
 function footer(){
  const btn=document.querySelector('#footer-logout');
