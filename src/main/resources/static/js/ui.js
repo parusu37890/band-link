@@ -66,7 +66,7 @@ export function bindForm(form,handler) {
   });
 }
 export function confirmAction(title,description,handler) {
-  const dialog=document.querySelector('#dialog');dialog.innerHTML=`<h2 id="dialog-title">${h(title)}</h2><p>${h(description)}</p><form id="confirm-form"><div class="dialog-actions"><button type="button" class="button secondary" data-cancel>キャンセル</button><button type="submit" class="button primary">実行する</button></div></form>`;
+  const dialog=document.querySelector('#dialog');dialog.innerHTML=`<h2 id="dialog-title">${h(title)}</h2>${description?`<p>${h(description)}</p>`:''}<form id="confirm-form"><div class="dialog-actions"><button type="button" class="button secondary" data-cancel>キャンセル</button><button type="submit" class="button primary">実行する</button></div></form>`;
   dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();bindForm(dialog.querySelector('form'),async()=>{await handler();dialog.close();});dialog.showModal();
 }
 /** Opens an image at full size in the shared modal dialog, keeping focus in-page instead of

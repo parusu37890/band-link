@@ -163,7 +163,7 @@ export async function postEditor(id) {
       catch(e){error(e.message);}
       finally{imageBusy=false;renderSaved(move.dataset.move,move.dataset.dir);}
     }
-    if(remove)confirmAction('この画像を削除しますか？','削除はすぐに保存され、12時間の編集制限がかかります。編集中の本文は保存されません。画像の削除は元に戻せません。',async()=>{
+    if(remove)confirmAction('この画像を削除しますか？','',async()=>{
       if(imageBusy||saving)throw new Error('保存処理が終わってから、もう一度お試しください。');
       imageBusy=true;
       try{await api(`/api/posts/${id}/images/${remove.dataset.deleteImage}`,{method:'DELETE'});saved=saved.filter(x=>String(x.id)!==remove.dataset.deleteImage);toast('画像を削除しました。');}
