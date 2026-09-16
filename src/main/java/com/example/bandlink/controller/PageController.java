@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class PageController {
-    private static final String DEFAULT_TITLE = "Band Link — 募集・加入希望の掲示板";
+    private static final String DEFAULT_TITLE = "Band Link バンドメンバー募集・加入サイト";
     private static final String DEFAULT_DESCRIPTION =
-            "募集・加入希望の掲示板です。都道府県・パート・ジャンルから募集を探せます。閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。";
+            "バンドメンバー募集・加入希望の掲示板です。2026/09/15にリリースしました！閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。";
 
     private final String baseUrl;
     private final String googleAnalyticsId;
