@@ -1,5 +1,5 @@
 import {api,state,h,icon,showPage,notice} from './ui.js';
-import {discoveryPage} from './discovery.js?v=20260916-11';
+import {discoveryPage} from './discovery.js?v=20260916-12';
 import {accountPage} from './account.js?v=20260916-1';
 import {communityPage} from './community.js?v=20260916-1';
 
@@ -30,7 +30,7 @@ function footer(){
  // edge - the tagline text doesn't reach that edge, so a plain margin-left:auto overshot it.
  const day=document.querySelector('#footer-day');
  if(state.user&&day){
-  const delta=day.getBoundingClientRect().left-btn.getBoundingClientRect().left-5;
+  const delta=day.getBoundingClientRect().left-btn.getBoundingClientRect().left-10;
   btn.style.marginLeft=Math.max(0,delta)+'px';
  }
  btn.onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
