@@ -3,7 +3,7 @@ package com.example.bandlink.dto;
 import com.example.bandlink.entity.Post;
 import com.example.bandlink.entity.UserStatus;
 
-public record PostResponse(Long id, Long userId, String username, String authorActivity, String authorImageUrl,
+public record PostResponse(Long id, Long userId, String username, String authorImageUrl,
                            String authorAgeRange, String authorGender, java.time.LocalDateTime authorLastLoginAt, boolean authorOnline,
                            String title, String content,
                            String status, String closedReason, java.time.LocalDateTime expiresAt,
@@ -14,7 +14,7 @@ public record PostResponse(Long id, Long userId, String username, String authorA
                            java.time.LocalDateTime createdAt, java.time.LocalDateTime updatedAt) {
     public static PostResponse from(Post post) {
         return new PostResponse(post.getId(), post.getUser().getId(), post.getUser().getUsername(),
-                ActivitySignal.of(post.getUser().getLastLoginAt()), authorImage(post),
+                authorImage(post),
                 AgeBand.of(post.getUser().getAge()), post.getUser().getGender(), post.getUser().getLastLoginAt(), online(post),
                 post.getTitle(),
                 post.getContent(), post.getStatus().name(), post.getClosedReason() == null ? null : post.getClosedReason().name(),

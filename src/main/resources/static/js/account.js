@@ -1,5 +1,5 @@
 import {mediaHref,mediaEmbed,mediaProvider} from './media-embed.js?v=20260916-1';
-import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper} from './ui.js';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper,loginRelativeTime} from './ui.js?v=20260915-3';
 
 const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
 
@@ -14,7 +14,7 @@ const factRows = p => [
   ['経験年数', p.experienceYears == null ? '' : p.experienceYears + '年'],
   ['年齢', p.ageRange || ''],
   ['性別', p.gender || ''],
-  ['最近の活動', p.online ? 'オンライン中' : (p.activity || '')]
+  ['最近の活動', p.online || p.lastLoginAt ? loginRelativeTime(p.lastLoginAt, p.online) : '']
 ].filter(([, value]) => value);
 const facts = p => {
   const rows = factRows(p);
