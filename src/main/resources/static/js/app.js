@@ -1,5 +1,5 @@
 import {api,state,h,icon,showPage,notice} from './ui.js';
-import {discoveryPage} from './discovery.js?v=20260916-7';
+import {discoveryPage} from './discovery.js?v=20260916-8';
 import {accountPage} from './account.js?v=20260916-1';
 import {communityPage} from './community.js?v=20260916-1';
 
