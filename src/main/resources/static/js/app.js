@@ -1,5 +1,5 @@
 import {api,state,h,icon,showPage,notice} from './ui.js';
-import {discoveryPage} from './discovery.js?v=20260916-8';
+import {discoveryPage} from './discovery.js?v=20260916-9';
 import {accountPage} from './account.js?v=20260916-1';
 import {communityPage} from './community.js?v=20260916-1';
 
@@ -21,6 +21,12 @@ function header(){
  // (NFT-010: state must reach assistive tech, not just be shown as a colour/shape).
  if(state.user){api('/api/notifications/unread-count').then(x=>{const count=x?.count||0;const d=el.querySelector('[data-unread-dot]');if(d)d.hidden=!count;const link=el.querySelector('[data-notif-link]');if(link)link.setAttribute('aria-label',count?`通知（未読${count}件）`:'通知');}).catch(()=>{});}
 }
+function footer(){
+ const btn=document.querySelector('#footer-logout');
+ if(!btn)return;
+ btn.hidden=!state.user;
+ btn.onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
+}
 // requirements 3章: while an account is suspended, the screen after login carries the notice and
 // where to ask about it, and nothing else. Without this the app looked normal and the suspension
 // only surfaced as a 409 on whatever the person tried to do. The support page keeps its own route
@@ -39,7 +45,7 @@ function suspendedScreen(){
  document.querySelector('#suspended-logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
 }
 async function route(){
- await loadUser();header();
+ await loadUser();header();footer();
  const current=path();
  if(state.user?.status==='SUSPENDED'&&!['/support','/contact','/feature-request'].includes(current)){suspendedScreen();return;}
  if(state.user && !state.user.emailVerified && current!=='/verify-email'){

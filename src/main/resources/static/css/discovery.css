@@ -156,6 +156,10 @@
 .post-image-button { display:block; padding:0; border:0; background:none; cursor:zoom-in; border-radius:var(--radius); overflow:hidden; }
 .post-image-button:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
 .own-posts-page > .stack > .panel { background:none; border-width:1px 0 0; padding-inline:0; }
+/* .post-mark's -3px vertical-align is tuned against the 17px listing title; this h2 is the
+   default 23px heading size, so that fixed offset sat the mark visibly below the title's own
+   top. text-top aligns it to the title's font ascent instead, which holds at any heading size. */
+.own-posts-page h2 .post-mark { vertical-align: text-top; }
 @media(max-width:1099px) {
  .board-layout { grid-template-columns:1fr; gap:24px; } .search-rail { border:0; padding:0; }
  .search-keyword { display:flex; align-items:center; gap:20px; } .search-keyword > label { margin:0; flex:none; } .search-bar { flex:1; }
