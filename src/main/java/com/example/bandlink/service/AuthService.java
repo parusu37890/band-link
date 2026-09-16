@@ -104,7 +104,24 @@ public class AuthService {
     public void resendVerification(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new InvalidTokenException());
         if (user.isEmailVerified()) return;
-        verificationTokens.findAllByUserIdAndUsedAtIsNull(userId).forEach(token -> token.setUsedAt(now()));
+        sendFreshVerification(user);
+    }
+
+    /**
+     * Same resend, reached by an unverified visitor who can no longer sign in to ask for it from
+     * the account-side button (login now rejects an unverified account outright - see login's
+     * EmailNotVerifiedException). Silently no-ops for an unknown or already-verified address so this
+     * cannot be used to test which emails have an account, matching requestPasswordReset below.
+     */
+    @Transactional
+    public void resendVerificationByEmail(String email) {
+        userRepository.findByEmail(email.trim().toLowerCase(java.util.Locale.ROOT))
+                .filter(user -> !user.isEmailVerified())
+                .ifPresent(this::sendFreshVerification);
+    }
+
+    private void sendFreshVerification(User user) {
+        verificationTokens.findAllByUserIdAndUsedAtIsNull(user.getId()).forEach(token -> token.setUsedAt(now()));
         String token = UUID.randomUUID().toString();
         verificationTokens.save(new EmailVerificationToken(user, token, now().plusHours(24)));
         mail.sendVerification(user.getEmail(), token);
@@ -151,5 +168,15 @@ public class AuthService {
     /** SEC-013: raised by AuthController.login() when LoginAttemptService reports a lockout. */
     public static class TooManyAttemptsException extends RuntimeException {
         public TooManyAttemptsException() { super("試行回数が多すぎます。しばらくしてからもう一度お試しください。"); }
+    }
+
+    /**
+     * Raised by AuthController.login() for correct credentials on an unverified account. Previously
+     * a correct password alone was enough to establish a real session (the person just landed on the
+     * verify-email screen once inside) - this stops the session from being created at all, so the
+     * account cannot be considered "logged in" until its address is confirmed.
+     */
+    public static class EmailNotVerifiedException extends RuntimeException {
+        public EmailNotVerifiedException() { super("メールアドレスの確認が完了していません。登録時に届いたメールのリンクを開いて確認を完了してから、もう一度ログインしてください。"); }
     }
 }

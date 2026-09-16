@@ -76,7 +76,20 @@ async function authPage(path){
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
     let response;
-    if(path==='/login') response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
+    if(path==='/login'){
+      const email=fd.get('email');
+      try { response=await api('/api/auth/login',{method:'POST',body:{email,password:fd.get('password')}}); }
+      catch(e){
+        if(e.code!=='EMAIL_NOT_VERIFIED') throw e;
+        main.querySelector('#auth-message').innerHTML=notice(e.message,'error')+`<button type="button" class="button secondary full" id="resend-verification-anon">確認メールを再送する</button>`;
+        main.querySelector('#resend-verification-anon').addEventListener('click',async event=>{
+          event.currentTarget.disabled=true;
+          try { await api('/api/auth/verify-email/resend-request',{method:'POST',body:{email}}); toast('確認メールを再送しました。メールをご確認ください。'); }
+          catch { toast('再送に失敗しました。時間をおいてもう一度お試しください。'); event.currentTarget.disabled=false; }
+        });
+        return;
+      }
+    }
     else if(register){
       const body={username:fd.get('username'),email:fd.get('email'),password:fd.get('password'),age:Number(fd.get('age')),experienceYears:Number(fd.get('experienceYears')),gender:fd.get('gender'),partIds:fd.getAll('partIds').map(Number),genreIds:fd.getAll('genreIds').map(Number),stanceIds:fd.getAll('stanceIds').map(Number),prefectureIds:fd.getAll('prefectureIds').map(Number)};
       const labels={partIds:'担当パート',genreIds:'好きなジャンル',stanceIds:'活動スタンス',prefectureIds:'活動エリア'};

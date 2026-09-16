@@ -506,7 +506,7 @@ async function adminPage() {
   }
   const statuses = { PENDING: '未対応', REVIEWED: '確認済み', DISMISSED: '対応不要', ACTIONED: '対応済み' };
   const types = { POST: '募集投稿', USER: 'ユーザー', MESSAGE: 'メッセージ' };
-  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form></aside></div><section class="admin-feedback stack"><h2>お問い合わせ・機能要望</h2><div data-feedback aria-busy="true"><p role="status">受信内容を読み込んでいます…</p></div></section></div>`, '運営管理');
+  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form><h2>アカウントの削除</h2><p class="muted">ユーザーIDを指定して、アカウントと投稿を完全に削除します。取り消せません。</p><form data-delete-user-form class="stack"><label class="form-field" for="delete-user-id">ユーザーID<input class="input" type="number" id="delete-user-id" name="userId" min="1" step="1" required></label><button type="submit" class="button danger">削除内容を確認</button><div data-form-error role="alert"></div></form></aside></div><section class="admin-feedback stack"><h2>お問い合わせ・機能要望</h2><div data-feedback aria-busy="true"><p role="status">受信内容を読み込んでいます…</p></div></section></div>`, '運営管理');
   const container = main.querySelector('[data-reports]');
   const select = main.querySelector('#report-status');
   const feedbackContainer = main.querySelector('[data-feedback]');
@@ -522,7 +522,7 @@ async function adminPage() {
       container.innerHTML = items.length ? items.map(item => {
         const id = positiveId(item.id);
         const target = positiveId(item.targetId);
-        return `<article class="report-card panel stack"><div class="row"><h3>${h(types[item.targetType] || '対象')}への通報 <span class="muted">#${id}</span></h3><span class="badge">${h(statuses[item.status] || item.status)}</span></div><p class="muted">対象ID ${target} · ${h(time(item.createdAt))}</p><div><h4>通報理由</h4><p class="message-text">${h(item.reason)}</p></div>${item.targetType === 'MESSAGE' ? snapshot(item) : ''}<div class="row">${item.targetType === 'POST' ? `${button('募集を確認', `/posts/${target}`, 'secondary')}<button type="button" class="button danger" data-remove-post="${target}">募集を非公開にする</button>` : ''}${item.targetType === 'USER' ? `${button('プロフィールを確認', `/users/${target}`, 'secondary')}<button type="button" class="button danger" data-suspend="${target}">利用を停止する</button>` : ''}</div><form class="row" data-report-form="${id}"><label class="form-field" for="report-status-${id}">対応状況<select class="input" name="status" id="report-status-${id}">${Object.entries(statuses).map(([value, label]) => `<option value="${value}"${item.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></label><button type="submit" class="button secondary">状態を保存</button><div data-form-error role="alert"></div></form></article>`;
+        return `<article class="report-card panel stack"><div class="row"><h3>${h(types[item.targetType] || '対象')}への通報 <span class="muted">#${id}</span></h3><span class="badge">${h(statuses[item.status] || item.status)}</span></div><p class="muted">対象ID ${target} · ${h(time(item.createdAt))}</p><div><h4>通報理由</h4><p class="message-text">${h(item.reason)}</p></div>${item.targetType === 'MESSAGE' ? snapshot(item) : ''}<div class="row">${item.targetType === 'POST' ? `${button('募集を確認', `/posts/${target}`, 'secondary')}<button type="button" class="button danger" data-remove-post="${target}">募集を非公開にする</button>` : ''}${item.targetType === 'USER' ? `${button('プロフィールを確認', `/users/${target}`, 'secondary')}<button type="button" class="button danger" data-suspend="${target}">利用を停止する</button><button type="button" class="button danger" data-delete-user="${target}">アカウントを削除する</button>` : ''}</div><form class="row" data-report-form="${id}"><label class="form-field" for="report-status-${id}">対応状況<select class="input" name="status" id="report-status-${id}">${Object.entries(statuses).map(([value, label]) => `<option value="${value}"${item.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></label><button type="submit" class="button secondary">状態を保存</button><div data-form-error role="alert"></div></form></article>`;
       }).join('') : empty('この状況の通報はありません。', '新しい通報や、別の対応状況を確認できます。');
       container.querySelectorAll('[data-report-form]').forEach(form => bindForm(form, async () => {
         await api(`/api/admin/reports/${form.dataset.reportForm}?status=${form.elements.status.value}`, { method: 'PATCH' });
@@ -540,6 +540,14 @@ async function adminPage() {
         toast('利用を停止しました。必要に応じて対応状況を更新してください。');
         element.disabled = true;
         element.textContent = '利用停止にしました';
+      })));
+      // Suspend only closes posts (an operator may reinstate the account). This is for a report an
+      // operator has decided should end in the account being gone entirely, not just paused.
+      container.querySelectorAll('[data-delete-user]').forEach(element => element.addEventListener('click', () => confirmAction('アカウントを削除しますか？', `ユーザーID ${element.dataset.deleteUser}のアカウント、プロフィール、募集、会話、メッセージを完全に削除します。この操作は取り消せません。`, async () => {
+        await api(`/api/admin/users/${element.dataset.deleteUser}`, { method: 'DELETE' });
+        toast('アカウントを削除しました。必要に応じて対応状況を更新してください。');
+        element.disabled = true;
+        element.textContent = '削除しました';
       })));
     } catch (error) {
       if (currentRevision !== revision) return;
@@ -572,6 +580,16 @@ async function adminPage() {
       await api(`/api/admin/users/${id}/unsuspend`, { method: 'PATCH' });
       toast(`ユーザーID ${id}の利用停止を解除しました。`);
       form.reset();
+    });
+  });
+  const deleteUserForm = main.querySelector('[data-delete-user-form]');
+  bindForm(deleteUserForm, async () => {
+    const id = positiveId(deleteUserForm.elements.userId.value);
+    if (!id) throw new Error('有効なユーザーIDを入力してください。');
+    confirmAction('アカウントを削除しますか？', `ユーザーID ${id}のアカウント、プロフィール、募集、会話、メッセージを完全に削除します。この操作は取り消せません。`, async () => {
+      await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+      toast(`ユーザーID ${id}のアカウントを削除しました。`);
+      deleteUserForm.reset();
     });
   });
   await Promise.all([load(), loadFeedback()]);

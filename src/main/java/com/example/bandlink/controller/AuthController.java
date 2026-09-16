@@ -80,12 +80,20 @@ public class AuthController {
         if (loginAttempts.isLocked(request.email())) throw new AuthService.TooManyAttemptsException();
         Authentication authentication;
         try {
-            authentication = startSession(request.email(), request.password(), httpRequest, httpResponse);
+            authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
         } catch (org.springframework.security.core.AuthenticationException e) {
             loginAttempts.recordFailure(request.email());
             throw e;
         }
         loginAttempts.recordSuccess(request.email());
+        // Correct credentials used to be enough to establish a real session on their own - the
+        // account just landed on the verify-email screen once "inside". Checked here, before the
+        // session is created, so an unverified account is never actually signed in at all.
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
+        if (!user.isEmailVerified()) throw new AuthService.EmailNotVerifiedException();
+        establishSession(authentication, httpRequest, httpResponse);
         touchLogin(request.email());
         return currentUser(authentication);
     }
@@ -95,12 +103,16 @@ public class AuthController {
                                         HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(email, password));
+        establishSession(authentication, httpRequest, httpResponse);
+        return authentication;
+    }
+
+    private void establishSession(Authentication authentication, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         if (httpRequest.getSession(false) != null) httpRequest.changeSessionId();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
-        return authentication;
     }
 
     private void startLineSession(User user, HttpServletRequest request, HttpServletResponse response) {
@@ -190,6 +202,17 @@ public class AuthController {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
         authService.resendVerification(user.getId());
+        return ResponseEntity.accepted().build();
+    }
+
+    /**
+     * Login now rejects an unverified account outright, so someone who lost or outlived their
+     * verification email has no session to ask for a new one from. Reachable without one, by email,
+     * like password-reset/request below - always 202, verified or not, real address or not.
+     */
+    @PostMapping("/verify-email/resend-request")
+    public ResponseEntity<Void> resendVerificationByEmail(@Valid @RequestBody VerifyEmailResendRequest request) {
+        authService.resendVerificationByEmail(request.email());
         return ResponseEntity.accepted().build();
     }
 
