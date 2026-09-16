@@ -101,7 +101,6 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 .site-footer .wordmark { font-size: 20px; color: var(--ink); } .site-footer > a, .site-footer .footer-brand > a { display:inline-flex; align-items:center; min-width:44px; min-height:44px; padding:8px 4px; } .site-footer p { flex: 1; } .copyright { font: 11px var(--mono); }
 .footer-brand { display: inline-flex; align-items: center; gap: 4px; }
 .footer-brand .icon-button.x-link { padding: 0; min-width: 44px; }
-#footer-logout { margin-left: auto; }
 .mobile-only { display: none; }
 .password-field { position: relative; }
 .password-field .input { padding-right: 52px; }

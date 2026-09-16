@@ -24,7 +24,15 @@ function header(){
 function footer(){
  const btn=document.querySelector('#footer-logout');
  if(!btn)return;
+ btn.style.marginLeft='';
  btn.hidden=!state.user;
+ // Align to where the release date starts on the row below rather than the row's own right
+ // edge - the tagline text doesn't reach that edge, so a plain margin-left:auto overshot it.
+ const day=document.querySelector('#footer-day');
+ if(state.user&&day){
+  const delta=day.getBoundingClientRect().left-btn.getBoundingClientRect().left;
+  btn.style.marginLeft=Math.max(0,delta)+'px';
+ }
  btn.onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
 }
 // requirements 3章: while an account is suspended, the screen after login carries the notice and

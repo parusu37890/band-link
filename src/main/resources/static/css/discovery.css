@@ -156,6 +156,11 @@
 .post-image-button { display:block; padding:0; border:0; background:none; cursor:zoom-in; border-radius:var(--radius); overflow:hidden; }
 .post-image-button:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
 .own-posts-page > .stack > .panel { background:none; border-width:1px 0 0; padding-inline:0; }
+/* align-items:flex-start lines up the mark's and title's layout boxes exactly, but a text line
+   box always carries some leading space above the visible glyphs - the mark, with no such
+   leading of its own, reads as sitting a few pixels above the title's actual ink. Nudge it down
+   to match what's visually there rather than what the boxes report. */
+.own-posts-page h2 .post-mark { margin-top: 4px; }
 @media(max-width:1099px) {
  .board-layout { grid-template-columns:1fr; gap:24px; } .search-rail { border:0; padding:0; }
  .search-keyword { display:flex; align-items:center; gap:20px; } .search-keyword > label { margin:0; flex:none; } .search-bar { flex:1; }
