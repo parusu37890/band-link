@@ -1,7 +1,7 @@
 import {api,state,h,icon,showPage,notice} from './ui.js';
 import {discoveryPage} from './discovery.js?v=20260916-13';
 import {accountPage} from './account.js?v=20260916-6';
-import {communityPage} from './community.js?v=20260916-3';
+import {communityPage} from './community.js?v=20260916-4';
 
 const path=()=>location.pathname.replace(/\/+$/,'')||'/';
 async function loadUser(){try{state.user=await api('/api/auth/me');}catch{state.user=null;}}
@@ -16,11 +16,20 @@ function header(){
  }
  const feedbackLinks=state.user?`<a href="/contact" class="${here==='/contact'?'active':''}">お問い合わせ</a><a href="/feature-request" class="${here==='/feature-request'?'active':''}">機能要望</a>`:'';
  el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a>${state.user?`<a href="/my/posts" class="${here==='/my/posts'?'active':''}">自分の投稿</a>`:''}${feedbackLinks}</nav><div class="header-actions">${state.user?`<a class="icon-button" data-message-link href="/messages" aria-label="メッセージ">${icon('message')}<span data-unread-badge class="badge-count" hidden></span></a><a class="button secondary header-profile" href="/users/${state.user.id}">プロフィール</a>`:`${here==='/login'?'':'<a class="button secondary" href="/login">ログイン</a>'}${here==='/register'?'':'<a class="button primary register-cta" href="/register">新規登録</a>'}`}</div></div>`;
+ if(state.user)refreshUnreadBadge();
+}
+// community.js dispatches this right after marking a conversation read, so the badge catches up
+// immediately instead of only on the next full route() - a plain DOM event rather than an import,
+// since app.js already imports communityPage and a reverse import would be circular.
+function refreshUnreadBadge(){
+ const el=document.querySelector('#header');
+ if(!state.user||!el)return;
  // The unread count is a colour-only cue for sighted users; without also updating the link's
  // accessible name, assistive tech announces a plain "メッセージ" even when there is something new
  // (NFT-010: state must reach assistive tech, not just be shown as a colour/shape).
- if(state.user){api('/api/notifications/unread-count?type=NEW_MESSAGE').then(x=>{const count=x?.count||0;const b=el.querySelector('[data-unread-badge]');if(b){b.hidden=!count;b.textContent=count>99?'99+':String(count);}const link=el.querySelector('[data-message-link]');if(link)link.setAttribute('aria-label',count?`メッセージ（未読${count}件）`:'メッセージ');}).catch(()=>{});}
+ api('/api/notifications/unread-count?type=NEW_MESSAGE').then(x=>{const count=x?.count||0;const b=el.querySelector('[data-unread-badge]');if(b){b.hidden=!count;b.textContent=count>99?'99+':String(count);}const link=el.querySelector('[data-message-link]');if(link)link.setAttribute('aria-label',count?`メッセージ（未読${count}件）`:'メッセージ');}).catch(()=>{});
 }
+window.addEventListener('messages-read',refreshUnreadBadge);
 function footer(){
  const btn=document.querySelector('#footer-logout');
  if(!btn)return;

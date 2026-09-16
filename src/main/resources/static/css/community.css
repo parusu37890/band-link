@@ -1,10 +1,10 @@
 /* Conversation is a workspace; notifications are a chronological ledger. */
 /* .page's own base padding-block is 44px/88px - never overridden here on the bottom side, so the
    chat pane's height budget below was always fighting an inherited 88px of dead space under it. */
-.messages-page { padding-top: 32px; padding-bottom: 16px; }
-.messages-page .page-heading { margin-bottom: 24px; }
+.messages-page { padding-top: 16px; padding-bottom: 16px; }
+.messages-page .page-heading { margin-bottom: 16px; }
 .messages-page .page-heading h1 { font-size: 30px; }
-.chat-shell { display: grid; grid-template-columns: 285px minmax(0,1fr); border: 1px solid var(--line); background: var(--bg); height: calc(100dvh - 150px); min-height: 500px; }
+.chat-shell { display: grid; grid-template-columns: 285px minmax(0,1fr); border: 1px solid var(--line); background: var(--bg); height: calc(100dvh - 110px); min-height: 500px; }
 /* Reading the thread is the point of this screen, so an open conversation gives the heading back
    to the messages instead of keeping a description the reader has already acted on. */
 .messages-page:has(.has-conversation) .page-heading { margin-bottom: 12px; }
@@ -13,9 +13,11 @@
 .conversation-list .panel { border: 0; padding: 24px; background: none; }
 .conversation-list .panel h3 { font-size: 16px; margin-bottom: 12px; }
 .conversation-list .panel .button { margin-top: 20px; }
-.conversation-item { display: flex; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.conversation-item { display: flex; align-items: center; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--line); font-size: 14px; }
 .conversation-item .stack { gap: 4px; min-width: 0; overflow-wrap: anywhere; } .conversation-item .muted { font-size: 12px; }
 .conversation-item.active { background: var(--raised); box-shadow: inset 3px 0 var(--accent); }
+.conversation-item.is-unread strong { font-weight: 700; }
+.conversation-unread { flex: none; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; background: var(--danger); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
 .chat-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
 .chat-header { display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
 .chat-header h2 { font-size: 16px; } .chat-header a:not(.button) { display:inline-flex; align-items:center; min-height:44px; font-size:12px; color:var(--accent); }
@@ -30,7 +32,7 @@
 .chat-messages > .empty-state { margin-block: auto; border: 0; padding: 32px 0; }
 .message { align-self: flex-start; max-width: 82%; font-size: 15px; }
 .message.mine { align-self: flex-end; }
-.message > .message-text { padding: 14px 18px; background: var(--raised); border-radius: 0 4px 4px; }
+.message > .message-text { padding: 14px 18px; background: var(--bubble-bg-incoming); border-radius: 0 4px 4px; }
 .message.mine > .message-text { background: var(--bubble-bg); color: var(--bubble-ink); border-radius: 4px 0 4px 4px; }
 .message > .message-text:empty { display: none; }
 .message-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
@@ -92,6 +94,12 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
      repeats the back-link and peer's name, so nothing is lost by hiding both. */
   body:has(.messages-page .chat-shell.has-conversation) #header,
   body:has(.messages-page .chat-shell.has-conversation) .site-footer { display: none; }
+  /* Without this the page itself could still scroll a few pixels past 100dvh (iOS Safari's own
+     toolbar movement, a fraction of a pixel of layout rounding), dragging the whole flex column -
+     composer included - up and down with it instead of leaving it pinned to the bottom while only
+     .chat-messages scrolls internally. Locking the body to the viewport while a conversation is
+     open removes that page-level scroll entirely. */
+  body:has(.messages-page .chat-shell.has-conversation) { position: fixed; inset: 0; width: 100%; overflow: hidden; }
   .messages-page:has(.has-conversation) { padding: 0; }
   .messages-page:has(.has-conversation) .page-heading { display: none; }
   .chat-shell.has-conversation { height: 100dvh; border-width: 0; }

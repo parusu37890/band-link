@@ -38,12 +38,12 @@ class PublicContractTest {
         peer.setProfileImageUrl("/uploads/private.jpg");
         peer.setStatus(UserStatus.SUSPENDED);
         Conversation conversation = new Conversation(viewer, peer, LocalDateTime.now());
-        var suspended = ConversationResponse.from(conversation, 1L).otherUser();
+        var suspended = ConversationResponse.from(conversation, 1L, 0).otherUser();
         assertEquals("利用停止中ユーザー", suspended.username());
         assertNull(suspended.profileImageUrl(), "a suspended account's photo stays hidden too");
         // Suspension is reversible, so the label must not outlive it (docs/decisions/0001).
         peer.setStatus(UserStatus.ACTIVE);
-        var restored = ConversationResponse.from(conversation, 1L).otherUser();
+        var restored = ConversationResponse.from(conversation, 1L, 0).otherUser();
         assertEquals("Private Name", restored.username());
         assertEquals("/uploads/private.jpg", restored.profileImageUrl());
     }
@@ -52,14 +52,14 @@ class PublicContractTest {
         peer.setStatus(UserStatus.WITHDRAWN);
         peer.setProfileImageUrl("/uploads/private.jpg");
         Conversation conversation = new Conversation(viewer, peer, LocalDateTime.now());
-        var dto = ConversationResponse.from(conversation, 1L);
+        var dto = ConversationResponse.from(conversation, 1L, 0);
         assertEquals("退会済みユーザー", dto.otherUser().username());
         assertNull(dto.otherUser().profileImageUrl());
         String json = mapper.writeValueAsString(dto);
         assertFalse(json.contains("private@example.com")); assertFalse(json.contains("passwordHash"));
         assertFalse(json.contains("Private Name"));
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
-                () -> ConversationResponse.from(conversation, 3L));
+                () -> ConversationResponse.from(conversation, 3L, 0));
     }
 
     @Test void listingCarriesThePostersPictureButHidesItWhileTheAccountIsNot() {

@@ -15,7 +15,17 @@ import com.example.bandlink.dto.MessageRequests; import com.example.bandlink.ent
  @Transactional public List<Message> messages(Long userId,Long conversationId){Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません")); if(!c.includes(userId))throw new RuleViolationException("会話を閲覧できません"); return messages.findByConversationIdOrderByCreatedAtAsc(conversationId);}
  @Transactional(readOnly=true) public void requireParticipant(Long userId,Long conversationId){Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));if(!c.includes(userId))throw new RuleViolationException("会話を閲覧できません");}
  public List<Conversation> conversations(Long userId){return conversations.findByUserAIdOrUserBIdOrderByLastMessageAtDesc(userId,userId);}
- @Transactional public void markRead(Long userId,Long conversationId){Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));if(!c.includes(userId))throw new RuleViolationException("会話を操作できません");messages.findByConversationIdOrderByCreatedAtAsc(conversationId).stream().filter(m->!m.getSender().getId().equals(userId)&&m.getReadAt()==null).forEach(m->m.markRead(now()));}
+ @Transactional public void markRead(Long userId,Long conversationId){
+   Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));
+   if(!c.includes(userId))throw new RuleViolationException("会話を操作できません");
+   messages.findByConversationIdOrderByCreatedAtAsc(conversationId).stream().filter(m->!m.getSender().getId().equals(userId)&&m.getReadAt()==null).forEach(m->m.markRead(now()));
+   // The header's unread-message badge reads notifications, not messages.readAt directly (see
+   // NotificationController), so reading the thread here has to clear the matching NEW_MESSAGE
+   // notifications too or the badge count would stay stuck after the person already read them.
+   List<Notification> unreadNotifications=notifications.findByUserIdAndTypeAndRelatedIdAndReadAtIsNull(userId,"NEW_MESSAGE",conversationId);
+   unreadNotifications.forEach(n->n.markRead(now()));
+   if(!unreadNotifications.isEmpty())notifications.saveAll(unreadNotifications);
+ }
  private Conversation conversation(User a,User b){Long x=a.getId(),y=b.getId(); User first=x<y?a:b; User second=x<y?b:a; return conversations.findByUserAIdAndUserBId(first.getId(),second.getId()).orElseGet(()->createConversation(first,second));}
  // NFT-005: findByUserAIdAndUserBId (above) and this insert are not atomic - two users DMing each
  // other for the very first time at the same instant can both miss the row and both try to create

@@ -119,7 +119,8 @@ async function messagesPage(path) {
       const id = positiveId(conversation.id);
       if (!id) return '';
       const other = conversation.otherUser;
-      return `<a class="conversation-item${id === conversationId ? ' active' : ''}" href="/messages/${id}"${id === conversationId ? ' aria-current="page"' : ''}>${avatar(other)}<span class="stack"><strong>${h(personName(other))}</strong><span class="muted">${h(time(conversation.lastMessageAt))}</span></span></a>`;
+      const unread = Number(conversation.unreadCount) || 0;
+      return `<a class="conversation-item${id === conversationId ? ' active' : ''}${unread ? ' is-unread' : ''}" href="/messages/${id}"${id === conversationId ? ' aria-current="page"' : ''}>${avatar(other)}<span class="stack"><strong>${h(personName(other))}</strong><span class="muted">${h(time(conversation.lastMessageAt))}</span></span>${unread ? `<span class="conversation-unread" aria-label="未読${unread}件">${unread > 99 ? '99+' : unread}</span>` : ''}</a>`;
     };
     shell.classList.toggle('is-empty', matches.length === 0);
     if (visible.length) reconcileRows(list, visible, markup);
@@ -322,6 +323,7 @@ async function messagesPage(path) {
         renderMessages(items, scrollToLatest);
         if (!document.hidden && messageUpdates.hidden && items.some(item => String(item.senderId) !== String(state.user.id) && !item.readAt)) {
           await api(`/api/messages/conversation/${conversationId}/read`, { method: 'PATCH' });
+          window.dispatchEvent(new Event('messages-read'));
         }
       } else if (!recipientId) renderPeer();
       status.textContent = '';

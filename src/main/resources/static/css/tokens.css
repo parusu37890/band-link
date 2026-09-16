@@ -36,10 +36,13 @@
   --placeholder: #6e7268;    /* 4.92:1 on --field */
   --avatar-bg: var(--bg);    /* placeholder avatars do not introduce a gray tile */
   --avatar-ink: #3f443b;     /* readable against the shared canvas */
-  --bubble-bg: #cbd8c0;      /* the reader's own messages — 1.23:1 against the incoming bubble.
-                                #dfe4da was only 1.07 and the two sides read as one colour once the
-                                theme went light; alignment carried the whole distinction. */
+  --bubble-bg: #cbd8c0;      /* the reader's own messages */
   --bubble-ink: #1b2118;     /* 12.72:1 on --bubble-bg */
+  /* The incoming bubble used --raised, which is just --bg (#ffffff) - 1.23:1 against --bubble-bg,
+     so the two sides only read as different messages because of which edge they aligned to, not
+     their colour. This gives the incoming side its own visible gray, keeping --ink readable on it
+     (~15:1) while staying clearly distinct from both the page canvas and the reader's own green. */
+  --bubble-bg-incoming: #e7e5dd;
   --scrim: #1b1d19a6;        /* dialog backdrop */
   --radius: 3px;
   --page: 1240px;

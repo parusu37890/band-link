@@ -125,7 +125,10 @@ class ReleaseMessageUnitTest {
         assertEquals(LocalDateTime.now(clock), incoming.getReadAt());
         assertNull(outgoing.getReadAt());
         assertEquals(old, alreadyRead.getReadAt());
-        verifyNoInteractions(notifications);
+        // Reading the thread also clears the matching NEW_MESSAGE notifications the header's
+        // unread badge counts, so it isn't left stuck after the messages themselves are read.
+        verify(notifications, times(2)).findByUserIdAndTypeAndRelatedIdAndReadAtIsNull(1L, "NEW_MESSAGE", 10L);
+        verify(notifications, never()).saveAll(any());
     }
     @Test void codeUt016_dtoRejects501CharactersButAccepts500() {
         try (var factory = Validation.buildDefaultValidatorFactory()) {
