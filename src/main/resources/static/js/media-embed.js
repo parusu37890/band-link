@@ -52,11 +52,13 @@ const providers = [
     },
   },
   {
+    // vt.tiktok.com is what the app's own Share button actually hands people - vm.tiktok.com is
+    // the older form of the same thing. Both are opaque short codes a redirect resolves server
+    // side, so neither carries an id this code can embed, but the person still typed a real
+    // TikTok link and deserves to see "TikTok", not a generic fallback.
     name: 'TikTok',
-    hosts: ['tiktok.com', 'm.tiktok.com', 'vm.tiktok.com'],
+    hosts: ['tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'],
     build(url) {
-      // Only the full /video/<id> form carries an id; vm.tiktok.com short links resolve server-side,
-      // so those stay a link rather than a guess.
       const id = url.pathname.split('/').filter(Boolean).pop();
       return DIGITS.test(id || '') ? { src: `https://www.tiktok.com/embed/v2/${id}`, height: 750, width: 325 } : null;
     },
@@ -73,8 +75,11 @@ const providers = [
       return { src: `https://w.soundcloud.com/player/?url=${track}&color=%2355794b&show_comments=false`, height: 166 };
     },
   },
-  { name: 'Spotify', hosts: ['open.spotify.com', 'spotify.com'], build: spotify },
-  { name: 'Apple Music', hosts: ['music.apple.com', 'embed.music.apple.com'], build: appleMusic },
+  // spotify.link is Spotify's own share-button short domain; itunes.apple.com is Apple Music's
+  // older link form, still handed out by some share sheets. Same opaque-short-code situation as
+  // TikTok above - recognised for the label, even where the id isn't there to embed.
+  { name: 'Spotify', hosts: ['open.spotify.com', 'spotify.com', 'spotify.link'], build: spotify },
+  { name: 'Apple Music', hosts: ['music.apple.com', 'embed.music.apple.com', 'itunes.apple.com'], build: appleMusic },
 ];
 
 /** The link itself, once it is known to be http(s). Empty for anything else. */
