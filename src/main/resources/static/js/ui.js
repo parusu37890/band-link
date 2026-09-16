@@ -5,7 +5,7 @@ const paths = {search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 
 export const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.arrow}</svg>`;
 export const button = (label, href, kind='primary') => `<a class="button ${h(kind)}" href="${h(href)}">${h(label)}</a>`;
 export function safeUrl(value) { try { const u = new URL(value, location.origin); return ['http:','https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } }
-export function avatar(user, large=false) { const url = user?.profileImageUrl; const local = url && /^\/(?:uploads|api\/images)\/[a-zA-Z0-9/_.-]+$/.test(url); return `<span class="avatar${large?' large':''}" aria-hidden="true">${local ? `<img src="${h(url)}" alt="" loading="lazy">` : h((user?.username || '♪').slice(0,1))}</span>`; }
+export function avatar(user, large=false) { const url = user?.profileImageUrl; const local = url && /^\/(?:uploads|api\/images)\/[a-zA-Z0-9/_.-]+$/.test(url); return `<span class="avatar${large?' large':''}" aria-hidden="true"><img src="${local ? h(url) : '/assets/avatar-default.svg?v=20260916-1'}" alt="" loading="lazy"></span>`; }
 // The server sends LocalDateTime values, which carry no zone by construction. They are always UTC
 // (Clock.systemDefaultZone() in the container) and JacksonDateTimeConfig appends Z to say so, but
 // this guards any timestamp that somehow arrives without one: a bare "2026-09-15T15:33:23" is

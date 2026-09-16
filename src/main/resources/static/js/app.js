@@ -1,7 +1,7 @@
-import {api,state,h,icon,showPage,notice} from './ui.js';
-import {discoveryPage} from './discovery.js?v=20260916-13';
-import {accountPage} from './account.js?v=20260916-6';
-import {communityPage} from './community.js?v=20260916-5';
+import {api,state,h,icon,showPage,notice} from './ui.js?v=20260916-1';
+import {discoveryPage} from './discovery.js?v=20260916-14';
+import {accountPage} from './account.js?v=20260916-7';
+import {communityPage} from './community.js?v=20260916-6';
 
 const path=()=>location.pathname.replace(/\/+$/,'')||'/';
 async function loadUser(){try{state.user=await api('/api/auth/me');}catch{state.user=null;}}
