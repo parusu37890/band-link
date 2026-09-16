@@ -506,7 +506,7 @@ async function adminPage() {
   }
   const statuses = { PENDING: '未対応', REVIEWED: '確認済み', DISMISSED: '対応不要', ACTIONED: '対応済み' };
   const types = { POST: '募集投稿', USER: 'ユーザー', MESSAGE: 'メッセージ' };
-  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form><h2>アカウントの削除</h2><p class="muted">ユーザーIDを指定して、アカウントと投稿を完全に削除します。取り消せません。</p><form data-delete-user-form class="stack"><label class="form-field" for="delete-user-id">ユーザーID<input class="input" type="number" id="delete-user-id" name="userId" min="1" step="1" required></label><button type="submit" class="button danger">削除内容を確認</button><div data-form-error role="alert"></div></form></aside></div><section class="admin-feedback stack"><h2>お問い合わせ・機能要望</h2><div data-feedback aria-busy="true"><p role="status">受信内容を読み込んでいます…</p></div></section></div>`, '運営管理');
+  showPage(`<div class="page admin-page">${heading('運営管理', '通報の確認と、ユーザーの利用状況を管理します。')}<div class="admin-layout"><section class="admin-reports stack"><div class="section-toolbar"><h2>通報一覧</h2><label class="form-field" for="report-status">対応状況<select class="input" id="report-status">${Object.entries(statuses).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label></div><div data-reports aria-busy="true"><p role="status">通報を読み込んでいます…</p></div></section><aside class="admin-tools stack"><h2>利用停止の解除</h2><p class="muted">確認済みのユーザーIDを指定して、利用停止を解除します。</p><form data-unsuspend-form class="stack"><label class="form-field" for="unsuspend-user">ユーザーID<input class="input" type="number" id="unsuspend-user" name="userId" min="1" step="1" required></label><button type="submit" class="button secondary">解除内容を確認</button><div data-form-error role="alert"></div></form><h2>アカウントの削除</h2><p class="muted">ユーザーIDを指定して、アカウントと投稿を完全に削除します。取り消せません。</p><form data-delete-user-form class="stack"><label class="form-field" for="delete-user-id">ユーザーID<input class="input" type="number" id="delete-user-id" name="userId" min="1" step="1" required></label><button type="submit" class="button danger">削除内容を確認</button><div data-form-error role="alert"></div></form><h2>投稿の削除</h2><p class="muted">募集IDを指定して、その投稿を完全に削除します（非公開ではなく完全削除）。取り消せません。</p><form data-delete-post-form class="stack"><label class="form-field" for="delete-post-id">募集ID<input class="input" type="number" id="delete-post-id" name="postId" min="1" step="1" required></label><button type="submit" class="button danger">削除内容を確認</button><div data-form-error role="alert"></div></form></aside></div><section class="admin-feedback stack"><h2>お問い合わせ・機能要望</h2><div data-feedback aria-busy="true"><p role="status">受信内容を読み込んでいます…</p></div></section></div>`, '運営管理');
   const container = main.querySelector('[data-reports]');
   const select = main.querySelector('#report-status');
   const feedbackContainer = main.querySelector('[data-feedback]');
@@ -590,6 +590,16 @@ async function adminPage() {
       await api(`/api/admin/users/${id}`, { method: 'DELETE' });
       toast(`ユーザーID ${id}のアカウントを削除しました。`);
       deleteUserForm.reset();
+    });
+  });
+  const deletePostForm = main.querySelector('[data-delete-post-form]');
+  bindForm(deletePostForm, async () => {
+    const id = positiveId(deletePostForm.elements.postId.value);
+    if (!id) throw new Error('有効な募集IDを入力してください。');
+    confirmAction('投稿を完全に削除しますか？', `募集ID ${id}を完全に削除します。この操作は取り消せません。`, async () => {
+      await api(`/api/admin/posts/${id}/permanent`, { method: 'DELETE' });
+      toast(`募集ID ${id}を削除しました。`);
+      deletePostForm.reset();
     });
   });
   await Promise.all([load(), loadFeedback()]);

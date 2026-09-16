@@ -73,4 +73,24 @@ public class AccountDeletionService {
         messageImages.forEach(images::delete);
         profileImages.forEach(images::delete);
     }
+
+    /**
+     * A single post, hard-deleted rather than closed. AdminPostController's existing DELETE
+     * (PostService.adminDelete) only closes a post so a moderation report keeps something to point
+     * at; this is for the separate case of actually wanting the row gone, e.g. operator cleanup.
+     */
+    @Transactional
+    public void deletePost(Long postId) {
+        List<String> postImages = jdbc.queryForList(
+                "select image_url from post_images where post_id = ?", String.class, postId);
+        jdbc.update("delete from reports where target_type = 'POST' and target_id = ?", postId);
+        jdbc.update("delete from post_images where post_id = ?", postId);
+        jdbc.update("delete from post_age_ranges where post_id = ?", postId);
+        jdbc.update("delete from post_parts where post_id = ?", postId);
+        jdbc.update("delete from post_genres where post_id = ?", postId);
+        jdbc.update("delete from post_stances where post_id = ?", postId);
+        jdbc.update("delete from post_prefectures where post_id = ?", postId);
+        jdbc.update("delete from posts where id = ?", postId);
+        postImages.forEach(images::delete);
+    }
 }
