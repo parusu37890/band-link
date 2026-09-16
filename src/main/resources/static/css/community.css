@@ -84,10 +84,15 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
 @media (max-width: 1000px) { .chat-shell { grid-template-columns: 230px minmax(0,1fr); }.admin-layout { grid-template-columns: 1fr; }.admin-tools { border-left: 0; border-top: 1px solid var(--line); padding-inline: 0; } }
 @media (max-width: 640px) {
   .chat-shell { grid-template-columns: 1fr; height: calc(100dvh - 250px); min-height: 360px; max-height: none; }
-  .messages-page:has(.has-conversation) { padding-top: 16px; padding-bottom: 24px; }
-  .messages-page:has(.has-conversation) .page-heading { margin: 0 0 12px; }
-  .messages-page:has(.has-conversation) .page-heading p { display: none; }
-  .chat-shell.has-conversation { height: calc(100dvh - 210px); }
+  /* An open conversation on a phone is the one thing on screen, the way a DM app works - the site's
+     own logo/nav bar and the redundant "メッセージ" heading were eating most of a small viewport,
+     leaving two lines of the actual conversation visible above the fold. .chat-header already
+     repeats the back-link and peer's name, so nothing is lost by hiding both. */
+  body:has(.messages-page .chat-shell.has-conversation) #header,
+  body:has(.messages-page .chat-shell.has-conversation) .site-footer { display: none; }
+  .messages-page:has(.has-conversation) { padding: 0; }
+  .messages-page:has(.has-conversation) .page-heading { display: none; }
+  .chat-shell.has-conversation { height: 100dvh; border-width: 0; }
   .chat-shell .conversation-list { display: block; border-right: 0; }.chat-shell .chat-pane { display: none; }
   .chat-shell.has-conversation .conversation-list { display: none; }.chat-shell.has-conversation .chat-pane { display: flex; }
   .mobile-back { display: inline-flex; padding: 8px; }.chat-header { padding: 14px; gap: 12px; }

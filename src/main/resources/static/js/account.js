@@ -6,7 +6,7 @@ const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パ�
 const names = items => (items||[]).map(x=>x.name).join('・');
 // Showing every field with 未設定 filled the screen with absences instead of the person.
 // Only filled rows render; an empty profile says so once.
-const factRows = p => [
+const factRows = (p, own) => [
   ['担当パート', names(p.parts)],
   ['好きなジャンル', names(p.genres)],
   ['活動エリア', names(p.prefectures)],
@@ -14,10 +14,13 @@ const factRows = p => [
   ['経験年数', p.experienceYears == null ? '' : p.experienceYears + '年'],
   ['年齢', p.ageRange || ''],
   ['性別', p.gender || ''],
-  ['最近の活動', p.online || p.lastLoginAt ? loginRelativeTime(p.lastLoginAt, p.online) : '']
+  ['最近の活動', p.online || p.lastLoginAt ? loginRelativeTime(p.lastLoginAt, p.online) : ''],
+  // Only the account itself sees this - p (ProfileResponse) never carries email, so this reads
+  // state.user, which is only this same person's data when own is true.
+  ['メールアドレス', own ? (state.user.email || '') : '']
 ].filter(([, value]) => value);
-const facts = p => {
-  const rows = factRows(p);
+const facts = (p, own) => {
+  const rows = factRows(p, own);
   if (!rows.length) return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><p class="muted">まだ登録されていません。</p></section>`;
   return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><dl class="facts">${rows.map(([label, value]) => `<dt>${h(label)}</dt><dd>${h(value)}</dd>`).join('')}</dl></section>`;
 };
@@ -153,7 +156,7 @@ async function profilePage(id){
         </aside>
         <article class="profile-story">
           <section class="profile-intro"><h2>自己紹介</h2><p class="body-text">${h(p.bio||'自己紹介はまだ登録されていません。')}</p></section>
-          ${facts(p)}
+          ${facts(p,own)}
           ${mediaMarkup}
         </article>
       </div>
