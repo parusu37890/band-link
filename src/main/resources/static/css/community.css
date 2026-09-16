@@ -115,10 +115,6 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
   .mobile-back { display: inline-flex; padding: 8px; }.chat-header { padding: 14px; gap: 12px; }
   .chat-messages { flex: 1 1 0; padding: 18px 14px; }.message { max-width: 94%; }.chat-status { padding-inline: 14px; }
   .composer { padding: 10px 14px; gap: 8px; }.composer-help { display: none; }.composer-toolbar { gap: 8px; }.composer-toolbar .button { padding: 10px; }
-  /* The composer was taking a fixed, fairly tall share of the now fully-fixed .chat-pane, leaving
-     less room than it should for the actual conversation above it. font-size stays 16px - anything
-     smaller makes iOS Safari auto-zoom the page on focus. */
-  .composer textarea { min-height: 44px; height: 44px; max-height: 88px; }
   .notification-meta time { margin-left: 0; }.notification-item { padding-block: 24px; }
 }
 
