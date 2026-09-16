@@ -79,6 +79,11 @@ async function messagesPage(path) {
   let messageLimit = 30;
   let messageItems = [];
   let frozenEndId = null;
+  // A message already marked read before this notification-sync existed never gets a fresh
+  // read-transition to trigger it again, so the matching NEW_MESSAGE notification stayed stuck
+  // forever - the header badge kept counting it. Sync once per conversation view regardless of
+  // whether there are still-unread messages, not just when marking new ones read.
+  let notificationsSynced = false;
   window.addEventListener('pagehide', () => { disposed = true; stream?.close(); stream = null; streamConversationId = null; if (previewUrl) URL.revokeObjectURL(previewUrl); }, { once: true });
 
   function closeStream() { stream?.close(); stream = null; streamConversationId = null; }
@@ -321,8 +326,19 @@ async function messagesPage(path) {
         if (disposed) return;
         if (!Array.isArray(items)) throw new Error('メッセージを読み込めませんでした。');
         renderMessages(items, scrollToLatest);
-        if (!document.hidden && messageUpdates.hidden && items.some(item => String(item.senderId) !== String(state.user.id) && !item.readAt)) {
+        if (!document.hidden && messageUpdates.hidden && !notificationsSynced) {
+          notificationsSynced = true;
           await api(`/api/messages/conversation/${conversationId}/read`, { method: 'PATCH' });
+          // The API clears both message readAt and the matching NEW_MESSAGE notifications - called
+          // unconditionally (not just when unread messages were found) since a message marked read
+          // before this sync existed has no future read-transition to trigger it from otherwise.
+          // Reflect the same result in the already-rendered conversation list immediately;
+          // waiting for the next poll left a stale red count beside the conversation.
+          if (selected && Number(selected.unreadCount) > 0) {
+            selected.unreadCount = 0;
+            lastListState = '';
+            renderList();
+          }
           window.dispatchEvent(new Event('messages-read'));
         }
       } else if (!recipientId) renderPeer();

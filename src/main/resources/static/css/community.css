@@ -18,7 +18,7 @@
 .conversation-item.active { background: var(--raised); box-shadow: inset 3px 0 var(--accent); }
 .conversation-item.is-unread strong { font-weight: 700; }
 .conversation-unread { flex: none; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; background: var(--danger); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
-.chat-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+.chat-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: var(--bg); }
 .chat-header { display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
 .chat-header h2 { font-size: 16px; } .chat-header a:not(.button) { display:inline-flex; align-items:center; min-height:44px; font-size:12px; color:var(--accent); }
 .chat-status { padding: 10px 24px 0; font-size: 12px; } .chat-status:empty { display: none; }
@@ -43,7 +43,7 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
 .image-dialog { display: flex; flex-direction: column; gap: 12px; margin: 0; }
 .image-dialog > .button { align-self: flex-end; }
 .image-dialog > img { display: block; width: 100%; max-height: calc(90dvh - 88px); object-fit: contain; }
-.composer { display: flex; flex-direction: column; gap: 12px; padding: 18px 24px; border-top: 1px solid var(--line); background: var(--bg); }
+.composer { display: flex; flex: 0 0 auto; flex-direction: column; gap: 12px; padding: 18px 24px; border-top: 1px solid var(--line); background: var(--bg); position: static; bottom: auto; }
 .composer-field { width: 100%; } .composer-field > span { font-size: 12px; }
 .composer textarea { min-height: 80px; height: 80px; max-height: 160px; font-size: 16px; }
 .composer-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -104,9 +104,16 @@ dialog:has(.image-dialog) { width: min(900px, calc(100% - 32px)); padding: 16px;
   .messages-page:has(.has-conversation) .page-heading { display: none; }
   .chat-shell.has-conversation { height: 100dvh; border-width: 0; }
   .chat-shell .conversation-list { display: block; border-right: 0; }.chat-shell .chat-pane { display: none; }
-  .chat-shell.has-conversation .conversation-list { display: none; }.chat-shell.has-conversation .chat-pane { display: flex; }
+  .chat-shell.has-conversation .conversation-list { display: none; }
+  /* The body lock above should already stop the page from scrolling as a whole, but the composer
+     still visibly rode along with the message list on a real phone (per a live device recording),
+     which only a genuine page-level scroll (not the internal .chat-messages one) explains. Pinning
+     the whole pane to the viewport removes any dependency on that body lock actually holding: the
+     header/messages/composer stack is now fixed regardless of what the surrounding page does, and
+     only .chat-messages (overflow-y:auto) scrolls, exactly like a native chat app. */
+  .chat-shell.has-conversation .chat-pane { display: flex; position: fixed; inset: 0; z-index: 20; background: var(--bg); }
   .mobile-back { display: inline-flex; padding: 8px; }.chat-header { padding: 14px; gap: 12px; }
-  .chat-messages { padding: 18px 14px; }.message { max-width: 94%; }.chat-status { padding-inline: 14px; }
+  .chat-messages { flex: 1 1 0; padding: 18px 14px; }.message { max-width: 94%; }.chat-status { padding-inline: 14px; }
   .composer { padding: 14px; }.composer-help { display: none; }.composer-toolbar { gap: 8px; }.composer-toolbar .button { padding: 10px; }
   .notification-meta time { margin-left: 0; }.notification-item { padding-block: 24px; }
 }
