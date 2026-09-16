@@ -1,8 +1,10 @@
 /* Conversation is a workspace; notifications are a chronological ledger. */
-.messages-page { padding-top: 32px; }
+/* .page's own base padding-block is 44px/88px - never overridden here on the bottom side, so the
+   chat pane's height budget below was always fighting an inherited 88px of dead space under it. */
+.messages-page { padding-top: 32px; padding-bottom: 16px; }
 .messages-page .page-heading { margin-bottom: 24px; }
 .messages-page .page-heading h1 { font-size: 30px; }
-.chat-shell { display: grid; grid-template-columns: 285px minmax(0,1fr); border: 1px solid var(--line); background: var(--bg); height: calc(100dvh - 190px); min-height: 500px; }
+.chat-shell { display: grid; grid-template-columns: 285px minmax(0,1fr); border: 1px solid var(--line); background: var(--bg); height: calc(100dvh - 150px); min-height: 500px; }
 /* Reading the thread is the point of this screen, so an open conversation gives the heading back
    to the messages instead of keeping a description the reader has already acted on. */
 .messages-page:has(.has-conversation) .page-heading { margin-bottom: 12px; }
