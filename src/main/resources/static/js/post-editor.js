@@ -50,7 +50,7 @@ export async function postEditor(id) {
       <section class="editor-step" data-editor-step="2" aria-labelledby="editor-heading-2" hidden>
         <div class="editor-step-heading"><h2 id="editor-heading-2" tabindex="-1">この内容で${id?'保存':'公開'}しますか？</h2><p>タイトル・本文・条件・画像を確認してください。各項目に戻って直せます。</p></div>
         <div id="editor-preview"></div>
-        <p class="editor-publish-note">${id?'編集に回数の制限はありません。':'募集と加入はそれぞれ1件ずつ公開できます。新規投稿に時間制限はありません。'}${id?'編集では掲載順位・掲載期限は変わりません。一覧の上位に表示したい場合は、自分の投稿から「更新する」を使ってください（12時間に1回まで）。':'掲載期間は30日です。'}投稿の終了はいつでもできます。</p>
+        <p class="editor-publish-note">${id?'編集に回数の制限はありません。':'募集と加入はそれぞれ1件ずつ公開できます。新規投稿に時間制限はありません。'}${id?'編集では掲載順位・掲載期限は変わりません。一覧の上位に表示したい場合は、自分の投稿から「更新する」を使ってください（12時間に1回まで）。':'掲載期間は30日です。'}</p>
       </section>
       <div class="editor-actions"><div><a class="button quiet" href="/my/posts">キャンセル</a><button type="button" class="button secondary" data-editor-back hidden>前に戻る</button></div><button type="button" class="button primary" data-editor-next>内容を書く ${icon('arrow')}</button><button type="submit" class="button primary" data-editor-submit hidden ${!state.user.emailVerified?'disabled':''}>${id?'変更を保存する':'投稿を公開する'}</button></div>
     </form></div>`,id?'募集の編集':'募集の作成');
