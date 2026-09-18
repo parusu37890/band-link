@@ -9,6 +9,7 @@ import com.example.bandlink.repository.UserRepository;
 import java.util.Map;
 import java.util.Optional;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
@@ -41,24 +42,30 @@ public class PageController {
             "/login", "/register", "/verify-email", "/password-reset", "/password-reset/confirm",
             "/messages", "/messages/{id}", "/notifications", "/blocks", "/admin", "/admin/reports", "/support",
             "/contact", "/feature-request", "/privacy"})
-    public String app(HttpServletRequest request, Model model) {
+    public String app(HttpServletRequest request, HttpServletResponse response, Model model) {
         String path = request.getRequestURI();
         boolean publicPage = "/".equals(path) || "/posts".equals(path)
                 || path.matches("/posts/[0-9]+") || path.matches("/users/[0-9]+");
         String canonicalPath = "/".equals(path) ? "/posts" : path;
-        model.addAttribute("seoRobots", publicPage ? "index,follow" : "noindex,nofollow");
         model.addAttribute("seoCanonical", baseUrl + canonicalPath);
         model.addAttribute("seoOgUrl", baseUrl + canonicalPath);
+        model.addAttribute("seoImage", baseUrl + "/assets/og-image.png?v=20260918-1");
         model.addAttribute("googleAnalyticsId", googleAnalyticsId);
 
         String title = DEFAULT_TITLE;
         String description = DEFAULT_DESCRIPTION;
+        // A stale/guessed /posts/{id} or /users/{id} must not come back as a 200 with
+        // index,follow robots - that is exactly what a soft 404 is, and it accumulates in
+        // Search Console as posts get closed/deleted over time.
+        boolean notFound = false;
         if (path.matches("/posts/[0-9]+")) {
             Optional<Post> post = posts.findById(Long.valueOf(path.substring("/posts/".length())))
                     .filter(p -> p.getStatus() == PostStatus.OPEN);
             if (post.isPresent()) {
                 title = post.get().getTitle() + " — Band Link";
                 description = summarize(post.get().getContent());
+            } else {
+                notFound = true;
             }
         } else if (path.matches("/users/[0-9]+")) {
             Optional<User> user = users.findById(Long.valueOf(path.substring("/users/".length())))
@@ -68,8 +75,12 @@ public class PageController {
                 description = user.get().getBio() != null && !user.get().getBio().isBlank()
                         ? summarize(user.get().getBio())
                         : user.get().getUsername() + " さんのプロフィールページです。Band Linkでバンドメンバーの募集・加入希望をチェックできます。";
+            } else {
+                notFound = true;
             }
         }
+        model.addAttribute("seoRobots", notFound || !publicPage ? "noindex,nofollow" : "index,follow");
+        if (notFound) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         model.addAttribute("seoTitle", title);
         model.addAttribute("seoDescription", description);
         return "posts";
