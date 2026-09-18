@@ -18,9 +18,13 @@
   <meta property="og:title" content="Band Link バンドメンバー募集・加入サイト" th:content="${seoTitle}">
   <meta property="og:description" content="バンドメンバー募集・加入希望の掲示板です。2026/09/15にリリースしました！閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。" th:content="${seoDescription}">
   <meta property="og:url" content="/posts" th:content="${seoOgUrl}">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="/assets/og-image.png" th:content="${seoImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Band Link バンドメンバー募集・加入サイト" th:content="${seoTitle}">
   <meta name="twitter:description" content="バンドメンバー募集・加入希望の掲示板です。2026/09/15にリリースしました！閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。" th:content="${seoDescription}">
+  <meta name="twitter:image" content="/assets/og-image.png" th:content="${seoImage}">
   <link rel="stylesheet" href="/css/app.css?v=20260916-25">
   <script type="module" src="/js/app.js?v=20260916-26"></script>
   <script th:if="${!#strings.isEmpty(googleAnalyticsId)}" th:src="@{https://www.googletagmanager.com/gtag/js(id=${googleAnalyticsId})}" async></script>
