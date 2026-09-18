@@ -1,5 +1,5 @@
-import {mediaHref,mediaEmbed,mediaIconRow} from './media-embed.js?v=20260918-1';
-import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper,loginRelativeTime} from './ui.js?v=20260918-2';
+import {mediaHref,mediaEmbed,mediaProvider,mediaIconRow} from './media-embed.js?v=20260918-2';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper,loginRelativeTime} from './ui.js';
 
 const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
 
@@ -74,13 +74,24 @@ async function authPage(path){
     : `<a href="/login">ログインへ戻る</a>`;
   const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。':'';
   const login=path==='/login';
-  const authMark=(login||register)?'':`<a class="auth-mark" href="/" aria-label="Band Link ホーム"><img src="/assets/mark.svg?v=20260913-1" alt=""> <span>Band Link</span></a>`;
+  const authMark=(login||register)?'':`<a class="auth-mark" href="/" aria-label="Band Link ホーム"><span>Band Link</span></a>`;
   showPage(`<div class="page auth-page${register?' register-page':''}${login?' login-page':''}"><section class="auth-panel">${authMark}<h1>${h(config[0])}</h1><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
   const authForm=main.querySelector('#auth-form');
   if(authForm) bindForm(authForm,async fd=>{
     let response;
     if(path==='/login'){
-      response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
+      const email=fd.get('email');
+      try { response=await api('/api/auth/login',{method:'POST',body:{email,password:fd.get('password')}}); }
+      catch(e){
+        if(e.code!=='EMAIL_NOT_VERIFIED') throw e;
+        main.querySelector('#auth-message').innerHTML=notice(e.message,'error')+`<button type="button" class="button secondary full" id="resend-verification-anon">確認メールを再送する</button>`;
+        main.querySelector('#resend-verification-anon').addEventListener('click',async event=>{
+          event.currentTarget.disabled=true;
+          try { await api('/api/auth/verify-email/resend-request',{method:'POST',body:{email}}); toast('確認メールを再送しました。メールをご確認ください。'); }
+          catch { toast('再送に失敗しました。時間をおいてもう一度お試しください。'); event.currentTarget.disabled=false; }
+        });
+        return;
+      }
     }
     else if(register){
       const body={username:fd.get('username'),email:fd.get('email'),password:fd.get('password'),age:Number(fd.get('age')),experienceYears:Number(fd.get('experienceYears')),gender:fd.get('gender'),partIds:fd.getAll('partIds').map(Number),genreIds:fd.getAll('genreIds').map(Number),stanceIds:fd.getAll('stanceIds').map(Number),prefectureIds:fd.getAll('prefectureIds').map(Number)};
@@ -91,7 +102,7 @@ async function authPage(path){
     }
     else if(reset){await api('/api/auth/password-reset/request',{method:'POST',body:{email:fd.get('email')}});main.querySelector('#auth-message').innerHTML=notice('再設定の案内を送信しました。メールをご確認ください。','success');return;}
     else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
-    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register||!response.emailVerified?'/verify-email':next);}
+    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register?'/verify-email':next);}
   });
   main.querySelectorAll('[data-password-toggle]').forEach(toggle=>toggle.addEventListener('click',()=>{
     const input=main.querySelector('#'+toggle.dataset.passwordToggle); if(!input)return;
@@ -126,15 +137,14 @@ async function profilePage(id){
   try {
     const p=await api('/api/users/'+Number(id));
     const own=state.user&&String(state.user.id)===String(p.id);
-    // Every service shows up here, filled in or not - mediaIconRow dims and disables the ones the
-    // person hasn't linked instead of hiding them, so the row reads as "here is what they have and
-    // haven't shared" rather than a list that grows and shrinks unpredictably.
-    const embedItems=[p.youtubeUrl,p.tiktokUrl,p.soundcloudUrl,p.spotifyUrl,p.appleMusicUrl,p.videoUrl].filter(url=>mediaHref(url));
-    const embedsMarkup=embedItems.map(url=>{const embed=mediaEmbed(url);return embed?`<div class="profile-media-embed"><iframe class="media-frame" style="${embed.ratio?`aspect-ratio:${embed.ratio}`:`height:${Number(embed.height)}px`}${embed.width?`;max-width:${Number(embed.width)}px`:''}" src="${h(embed.src)}" title="${h(p.username)}の${h(embed.name)}" loading="lazy" allow="encrypted-media; fullscreen; clipboard-write" allowfullscreen></iframe></div>`:'';}).join('');
-    const mediaMarkup=`<section class="detail-section profile-video"><h2>演奏動画・音源</h2>${mediaIconRow(p,icon,h)}${embedsMarkup}</section>`;
+    const mediaItems=[p.youtubeUrl,p.tiktokUrl,p.soundcloudUrl,p.spotifyUrl,p.appleMusicUrl,p.videoUrl].filter(url=>mediaHref(url));
+    // The label shown is always the service the URL's own host resolves to (never the name of the
+    // field it happened to be typed into): pasting a non-Spotify link into "Spotify URL" must not
+    // render as a trusted-looking "Spotifyで開く" link to somewhere else.
+    const mediaMarkup=mediaItems.length?`<section class="detail-section profile-video"><h2>演奏動画・音源</h2>${mediaIconRow(p,icon,h)}<div class="profile-media-list">${mediaItems.map(url=>{const label=mediaProvider(url)||'リンク';const embed=mediaEmbed(url);return `<article class="profile-media-item"><h3>${h(label)}</h3>${embed?`<iframe class="media-frame" style="${embed.ratio?`aspect-ratio:${embed.ratio}`:`height:${Number(embed.height)}px`}${embed.width?`;max-width:${Number(embed.width)}px`:''}" src="${h(embed.src)}" title="${h(p.username)}の${h(label)}" loading="lazy" allow="encrypted-media; fullscreen; clipboard-write" allowfullscreen></iframe>`:''}<a class="row media-link" href="${h(mediaHref(url))}" target="_blank" rel="noopener noreferrer">${icon('external')}${h(label)}で開く</a></article>`}).join('')}</div></section>`:'';
     const contact=own?button('プロフィールを編集','/settings/profile','secondary'):button('メッセージを送る',state.user?'/messages?to='+p.id:'/login?next='+encodeURIComponent('/messages?to='+p.id));
     showPage(`<div class="page profile-page">
-      <a class="back-link" href="/posts">${icon('back')}募集一覧へ</a>
+      <a class="back-link" href="/posts">募集一覧へ</a>
       <div class="profile-layout">
         <aside class="profile-identity">
           ${avatar(p,true)}
@@ -150,7 +160,7 @@ async function profilePage(id){
           ${mediaMarkup}
         </article>
       </div>
-    </div>`,p.username);
+    </div>`,p.username,p.bio||'公開プロフィールです。音楽や活動エリアを確認できます。');
     main.querySelector('#report-user')?.addEventListener('click',()=>report('USER',id));
     // Blocking had no entry point in the UI at all, so the feature was unreachable: the blocks page
     // could only list and undo blocks that never had a way to be created.
@@ -175,7 +185,7 @@ async function profileEdit(){
     return field(`<p class="editor-selection-status" id="${key}-status" aria-live="polite"></p><details class="editor-area-options"><summary>都道府県を選ぶ・変更する</summary><div class="editor-choices">${m[source].map(x=>`<label class="editor-choice"><input type="checkbox" name="${key}" value="${x.id}" ${selected.includes(x.id)?'checked':''}><span>${h(x.name)}</span></label>`).join('')}</div></details>`);
   };
   showPage(`<div class="page settings-page">
-    <a class="back-link" href="/users/${p.id}">${icon('back')}公開プロフィールへ</a>
+    <a class="back-link" href="/users/${p.id}">公開プロフィールへ</a>
     <div class="page-heading"><div><h1>プロフィール・設定</h1><p>一緒に演奏する相手へ、あなたの音楽や活動のことを伝えましょう。</p></div></div>
     <div class="settings-layout">
       <nav class="settings-nav" aria-label="設定メニュー"><a href="#profile-form" aria-current="page">プロフィール</a><a href="/my/posts">自分の募集</a><a href="/settings/blocks">ブロック管理</a></nav>
@@ -249,7 +259,7 @@ async function feedbackPage(type){
   const feature=type==='FEATURE_REQUEST';
   const title=feature?'機能要望':'お問い合わせ';
   const description=feature?'新機能のアイデアやこうなったら使いやすい等を教えてください。':'困っていることや確認したいことを運営に知らせてください。';
-  showPage(`<div class="page feedback-page"><a class="back-link" href="/posts">${icon('back')}募集一覧へ</a><div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div></div><form id="feedback-form" class="feedback-form"><div class="form-field"><label for="feedback-message">${feature?'要望の内容':'お問い合わせ内容'}</label><textarea class="input" id="feedback-message" name="message" rows="9" maxlength="1000" required placeholder="自由にご記入ください。"></textarea><span class="hint">1000文字まで</span></div><div class="form-field"><label for="feedback-image">画像（任意）</label><input id="feedback-image" name="image" type="file" accept="image/jpeg,image/png,image/webp"><div class="feedback-attachment" data-feedback-attachment hidden></div><span class="hint">画面の状態が分かる画像を1枚添付できます（5MBまで）。</span></div><div id="feedback-status" aria-live="polite"></div><button class="button primary" type="submit">送信</button></form></div>`,title);
+  showPage(`<div class="page feedback-page"><a class="back-link" href="/posts">募集一覧へ</a><div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div></div><form id="feedback-form" class="feedback-form"><div class="form-field"><label for="feedback-message">${feature?'要望の内容':'お問い合わせ内容'}</label><textarea class="input" id="feedback-message" name="message" rows="9" maxlength="1000" required placeholder="自由にご記入ください。"></textarea><span class="hint">1000文字まで</span></div><div class="form-field"><label for="feedback-image">画像（任意）</label><input id="feedback-image" name="image" type="file" accept="image/jpeg,image/png,image/webp"><div class="feedback-attachment" data-feedback-attachment hidden></div><span class="hint">画面の状態が分かる画像を1枚添付できます（5MBまで）。</span></div><div id="feedback-status" aria-live="polite"></div><button class="button primary" type="submit">送信</button></form></div>`,title);
   const form=main.querySelector('#feedback-form');
   const imageInput=form.elements.image;
   const attachment=form.querySelector('[data-feedback-attachment]');
@@ -284,7 +294,7 @@ async function feedbackPage(type){
 // Help is organized around the situations a reader actually arrives with, each ending at the
 // screen that resolves it. Service inquiries and feature requests have separate forms above.
 const helpItem = ([question, answer, link]) =>
-  `<article class="help-item"><h3>${h(question)}</h3><p>${h(answer)}</p>${link ? `<a class="help-link" href="${h(link[1])}">${h(link[0])}${icon('arrow')}</a>` : ''}</article>`;
+  `<article class="help-item"><h3>${h(question)}</h3><p>${h(answer)}</p>${link ? `<a class="help-link" href="${h(link[1])}">${h(link[0])}</a>` : ''}</article>`;
 const helpSection = (id, title, items) =>
   `<section class="help-section" aria-labelledby="${id}"><h2 id="${id}">${h(title)}</h2><div class="help-list">${items.map(helpItem).join('')}</div></section>`;
 
@@ -297,7 +307,7 @@ function supportPage(){
     ])}
     ${helpSection('help-posts', '募集のきまり', [
       ['募集と加入は1件ずつ公開できる', '募集と加入希望は、それぞれ同時に1件ずつ公開できます。終了した投稿は自分の投稿一覧に残り、あとから再公開できます。', ['自分の投稿を見る', '/my/posts']],
-      ['投稿の編集と「更新する」の違い', '本文・条件・画像の編集回数に制限はありません。一覧の上位に表示したい場合は、自分の投稿から「更新する」を使ってください。こちらは12時間に1回までです。', ['自分の投稿を見る', '/my/posts']],
+      ['投稿・編集した直後は変更できない', '新規投稿には時間制限はありません。投稿を編集してから12時間は、その投稿の本文・条件・画像を変更できません。', null],
       ['募集は30日で自動的に終了する', '公開から30日経つと掲載が終わります。再公開すると、その時点から30日に更新されます。募集の終了と再公開はいつでも操作できます。', null],
     ])}
     ${helpSection('help-people', '相手とのやりとり', [

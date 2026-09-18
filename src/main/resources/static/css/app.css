@@ -1,15 +1,45 @@
 /* CSS entry: design tokens, primitives, shared controls, then screen layouts. */
-@import url('./tokens.css?v=20260915-2');
-@import url('./base.css?v=20260918-1');
-@import url('./components.css?v=20260916-7');
+@import url('./tokens.css?v=20260915-1');
+@import url('./base.css?v=20260913-9');
+@import url('./components.css?v=20260916-6');
 @import url('./discovery.css?v=20260916-8');
-@import url('./account.css?v=20260918-1');
-@import url('./community.css?v=20260916-8');
+@import url('./account.css?v=20260916-1');
+@import url('./community.css?v=20260916-6');
 
 @import url('./post-editor.css?v=20260913-9');
 
-/* The 募集/加入 mark is an 18-20px square block; the title link next to it defaults to baseline
-   inline alignment, which sat its top ~3-4px above the mark's own top instead of level with it.
-   Lower only the title's inline box; the anchor stays unpositioned so the card-wide stretched-link
-   hit area continues to be positioned against .post-card. */
+/* Profile images are avatars everywhere in the product. Keep the deterministic QA bear and
+   user-uploaded profile photos circular at every size, including the large listing thumbnail. */
+.avatar.large,
+.post-card .post-thumb .avatar { border-radius: 50%; }
+
+/* Keep the square recruitment mark and its title on the same visual rhythm. Lower only the
+   title's inline box; the anchor stays unpositioned so the card-wide stretched-link hit area
+   continues to be positioned against .post-card. */
 .post-card h2 > a { display: inline-block; vertical-align: -4px; }
+
+/* The listing is read as four stacked facts. One shared gap keeps the space below the title,
+   type/parts, prefectures, and the person/time row consistent across desktop and phone rules. */
+.post-card .post-content { display: flex; flex-direction: column; gap: 3px !important; }
+.post-card .post-content > * { margin-block: 0 !important; }
+.post-card .post-content > h2 { order: 1; margin: 0; }
+.post-card .post-content > .post-roles { order: 2; margin: 0; }
+.post-card .post-content > .post-location { order: 3; margin: 0; }
+.post-card .post-content > .post-person { order: 4; margin: 0; }
+.post-card .post-person { min-height: 0; }
+.post-card .post-person .person { min-height: 44px; display: inline-flex; align-items: center; }
+.media-icon-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 16px; }
+.media-icon-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 32px; min-height: 32px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); text-decoration: none; }
+.media-icon-link .icon { width: 18px; height: 18px; }
+.media-icon-link.is-unset { opacity: .38; filter: grayscale(1); }
+.media-icon-row-compact { display: inline-flex; flex-wrap: nowrap; gap: 3px; margin: 0; vertical-align: middle; }
+.media-icon-row-compact .media-icon-link { min-width: 18px; width: 18px; min-height: 18px; height: 18px; padding: 0; border: 0; border-radius: 3px; background: transparent; }
+.media-icon-row-compact .media-icon-link .icon { width: 16px; height: 16px; }
+.post-media-icons { display: inline-flex; align-items: center; flex: none; }
+@media (max-width: 640px) {
+  .post-card .post-content { gap: 3px; }
+  .post-card .post-person { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; row-gap: 3px; }
+  .post-card .post-person .person { grid-column: 1; grid-row: 1; }
+  .post-card .post-media-icons { grid-column: 2; grid-row: 1; margin-left: auto; }
+  .post-card .post-times { grid-column: 1 / -1; grid-row: 2; }
+}

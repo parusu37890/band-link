@@ -5,6 +5,8 @@ import com.example.bandlink.entity.UserStatus;
 
 public record PostResponse(Long id, Long userId, String username, String authorImageUrl,
                            String authorAgeRange, String authorGender, java.time.LocalDateTime authorLastLoginAt, boolean authorOnline,
+                           String authorYoutubeUrl, String authorTiktokUrl, String authorSoundcloudUrl,
+                           String authorSpotifyUrl, String authorAppleMusicUrl,
                            String title, String content,
                            String status, String closedReason, java.time.LocalDateTime expiresAt,
                            java.time.LocalDateTime rankUpdatedAt, String type, String areaSub,
@@ -16,6 +18,8 @@ public record PostResponse(Long id, Long userId, String username, String authorI
         return new PostResponse(post.getId(), post.getUser().getId(), post.getUser().getUsername(),
                 authorImage(post),
                 AgeBand.of(post.getUser().getAge()), post.getUser().getGender(), post.getUser().getLastLoginAt(), online(post),
+                post.getUser().getYoutubeUrl(), post.getUser().getTiktokUrl(), post.getUser().getSoundcloudUrl(),
+                post.getUser().getSpotifyUrl(), post.getUser().getAppleMusicUrl(),
                 post.getTitle(),
                 post.getContent(), post.getStatus().name(), post.getClosedReason() == null ? null : post.getClosedReason().name(),
                 post.getExpiresAt(), post.getRankUpdatedAt(), post.getType().name(), post.getAreaSub(),

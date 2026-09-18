@@ -141,11 +141,14 @@ export const mediaFields = [
  * this person has and hasn't linked" rather than a list that only shows what's filled in.
  * icon/h are passed in from ui.js so this module keeps no UI library dependency of its own.
  */
-export function mediaIconRow(profile, icon, h) {
-  return `<div class="media-icon-row">${mediaFields.map(([field, label, key]) => {
+export function mediaIconRow(profile, icon, h, compact = false, interactive = true) {
+  const rowClass = compact ? 'media-icon-row media-icon-row-compact' : 'media-icon-row';
+  return `<div class="${rowClass}">${mediaFields.map(([field, label, key]) => {
     const url = mediaHref(profile[field]);
+    const inner = compact ? icon(key) : `${icon(key)}<span>${h(label)}</span>`;
+    if (!interactive) return `<span class="media-icon-link${url ? '' : ' is-unset'}" aria-label="${h(url ? label : `${label}のリンクはありません`)}">${inner}</span>`;
     return url
-      ? `<a class="media-icon-link" href="${h(url)}" target="_blank" rel="noopener noreferrer" aria-label="${h(label)}で開く">${icon(key)}<span>${h(label)}</span></a>`
-      : `<span class="media-icon-link is-unset" aria-hidden="true">${icon(key)}<span>${h(label)}</span></span>`;
+      ? `<a class="media-icon-link" href="${h(url)}" target="_blank" rel="noopener noreferrer" aria-label="${h(label)}で開く">${inner}</a>`
+      : `<span class="media-icon-link is-unset" aria-label="${h(label)}のリンクはありません">${inner}</span>`;
   }).join('')}</div>`;
 }

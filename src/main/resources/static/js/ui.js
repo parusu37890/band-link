@@ -1,16 +1,14 @@
 export const main = document.querySelector('#main');
 export const state = { user: null, masters: null, csrf: null };
 export const h = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const paths = {search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>','arrow-left':'<path d="M19 12H5m6-6-6 6 6 6"/>',back:'<path d="M19 12H5m6-6-6 6 6 6"/>',filter:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="16" cy="17" r="2" fill="currentColor"/>',plus:'<path d="M12 5v14M5 12h14"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',message:'<path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 20l1.5-3.7A7.5 7.5 0 1 1 20 11.5Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 8 3 8 3 10H3c0-2 3-2 3-10m4 13h4"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',pin:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',music:'<path d="M9 18V5l11-2v13M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>',close:'<path d="m6 6 12 12M6 18 18 6"/>',check:'<path d="m5 12 4 4L19 6"/>',external:'<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',shield:'<path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6Z"/>',eye:'<path d="M2.5 12s3.2-5 9.5-5 9.5 5 9.5 5-3.2 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.2"/>','eye-off':'<path d="m3 3 18 18M10.7 7.2A10.2 10.2 0 0 1 12 7c6.3 0 9.5 5 9.5 5a16.8 16.8 0 0 1-3.1 3.4M6.1 6.1C3.7 7.6 2.5 10 2.5 12c0 0 3.2 5 9.5 5 1 0 1.9-.1 2.7-.4"/>',x:'<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
-// Each service's official brand mark, simplified to a single small glyph and used only to label a
-// link to that service (its own brand guidelines permit this) - never resized, recolored or
-// implied as an endorsement. Apple Music draws its actual app icon (a red badge with a music
-// note), not Apple Inc.'s own logo.
-youtube:'<rect x="2" y="5" width="20" height="14" rx="5" fill="#FF0000" stroke="none"/><path d="M10 8.6v6.8l6-3.4Z" fill="#ffffff" stroke="none"/>',
-spotify:'<circle cx="12" cy="12" r="10" fill="#1DB954" stroke="none"/><path d="M6.8 9.8c3.6-1 7.7-1 10.3.8M7.1 13c3-.8 6.2-.8 8.6.6M7.6 15.9c2.4-.6 4.8-.6 6.6.4" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>',
-tiktok:'<path fill="#000000" stroke="none" d="M15.5 2.5c.4 2.2 1.9 3.9 4.3 4.2v3a7.6 7.6 0 0 1-4.3-1.4v6.4a5.9 5.9 0 1 1-5.9-5.9c.2 0 .5 0 .7.03v3.07a2.9 2.9 0 1 0 2.2 2.8V2.5Z"/>',
-soundcloud:'<g fill="#FF5500" stroke="none"><rect x="2.5" y="12.5" width="2.1" height="5.5" rx="1"/><rect x="5.8" y="9.5" width="2.1" height="8.5" rx="1"/><rect x="9.1" y="6.5" width="2.1" height="11.5" rx="1"/><rect x="12.4" y="10.3" width="2.1" height="7.7" rx="1"/><rect x="15.7" y="8" width="2.1" height="10" rx="1"/><rect x="19" y="11.2" width="2.1" height="6.8" rx="1"/></g>',
-'apple-music':'<rect x="3" y="3" width="18" height="18" rx="5" fill="#FA233B" stroke="none"/><path fill="#ffffff" stroke="none" d="M15.8 7.3v6.9a2.5 2.5 0 1 1-1.4-2.25V9.75l-3.8.86v5.44a2.5 2.5 0 1 1-1.4-2.25V8.4Z"/>'};
+const paths = {search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>','arrow-left':'<path d="M19 12H5m6-6-6 6 6 6"/>',back:'<path d="M19 12H5m6-6-6 6 6 6"/>',filter:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="16" cy="17" r="2" fill="currentColor"/>',plus:'<path d="M12 5v14M5 12h14"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',message:'<path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 20l1.5-3.7A7.5 7.5 0 1 1 20 11.5Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 8 3 8 3 10H3c0-2 3-2 3-10m4 13h4"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',pin:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',music:'<path d="M9 18V5l11-2v13M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>',close:'<path d="m6 6 12 12M6 18 18 6"/>',check:'<path d="m5 12 4 4L19 6"/>',external:'<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',shield:'<path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6Z"/>',eye:'<path d="M2.5 12s3.2-5 9.5-5 9.5 5 9.5 5-3.2 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.2"/>','eye-off':'<path d="m3 3 18 18M10.7 7.2A10.2 10.2 0 0 1 12 7c6.3 0 9.5 5 9.5 5a16.8 16.8 0 0 1-3.1 3.4M6.1 6.1C3.7 7.6 2.5 10 2.5 12c0 0 3.2 5 9.5 5 1 0 1.9-.1 2.7-.4"/>',x:'<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>'};
+Object.assign(paths, {
+  youtube: '<rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0033" stroke="none"/><path d="m10 8 6 4-6 4Z" fill="#fff" stroke="none"/>',
+  tiktok: '<path d="M14 3v11.1a4.2 4.2 0 1 1-3-4V6.6c1.7 1.2 3.6 1.8 5.5 1.8V5.1c-1.1-.2-2-1-2.5-2.1Z" fill="currentColor" stroke="none"/>',
+  soundcloud: '<path d="M3 17.5a2.5 2.5 0 0 1 1.1-2.1A4.8 4.8 0 0 1 9 9.2a5.3 5.3 0 0 1 5.2 4.1A3.5 3.5 0 1 1 15 20H4a2.5 2.5 0 0 1-1-2.5Z" fill="#ff5500" stroke="none"/>',
+  spotify: '<circle cx="12" cy="12" r="10" fill="#1ed760" stroke="none"/><path d="M6.4 9.2c3.7-1.1 7.8-.8 11.2.8M7.3 12.4c3-.8 6.2-.6 9 .7M8.2 15.3c2.2-.5 4.5-.3 6.5.6" fill="none" stroke="#101510" stroke-width="1.5" stroke-linecap="round"/>',
+  'apple-music': '<rect x="2" y="2" width="20" height="20" rx="5" fill="#fa233b" stroke="none"/><path d="M14.2 5.2 18 4.3v8.2a2.8 2.8 0 1 1-1.3-2.4V6.6l-5.2 1.2v7.3a2.8 2.8 0 1 1-1.3-2.4V6.6c0-.6.4-1.1 1-1.2l3-.7Z" fill="#fff" stroke="none"/>'
+});
 export const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.arrow}</svg>`;
 export const button = (label, href, kind='primary') => `<a class="button ${h(kind)}" href="${h(href)}">${h(label)}</a>`;
 export function safeUrl(value) { try { const u = new URL(value, location.origin); return ['http:','https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } }
@@ -45,7 +43,28 @@ export function loginRelativeTime(value, online = false) {
 }
 export const notice = (message,type='info') => `<div class="notice ${h(type)}"${type==='error'?' role="alert"':''}>${h(message)}</div>`;
 export const empty = (title,body='',actionHtml='') => `<div class="empty-state">${icon('music')}<h2>${h(title)}</h2>${body?`<p>${h(body)}</p>`:''}${actionHtml}</div>`;
-export function showPage(html,title) { main.innerHTML=html; document.title=`${title} — Band Link`; }
+const defaultDescription='バンドメンバー募集・加入希望の掲示板です。2026/09/15にリリースしました！閲覧は登録不要、メッセージのやり取りは登録後に無料で使えます。';
+function meta(name,content,property=false){const selector=property?`meta[property="${name}"]`:`meta[name="${name}"]`;let el=document.head.querySelector(selector);if(!el){el=document.createElement('meta');el.setAttribute(property?'property':'name',name);document.head.append(el);}el.setAttribute('content',content);}
+function updateSeo(title,description=''){
+ const pathname=location.pathname.replace(/\/+$/,'')||'/';
+ const publicPage=pathname==='/'||pathname==='/posts'||/^\/posts\/\d+$/.test(pathname)||/^\/users\/\d+$/.test(pathname);
+ const safeTitle=title?`${title} — Band Link`:'Band Link バンドメンバー募集・加入サイト';
+ const safeDescription=String(description||defaultDescription).replace(/\s+/g,' ').trim().slice(0,160)||defaultDescription;
+ const canonical=`${location.origin}${pathname==='/'?'/posts':pathname}`;
+ document.title=safeTitle;
+ meta('description',safeDescription);
+ meta('robots',publicPage?'index,follow':'noindex,nofollow');
+ const canonicalLink=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(Object.assign(document.createElement('link'),{rel:'canonical'}));
+ canonicalLink.href=canonical;
+ meta('og:type',pathname.match(/^\/posts\/\d+$/)?'article':'website',true);
+ meta('og:site_name','Band Link',true);meta('og:locale','ja_JP',true);meta('og:title',safeTitle,true);meta('og:description',safeDescription,true);meta('og:url',canonical,true);
+ meta('twitter:title',safeTitle);meta('twitter:description',safeDescription);
+ let structured=document.head.querySelector('#band-link-seo-jsonld');
+ if(!structured){structured=document.createElement('script');structured.id='band-link-seo-jsonld';structured.type='application/ld+json';document.head.append(structured);}
+ const postDetail=pathname.match(/^\/posts\/\d+$/),profileDetail=pathname.match(/^\/users\/\d+$/);
+ structured.textContent=JSON.stringify(publicPage?postDetail?{'@context':'https://schema.org','@type':'Article','headline':title||'募集','description':safeDescription,'url':canonical}:profileDetail?{'@context':'https://schema.org','@type':'ProfilePage','name':title||'公開プロフィール','description':safeDescription,'url':canonical}:{'@context':'https://schema.org','@type':'WebSite','name':'Band Link','url':`${location.origin}/posts`}:{});
+}
+export function showPage(html,title,description='') { main.innerHTML=html; updateSeo(title,description); }
 // Search and filter submits go through the router too rather than reloading the shell.
 export const navigate = url => { history.pushState(null, '', url); dispatchEvent(new PopStateEvent('popstate')); scrollTo(0, 0); };
 export function toast(message) { const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,4500); }
