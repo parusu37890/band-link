@@ -14,7 +14,7 @@ const factRows = (p, own) => [
   ['経験年数', p.experienceYears == null ? '' : p.experienceYears + '年'],
   ['年齢', p.ageRange || ''],
   ['性別', p.gender || ''],
-  ['最近の活動', p.online || p.lastLoginAt ? loginRelativeTime(p.lastLoginAt, p.online) : ''],
+  ['最近の活動', p.online || p.lastLoginAt ? loginRelativeTime(p.lastLoginAt, p.online) : '', p.online?'<span class="online-dot" aria-hidden="true"></span>':''],
   // Only the account itself sees this - p (ProfileResponse) never carries email, so this reads
   // state.user, which is only this same person's data when own is true.
   ['メールアドレス', own ? (state.user.email || '') : '']
@@ -22,7 +22,7 @@ const factRows = (p, own) => [
 const facts = (p, own) => {
   const rows = factRows(p, own);
   if (!rows.length) return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><p class="muted">まだ登録されていません。</p></section>`;
-  return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><dl class="facts">${rows.map(([label, value]) => `<dt>${h(label)}</dt><dd>${h(value)}</dd>`).join('')}</dl></section>`;
+  return `<section class="detail-section profile-facts"><h2>音楽と活動</h2><dl class="facts">${rows.map(([label, value, raw = '']) => `<dt>${h(label)}</dt><dd>${h(value)}${raw}</dd>`).join('')}</dl></section>`;
 };
 export async function accountPage(path){
   if(path==='/login'||path==='/register'||path==='/verify-email'||path==='/password-reset'||path==='/password-reset/confirm'){await authPage(path);return true;}

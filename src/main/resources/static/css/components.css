@@ -94,6 +94,8 @@ select[multiple] { min-height: 160px; } select option { padding: 6px; }
 .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 30; max-width: calc(100vw - 32px); background: var(--ink); color: var(--bg); padding: 14px 22px; border-radius: 3px; font-size: 14px; }
 dialog { color: var(--ink); background: var(--surface); border: 1px solid var(--control-line); border-radius: 4px; padding: 32px; width: min(500px, calc(100% - 32px)); max-height: 85dvh; }
 dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; } dialog p { color: var(--muted); font-size: 14px; }
+/* Shared with the listing row's own online marker - same dot wherever "オンライン中" appears. */
+.online-dot { width:9px; height:9px; border-radius:50%; background:var(--online); flex:none; display:inline-block; vertical-align:middle; margin-left:5px; position:relative; top:-1px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
 .crop-viewport { position: relative; width: 280px; height: 280px; max-width: 100%; margin: 0 auto; overflow: hidden; border-radius: 50%; background: var(--raised); touch-action: none; cursor: grab; }
 .crop-viewport:active { cursor: grabbing; }
