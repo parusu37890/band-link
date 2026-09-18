@@ -226,7 +226,7 @@ class DatabaseConstraintDefenseIntegrationTest {
                 {"username":"%s","email":"%s","password":"qa-pass-1234",
                  "age":20,"experienceYears":1,"gender":"男性","partIds":[%d],"genreIds":[%d],
                  "stanceIds":[%d],"prefectureIds":[%d]}
-                """.formatted(username, email, id("parts", "ギター"), id("genres", "ポップス"),
+                """.formatted(username, email, id("parts", "リードギター"), id("genres", "ポップス"),
                 id("stances", "趣味で楽しみたい"), id("prefectures", "東京都"));
     }
 

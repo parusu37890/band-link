@@ -75,6 +75,38 @@ BEGIN
   END LOOP;
 END $$;
 
+-- パートの統合。「ギター」をリードギター／バッキングギターに分けるにあたり、既存の選択は最も
+-- 近いリードギターへ寄せる（バッキングギターは新規の選択肢で、まだ何も参照していないため、
+-- MasterDataInitializer が次回起動時に追加するのに任せればよく、ここでの付け替えは不要）。
+DO $$
+DECLARE m record;
+BEGIN
+  FOR m IN SELECT * FROM (VALUES
+      ('ギター', 'リードギター')
+    ) AS t(old_name, new_name)
+  LOOP
+    CONTINUE WHEN NOT EXISTS (SELECT 1 FROM parts WHERE name = m.old_name);
+
+    IF NOT EXISTS (SELECT 1 FROM parts WHERE name = m.new_name) THEN
+      UPDATE parts SET name = m.new_name WHERE name = m.old_name;   -- 新しい行がまだ無い場合
+    ELSE
+      INSERT INTO post_parts (post_id, part_id)
+        SELECT pp.post_id, (SELECT id FROM parts WHERE name = m.new_name)
+          FROM post_parts pp JOIN parts p ON p.id = pp.part_id
+         WHERE p.name = m.old_name
+        ON CONFLICT DO NOTHING;
+      INSERT INTO user_parts (user_id, part_id)
+        SELECT up.user_id, (SELECT id FROM parts WHERE name = m.new_name)
+          FROM user_parts up JOIN parts p ON p.id = up.part_id
+         WHERE p.name = m.old_name
+        ON CONFLICT DO NOTHING;
+      DELETE FROM post_parts WHERE part_id IN (SELECT id FROM parts WHERE name = m.old_name);
+      DELETE FROM user_parts WHERE part_id IN (SELECT id FROM parts WHERE name = m.old_name);
+      DELETE FROM parts      WHERE name = m.old_name;
+    END IF;
+  END LOOP;
+END $$;
+
 -- 統合先の無い選択肢の削除。こちらは付け替え先が決められないので、参照が残っていれば中止する。
 DO $$
 DECLARE
@@ -130,7 +162,7 @@ END $$;
 -- 並びは MasterDataInitializer の add(...) の文字列と一致させること。
 WITH ordered AS (
   SELECT name, ord - 1 AS ord
-    FROM unnest(ARRAY['ボーカル','ギター','ベース','ドラム','キーボード','作詞作曲']) WITH ORDINALITY AS t(name, ord)
+    FROM unnest(ARRAY['ボーカル','リードギター','バッキングギター','ベース','ドラム','キーボード','作詞作曲']) WITH ORDINALITY AS t(name, ord)
 )
 UPDATE parts p SET display_order = o.ord FROM ordered o WHERE o.name = p.name;
 

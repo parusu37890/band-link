@@ -126,7 +126,7 @@ class PostConcurrencyIntegrationTest {
                 {"type":"%s","title":"QA_RELEASE nft-003","content":"QA_RELEASE concurrent body",
                  "areaSub":"都内","partIds":[%d],"genreIds":[%d],"stanceIds":[%d],
                  "prefectureIds":[%d],"ageRanges":["ANY"],"activityFrequency":"WEEKLY_1"}
-                """.formatted(type, id("parts", "ギター"), id("genres", "ポップス"),
+                """.formatted(type, id("parts", "リードギター"), id("genres", "ポップス"),
                 id("stances", "趣味で楽しみたい"), id("prefectures", "東京都"));
     }
 

@@ -61,7 +61,7 @@ class ReleaseApiIntegrationTest {
 
     @Test
     void it001_registrationPersistsEveryRequiredProfileRelation() throws Exception {
-        long part = id("parts", "ギター");
+        long part = id("parts", "リードギター");
         long genre = id("genres", "ポップス");
         long stance = id("stances", "趣味で楽しみたい");
         long prefecture = id("prefectures", "東京都");
@@ -323,7 +323,7 @@ class ReleaseApiIntegrationTest {
                 {"type":"MEMBER_WANTED","title":"QA_RELEASE second","content":"QA_RELEASE body",
                  "areaSub":"都内","partIds":[%d],"genreIds":[%d],"stanceIds":[%d],
                  "prefectureIds":[%d],"ageRanges":["ANY"],"activityFrequency":"WEEKLY_1"}
-                """.formatted(id("parts", "ギター"), id("genres", "ポップス"),
+                """.formatted(id("parts", "リードギター"), id("genres", "ポップス"),
                 id("stances", "趣味で楽しみたい"), id("prefectures", "東京都"));
     }
 }
