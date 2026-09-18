@@ -121,3 +121,31 @@ export function mediaEmbed(value) {
 }
 
 export const mediaServices = providers.map(p => p.name);
+
+/**
+ * The five profile fields in the fixed order they should always be shown, each with the label and
+ * ui.js icon() key for that service - the single source of truth for any icon row, so a service is
+ * only ever renamed or reordered in one place.
+ */
+export const mediaFields = [
+  ['youtubeUrl', 'YouTube', 'youtube'],
+  ['tiktokUrl', 'TikTok', 'tiktok'],
+  ['soundcloudUrl', 'SoundCloud', 'soundcloud'],
+  ['spotifyUrl', 'Spotify', 'spotify'],
+  ['appleMusicUrl', 'Apple Music', 'apple-music'],
+];
+
+/**
+ * All five service icons, always shown in the same order - bright and linking straight out where
+ * the profile has that URL set, dimmed and inert where it doesn't, so it reads as "here is what
+ * this person has and hasn't linked" rather than a list that only shows what's filled in.
+ * icon/h are passed in from ui.js so this module keeps no UI library dependency of its own.
+ */
+export function mediaIconRow(profile, icon, h) {
+  return `<div class="media-icon-row">${mediaFields.map(([field, label, key]) => {
+    const url = mediaHref(profile[field]);
+    return url
+      ? `<a class="media-icon-link" href="${h(url)}" target="_blank" rel="noopener noreferrer" aria-label="${h(label)}で開く">${icon(key)}<span>${h(label)}</span></a>`
+      : `<span class="media-icon-link is-unset" aria-hidden="true">${icon(key)}<span>${h(label)}</span></span>`;
+  }).join('')}</div>`;
+}

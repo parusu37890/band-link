@@ -107,6 +107,15 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 .password-field .input { padding-right: 52px; }
 .password-toggle { position: absolute; right: 4px; top: 2px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); }
 .password-toggle:hover { color: var(--ink); background: var(--raised); }
+/* All five services always show (account.js's profile page, discovery.js's post-detail author
+   card) - linked ones in their own brand color and clickable, unlinked ones grayscale and inert,
+   so the row reads as what someone has and hasn't shared rather than a list that only shows what
+   happens to be filled in. */
+.media-icon-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.media-icon-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font-size: 13px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.media-icon-link .icon { width: 18px; height: 18px; }
+a.media-icon-link:hover { border-color: var(--control-line); }
+.media-icon-link.is-unset { opacity: .4; filter: grayscale(1); cursor: default; }
 @media (max-width: 900px) { .header-inner { gap: 24px; } .main-nav { gap: 16px; } .header-actions { gap: 8px; } }
 @media (max-width: 640px) {
   .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 6px; padding-top: 10px; }
