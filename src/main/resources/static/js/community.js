@@ -304,10 +304,19 @@ async function messagesPage(path) {
     if (busy || disposed) return;
     busy = true;
     try {
-      conversations = await api('/api/messages/conversations');
+      // conversations and this conversation's messages are independent reads once the id is
+      // already known from the URL, so fetching them together instead of one after another cuts
+      // a full network round trip off every refresh - the recipientId lookup (a fresh DM with no
+      // conversation row yet) is the one case where the id isn't known until the list comes back.
+      const needsLookup = recipientId && !conversationId;
+      const [conversationsResult, itemsResult] = await Promise.all([
+        api('/api/messages/conversations'),
+        !needsLookup && conversationId ? api(`/api/messages/conversation/${conversationId}`) : Promise.resolve(null)
+      ]);
+      conversations = conversationsResult;
       if (disposed) return;
       if (!Array.isArray(conversations)) throw new Error('会話を読み込めませんでした。');
-      if (recipientId && !conversationId) {
+      if (needsLookup) {
         const existing = conversations.find(conversation => String(conversation.otherUser?.id) === recipientId);
         if (existing) {
           conversationId = positiveId(existing.id);
@@ -322,7 +331,7 @@ async function messagesPage(path) {
       }
       renderList();
       if (conversationId) {
-        const items = await api(`/api/messages/conversation/${conversationId}`);
+        const items = itemsResult ?? await api(`/api/messages/conversation/${conversationId}`);
         if (disposed) return;
         if (!Array.isArray(items)) throw new Error('メッセージを読み込めませんでした。');
         renderMessages(items, scrollToLatest);
@@ -362,9 +371,9 @@ async function messagesPage(path) {
       peer = await api(`/api/users/${recipientId}`);
       messages.innerHTML = empty('会話をはじめる', '自己紹介や、募集について聞きたいことを書いてみましょう。');
     }
-    // Do not silently treat a failed block lookup as an unblocked relationship.
-    const blocks = await api('/api/blocks');
-    await refresh();
+    // Do not silently treat a failed block lookup as an unblocked relationship. Independent of
+    // refresh()'s own reads, so run it alongside them instead of after.
+    const [blocks] = await Promise.all([api('/api/blocks'), refresh()]);
     blocked = Array.isArray(blocks) && blocks.some(user => String(user.id) === String(peer?.id));
     renderPeer();
     openStream();
