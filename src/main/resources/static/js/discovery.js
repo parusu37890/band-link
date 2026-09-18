@@ -24,7 +24,11 @@ async function detail(id){
  const [p,images]=await Promise.all([api('/api/posts/'+id),api('/api/posts/'+id+'/images')]);
  const own=String(state.user?.id)===String(p.userId),joining=p.type==='WANTS_TO_JOIN';
  let author={username:p.username};try{author=await api('/api/users/'+p.userId);}catch{/* Public post remains readable if profile lookup fails. */}
- const area=labelNames(p.prefectures),ageText=(p.ageRanges||[]).map(x=>ages.find(a=>a[0]===x)?.[1]||x).join('・');
+ // ageRanges comes back as a java.util.Set, whose JSON order isn't guaranteed - sort it into the
+ // same youngest-to-oldest order ages.js already lists the bands in, rather than showing whatever
+ // order the backend's hash happened to produce.
+ const ageOrder=ages.map(a=>a[0]);
+ const area=labelNames(p.prefectures),ageText=[...(p.ageRanges||[])].sort((a,b)=>ageOrder.indexOf(a)-ageOrder.indexOf(b)).map(x=>ages.find(a=>a[0]===x)?.[1]||x).join('・');
  const gallery=images.length?`<section class="detail-section"><h2>募集の写真</h2><div class="post-image-grid">${images.map((image,index)=>image.imageUrl&&/^\/uploads\/[A-Za-z0-9/_.-]+$/.test(image.imageUrl)?`<button type="button" class="post-image-button" data-expand-image="${h(image.imageUrl)}" aria-label="${index+1}枚目の募集画像を拡大表示"><img src="${h(image.imageUrl)}" alt="募集画像 ${index+1}枚目" loading="lazy"></button>`:'').join('')}</div></section>`:'';
  showPage(`<div class="page post-detail-page"><a class="back-link" href="${h(backUrl)}">${icon('back')}募集一覧へ</a><div class="detail-layout"><article class="detail-article">
   <div class="detail-topline"><span class="post-type ${joining?'join':''}">${joining?'加入希望':'募集'}</span><span>投稿 ${h(relativeTime(p.createdAt))}</span>${p.status==='CLOSED'?'<strong>募集終了</strong>':''}</div>
