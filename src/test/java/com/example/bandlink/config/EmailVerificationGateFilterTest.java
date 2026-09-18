@@ -15,7 +15,16 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.mockito.verification.VerificationMode;
 
+/**
+ * Policy reversal from this filter's original version: an unverified session used to be locked
+ * out of the board entirely, including browsing and search (requirements.md 3 at the time, backed
+ * by docs/test-results/2026-09-15-nft-004-005-006-013.md). That left a freshly registered person
+ * worse off than someone who never signed in at all - an anonymous visitor could already read the
+ * same listings. This now mirrors the anonymous read-only surface (SecurityConfig's own permitAll
+ * GET rules) while keeping every write path and every private screen behind the gate.
+ */
 class EmailVerificationGateFilterTest {
     private final UserRepository users = mock(UserRepository.class);
     private final EmailVerificationGateFilter filter = new EmailVerificationGateFilter(users);
@@ -24,9 +33,24 @@ class EmailVerificationGateFilterTest {
     void clearSecurityContext() { SecurityContextHolder.clearContext(); }
 
     @Test
-    void unverifiedPageIsRedirectedToVerification() throws Exception {
+    void unverifiedCanBrowseTheSameReadOnlyBoardAnAnonymousVisitorSees() throws Exception {
         authenticatedUnverifiedUser();
-        MockHttpServletRequest request = request("/posts");
+        for (String path : List.of("/", "/posts", "/posts/42", "/users/7")) {
+            FilterChain chain = mock(FilterChain.class);
+            filter.doFilter(request(path), new MockHttpServletResponse(), chain);
+            verify(chain, description(path)).doFilter(any(), any());
+        }
+        for (String path : List.of("/api/masters", "/api/posts/page", "/api/posts/42", "/api/posts/42/images", "/api/users/7")) {
+            FilterChain chain = mock(FilterChain.class);
+            filter.doFilter(request(path), new MockHttpServletResponse(), chain);
+            verify(chain, description(path)).doFilter(any(), any());
+        }
+    }
+
+    @Test
+    void unverifiedPrivatePageIsRedirectedToVerification() throws Exception {
+        authenticatedUnverifiedUser();
+        MockHttpServletRequest request = request("/messages");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
 
@@ -37,33 +61,29 @@ class EmailVerificationGateFilterTest {
     }
 
     @Test
-    void unverifiedApiReceivesStructuredForbiddenResponse() throws Exception {
+    void unverifiedPrivateApiReceivesStructuredForbiddenResponse() throws Exception {
         authenticatedUnverifiedUser();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        filter.doFilter(request("/api/posts"), response, mock(FilterChain.class));
+        filter.doFilter(request("/api/messages/conversations"), response, mock(FilterChain.class));
 
         assertEquals(403, response.getStatus());
         assertTrue(response.getContentAsString().contains("EMAIL_NOT_VERIFIED"));
     }
 
-    // Locks in the behavior described by /support's help copy: browsing and search are NOT
-    // reachable before verification (requirements.md 3: an unverified session shows only the
-    // verification screen, nothing else). The /support page used to claim the opposite
-    // ("閲覧と検索は確認前でもできます") until this was found to contradict the filter - see
-    // docs/test-results/2026-09-15-nft-004-005-006-013.md.
+    // Read-only browsing is allowed by method, not by path alone: posting or messaging still needs
+    // a verified email even though GET /api/posts/page is now open to an unverified session.
     @Test
-    void unverifiedBrowsingAndSearchApisAreBlockedTooNotJustPostingAndMessaging() throws Exception {
+    void unverifiedWriteToAnOtherwiseReadableApiIsStillBlocked() throws Exception {
         authenticatedUnverifiedUser();
-        MockHttpServletResponse listResponse = new MockHttpServletResponse();
-        MockHttpServletResponse pageResponse = new MockHttpServletResponse();
+        MockHttpServletRequest request = request("/api/posts/page");
+        request.setMethod("POST");
+        MockHttpServletResponse response = new MockHttpServletResponse();
 
-        filter.doFilter(request("/api/posts/page"), listResponse, mock(FilterChain.class));
-        filter.doFilter(request("/posts"), pageResponse, mock(FilterChain.class));
+        filter.doFilter(request, response, mock(FilterChain.class));
 
-        assertEquals(403, listResponse.getStatus());
-        assertTrue(listResponse.getContentAsString().contains("EMAIL_NOT_VERIFIED"));
-        assertEquals("/verify-email", pageResponse.getRedirectedUrl());
+        assertEquals(403, response.getStatus());
+        assertTrue(response.getContentAsString().contains("EMAIL_NOT_VERIFIED"));
     }
 
     @Test
@@ -87,10 +107,12 @@ class EmailVerificationGateFilterTest {
     }
 
     private MockHttpServletRequest request(String path) {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI(path);
-        return request;
+        // The no-arg constructor leaves getMethod() null, which the filter's own GET check would
+        // then treat as "not GET" - a test-only gap, not something a real servlet container does.
+        return new MockHttpServletRequest("GET", path);
     }
+
+    private VerificationMode description(String path) { return times(1).description("path: " + path); }
 
     private void authenticatedUnverifiedUser() {
         User user = new User("Member", "member@example.com", "hash");

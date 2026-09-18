@@ -108,10 +108,10 @@ public class AuthService {
     }
 
     /**
-     * Same resend, reached by an unverified visitor who can no longer sign in to ask for it from
-     * the account-side button (login now rejects an unverified account outright - see login's
-     * EmailNotVerifiedException). Silently no-ops for an unknown or already-verified address so this
-     * cannot be used to test which emails have an account, matching requestPasswordReset below.
+     * Same resend, reached by an unverified visitor with no session at all (cleared cookies, a
+     * different device, and so on) rather than the account-side button. Silently no-ops for an
+     * unknown or already-verified address so this cannot be used to test which emails have an
+     * account, matching requestPasswordReset below.
      */
     @Transactional
     public void resendVerificationByEmail(String email) {
@@ -170,13 +170,4 @@ public class AuthService {
         public TooManyAttemptsException() { super("試行回数が多すぎます。しばらくしてからもう一度お試しください。"); }
     }
 
-    /**
-     * Raised by AuthController.login() for correct credentials on an unverified account. Previously
-     * a correct password alone was enough to establish a real session (the person just landed on the
-     * verify-email screen once inside) - this stops the session from being created at all, so the
-     * account cannot be considered "logged in" until its address is confirmed.
-     */
-    public static class EmailNotVerifiedException extends RuntimeException {
-        public EmailNotVerifiedException() { super("メールアドレスの確認が完了していません。登録時に届いたメールのリンクを開いて確認を完了してから、もう一度ログインしてください。"); }
-    }
 }

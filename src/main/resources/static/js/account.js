@@ -80,18 +80,7 @@ async function authPage(path){
   if(authForm) bindForm(authForm,async fd=>{
     let response;
     if(path==='/login'){
-      const email=fd.get('email');
-      try { response=await api('/api/auth/login',{method:'POST',body:{email,password:fd.get('password')}}); }
-      catch(e){
-        if(e.code!=='EMAIL_NOT_VERIFIED') throw e;
-        main.querySelector('#auth-message').innerHTML=notice(e.message,'error')+`<button type="button" class="button secondary full" id="resend-verification-anon">確認メールを再送する</button>`;
-        main.querySelector('#resend-verification-anon').addEventListener('click',async event=>{
-          event.currentTarget.disabled=true;
-          try { await api('/api/auth/verify-email/resend-request',{method:'POST',body:{email}}); toast('確認メールを再送しました。メールをご確認ください。'); }
-          catch { toast('再送に失敗しました。時間をおいてもう一度お試しください。'); event.currentTarget.disabled=false; }
-        });
-        return;
-      }
+      response=await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
     }
     else if(register){
       const body={username:fd.get('username'),email:fd.get('email'),password:fd.get('password'),age:Number(fd.get('age')),experienceYears:Number(fd.get('experienceYears')),gender:fd.get('gender'),partIds:fd.getAll('partIds').map(Number),genreIds:fd.getAll('genreIds').map(Number),stanceIds:fd.getAll('stanceIds').map(Number),prefectureIds:fd.getAll('prefectureIds').map(Number)};
@@ -102,7 +91,7 @@ async function authPage(path){
     }
     else if(reset){await api('/api/auth/password-reset/request',{method:'POST',body:{email:fd.get('email')}});main.querySelector('#auth-message').innerHTML=notice('再設定の案内を送信しました。メールをご確認ください。','success');return;}
     else {await api('/api/auth/password-reset/confirm',{method:'POST',body:{token:fd.get('token'),newPassword:fd.get('newPassword')}});main.querySelector('#auth-message').innerHTML=notice('パスワードを更新しました。ログインしてください。','success');return;}
-    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register?'/verify-email':next);}
+    if(response) {state.user=response;toast(register?'アカウントを作成しました。':'ログインしました。');location.assign(register||!response.emailVerified?'/verify-email':next);}
   });
   main.querySelectorAll('[data-password-toggle]').forEach(toggle=>toggle.addEventListener('click',()=>{
     const input=main.querySelector('#'+toggle.dataset.passwordToggle); if(!input)return;

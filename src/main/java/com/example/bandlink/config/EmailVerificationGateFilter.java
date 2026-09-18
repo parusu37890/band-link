@@ -12,7 +12,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** Keeps an authenticated account on the email verification screen until its link is used. */
+/**
+ * Keeps an authenticated-but-unverified account off everything except the verification screen and
+ * the same read-only board an anonymous visitor can already see - being signed in while unverified
+ * must not leave someone worse off than signing out. Posting, messaging, notifications, settings
+ * and every other write path still requires a verified email.
+ */
 public class EmailVerificationGateFilter extends OncePerRequestFilter {
     private static final Set<String> PAGE_ALLOWLIST = Set.of("/verify-email");
     private final UserRepository users;
@@ -51,9 +56,15 @@ public class EmailVerificationGateFilter extends OncePerRequestFilter {
         if (PAGE_ALLOWLIST.contains(path)) return true;
         if (path.equals("/api/auth/verify-email") || path.equals("/api/auth/verify-email/resend") || path.equals("/api/auth/logout")
                 || path.equals("/api/auth/me") || path.equals("/api/csrf")) return true;
-        return path.startsWith("/css/") || path.startsWith("/js/")
+        if (path.startsWith("/css/") || path.startsWith("/js/")
                 || path.startsWith("/assets/") || path.startsWith("/uploads/")
-                || path.equals("/error");
+                || path.equals("/error")) return true;
+        if (!"GET".equals(request.getMethod())) return false;
+        // Mirrors SecurityConfig's own permitAll GET surface for the board itself.
+        if (path.equals("/") || path.equals("/posts") || path.matches("/posts/[0-9]+") || path.matches("/users/[0-9]+")) return true;
+        return path.equals("/api/masters") || path.equals("/api/posts/page")
+                || path.matches("/api/posts/[0-9]+") || path.matches("/api/posts/[0-9]+/images")
+                || path.matches("/api/users/[0-9]+");
     }
 
     private boolean isAuthenticated(Authentication authentication) {

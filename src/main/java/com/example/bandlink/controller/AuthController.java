@@ -87,12 +87,9 @@ public class AuthController {
             throw e;
         }
         loginAttempts.recordSuccess(request.email());
-        // Correct credentials used to be enough to establish a real session on their own - the
-        // account just landed on the verify-email screen once "inside". Checked here, before the
-        // session is created, so an unverified account is never actually signed in at all.
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalStateException("認証ユーザーが見つかりません"));
-        if (!user.isEmailVerified()) throw new AuthService.EmailNotVerifiedException();
+        // An unverified account signs in the same as any other - EmailVerificationGateFilter is
+        // what keeps it off everything but the verify-email screen and read-only browsing, and the
+        // client sends it straight to /verify-email on seeing emailVerified:false in the response.
         establishSession(authentication, httpRequest, httpResponse);
         touchLogin(request.email());
         return currentUser(authentication);
