@@ -94,6 +94,10 @@ async function messagesPage(path) {
     stream = new EventSource(`/api/messages/conversation/${conversationId}/stream`);
     stream.addEventListener('message', () => refresh());
     stream.addEventListener('read', () => refresh());
+    // The stream now times out server-side every few minutes to free its DB connection (see
+    // MessageEventHub) and reconnects on its own - onopen clears the "retrying" status as soon as
+    // that reconnect lands, instead of leaving it up until the next actual chat message arrives.
+    stream.onopen = () => { status.textContent = ''; status.classList.remove('error'); };
     stream.onerror = () => { status.textContent = 'リアルタイム接続を再試行しています…'; status.classList.add('error'); };
   }
 

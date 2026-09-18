@@ -14,8 +14,21 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class MessageEventHub {
     private final Map<Long, CopyOnWriteArrayList<SseEmitter>> subscribers = new ConcurrentHashMap<>();
 
+    /**
+     * spring.jpa.open-in-view is on (the Spring Boot default, and this app relies on it - lazy
+     * associations are read straight off the entity in controllers, e.g. MessageResponse.from()),
+     * which binds a Hikari connection to a request until it fully completes. An SseEmitter with no
+     * timeout never completes on its own; every browser tab left on the messages page pinned one
+     * connection for as long as it stayed open, and with a 10-connection pool, ten people idling on
+     * the page at once was enough to starve every other request in the app (HikariPool-1: Connection
+     * is not available). A bounded timeout forces the request to complete periodically, releasing
+     * the connection - the browser's EventSource reconnects on its own, so the stream itself still
+     * reads as unbroken to anyone actively watching it.
+     */
+    private static final long STREAM_TIMEOUT_MS = 10 * 60 * 1000;
+
     public SseEmitter subscribe(Long conversationId) {
-        SseEmitter emitter = new SseEmitter(0L);
+        SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
         CopyOnWriteArrayList<SseEmitter> room = subscribers.computeIfAbsent(conversationId,
                 ignored -> new CopyOnWriteArrayList<>());
         room.add(emitter);
