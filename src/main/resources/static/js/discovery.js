@@ -1,6 +1,6 @@
 import {postEditor} from './post-editor.js?v=20260916-1';
 import {mediaIconRow} from './media-embed.js?v=20260919-1';
-import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,report,confirmAction,time,relativeTime,loginRelativeTime,ages,frequencyLabel,chips,requireUser,verificationNotice,openImageViewer} from './ui.js?v=20260918-2';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,report,confirmAction,time,relativeTime,loginRelativeTime,ages,frequencyLabel,chips,requireUser,verificationNotice,openImageViewer} from './ui.js?v=20260919-2';
 import {listing,readListing,writeListing} from './recruitment-search.js?v=20260916-1';
 const labelNames = values => (values||[]).map(x=>x.name).join('・');
 export function postCard(post) {

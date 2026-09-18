@@ -1,4 +1,4 @@
-import {api,h,state,main,showPage,icon,button,empty,navigate,ages,frequencies} from './ui.js?v=20260918-2';
+import {api,h,state,main,showPage,icon,button,empty,navigate,ages,frequencies} from './ui.js?v=20260919-2';
 export const readListing=()=>{try{return JSON.parse(sessionStorage.getItem('band-link:list-return')||'null');}catch{return null;}};
 export const writeListing=value=>{try{sessionStorage.setItem('band-link:list-return',JSON.stringify(value));}catch{}};
 const keys=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances'],['ageRanges','希望年齢層',null],['activityFrequency','活動頻度',null]];
