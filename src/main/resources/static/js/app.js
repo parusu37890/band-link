@@ -1,6 +1,6 @@
 import {api,state,h,icon,showPage,notice} from './ui.js?v=20260918-2';
-import {discoveryPage} from './discovery.js?v=20260918-1';
-import {accountPage} from './account.js?v=20260918-1';
+import {discoveryPage} from './discovery.js?v=20260919-1';
+import {accountPage} from './account.js?v=20260919-1';
 import {communityPage} from './community.js?v=20260916-6';
 
 const path=()=>location.pathname.replace(/\/+$/,'')||'/';
