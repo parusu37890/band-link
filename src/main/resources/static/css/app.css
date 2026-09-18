@@ -37,7 +37,7 @@
 .media-icon-row-compact .media-icon-link .icon { width: 16px; height: 16px; }
 .post-media-icons { display: inline-flex; align-items: center; flex: none; }
 @media (max-width: 640px) {
-  .post-card .post-person { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; row-gap: 3px; }
+  .post-card .post-person { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; row-gap: 3px; }
   .post-card .post-person .person { grid-column: 1; grid-row: 1; }
   .post-card .post-media-icons { grid-column: 2; grid-row: 1; margin-left: auto; }
   .post-card .post-times { grid-column: 1 / -1; grid-row: 2; }
