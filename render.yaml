@@ -8,6 +8,7 @@ services:
   - type: web
     name: band-link
     runtime: docker
+    autoDeployTrigger: commit
     dockerfilePath: ./Dockerfile
     plan: 0.5c-512mb
     healthCheckPath: /robots.txt
