@@ -10,7 +10,11 @@ function header(){
  const brand=(tag,attrs='')=>`<${tag} class="wordmark" ${attrs}><img class="brand-mark" src="/assets/mark.svg?v=20260913-1" alt=""><span>Band Link</span></${tag}>`;
  if(state.user?.status==='SUSPENDED'){el.innerHTML=`<div class="header-inner">${brand('a','href="/support" aria-label="Band Link"')}</div>`;return;}
  if(state.user && !state.user.emailVerified){
-  el.innerHTML=`<div class="header-inner">${brand('span','aria-label="Band Link"')}<button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>`;
+  // Unverified is no longer confined to /verify-email alone (route() below now permits the same
+  // read-only board an anonymous visitor can see), so this keeps a working way back to /posts
+  // instead of the plain unclickable wordmark it used to be - everything else (messages, my
+  // posts, profile) still isn't reachable, so those links stay off this header.
+  el.innerHTML=`<div class="header-inner">${brand('a','href="/posts" aria-label="Band Link ホーム"')}<nav class="main-nav" aria-label="メインナビゲーション"><a href="/posts" class="${here==='/'||here==='/posts'?'active':''}">仲間を探す</a></nav><button type="button" class="button quiet" id="verification-logout">ログアウト</button></div>`;
   el.querySelector('#verification-logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.assign('/login');}};
   return;
  }
@@ -65,7 +69,10 @@ async function route(){
  await loadUser();header();footer();
  const current=path();
  if(state.user?.status==='SUSPENDED'&&!['/support','/contact','/feature-request'].includes(current)){suspendedScreen();return;}
- if(state.user && !state.user.emailVerified && current!=='/verify-email'){
+ // Mirrors EmailVerificationGateFilter's own allowlist: the same read-only board an anonymous
+ // visitor can already see, everything else still bounces to /verify-email.
+ const boardBrowsingAllowed=p=>p==='/'||p==='/posts'||/^\/posts\/\d+$/.test(p)||/^\/users\/\d+$/.test(p);
+ if(state.user && !state.user.emailVerified && current!=='/verify-email' && !boardBrowsingAllowed(current)){
   history.replaceState(null,'','/verify-email');
   await accountPage('/verify-email');
   return;
