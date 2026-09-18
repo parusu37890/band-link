@@ -116,6 +116,10 @@ dialog::backdrop { background: var(--scrim); } dialog h2 { margin-bottom: 16px; 
 .media-icon-link .icon { width: 18px; height: 18px; }
 a.media-icon-link:hover { border-color: var(--control-line); }
 .media-icon-link.is-unset { opacity: .4; filter: grayscale(1); cursor: default; }
+/* Icon-only variant for a listing row: no room there for five text chips, so just the mark. */
+.media-icon-row-compact { gap: 6px; margin: 0; }
+.media-icon-row-compact .media-icon-link { padding: 0; border: 0; background: none; }
+.media-icon-row-compact .media-icon-link .icon { width: 15px; height: 15px; }
 @media (max-width: 900px) { .header-inner { gap: 24px; } .main-nav { gap: 16px; } .header-actions { gap: 8px; } }
 @media (max-width: 640px) {
   .header-inner { min-height: 60px; flex-wrap: wrap; gap: 0 6px; padding-top: 10px; }

@@ -140,12 +140,15 @@ export const mediaFields = [
  * the profile has that URL set, dimmed and inert where it doesn't, so it reads as "here is what
  * this person has and hasn't linked" rather than a list that only shows what's filled in.
  * icon/h are passed in from ui.js so this module keeps no UI library dependency of its own.
+ * compact drops the text label (a listing row has no room for five "YouTube"-sized chips) and
+ * relies on the aria-label alone for the accessible name.
  */
-export function mediaIconRow(profile, icon, h) {
-  return `<div class="media-icon-row">${mediaFields.map(([field, label, key]) => {
+export function mediaIconRow(profile, icon, h, compact = false) {
+  return `<div class="media-icon-row${compact ? ' media-icon-row-compact' : ''}">${mediaFields.map(([field, label, key]) => {
     const url = mediaHref(profile[field]);
+    const inner = compact ? icon(key) : `${icon(key)}<span>${h(label)}</span>`;
     return url
-      ? `<a class="media-icon-link" href="${h(url)}" target="_blank" rel="noopener noreferrer" aria-label="${h(label)}で開く">${icon(key)}<span>${h(label)}</span></a>`
-      : `<span class="media-icon-link is-unset" aria-hidden="true">${icon(key)}<span>${h(label)}</span></span>`;
+      ? `<a class="media-icon-link" href="${h(url)}" target="_blank" rel="noopener noreferrer" aria-label="${h(label)}で開く">${inner}</a>`
+      : `<span class="media-icon-link is-unset" aria-hidden="true">${inner}</span>`;
   }).join('')}</div>`;
 }
