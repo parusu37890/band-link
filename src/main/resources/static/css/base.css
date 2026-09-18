@@ -8,7 +8,13 @@ button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 a:hover { color: var(--accent); }
 button:disabled { opacity: .5; cursor: not-allowed; }
-:is(button,a,input,select,textarea,summary):focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+/* Text-entry controls (typed input, select, textarea) are excluded here: browsers treat a mouse
+   click into one of those as focus-visible too, not just Tab, so this outline was appearing on
+   every click, not only keyboard navigation. Their border already turns --focus on any focus
+   (components.css), which is enough without adding an offset ring on top. Checkboxes/radios keep
+   the ring - browsers only match :focus-visible there for keyboard, and clicking one leaves no
+   border of its own to show the change instead. */
+:is(button,a,summary):focus-visible, input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 h1, h2, h3, h4, p { margin: 0; }
 h1 { font-size: clamp(28px, 3.3vw, 44px); font-weight: 500; line-height: 1.45; letter-spacing: -.04em; }
 h2 { font-size: 23px; font-weight: 500; line-height: 1.6; letter-spacing: -.025em; }
