@@ -28,18 +28,3 @@
 .post-card .post-content > .post-person { order: 4; margin: 0; }
 .post-card .post-person { min-height: 0; }
 .post-card .post-person .person { min-height: 44px; display: inline-flex; align-items: center; }
-.media-icon-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 16px; }
-.media-icon-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 32px; min-height: 32px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); text-decoration: none; }
-.media-icon-link .icon { width: 18px; height: 18px; }
-.media-icon-link.is-unset { opacity: .38; filter: grayscale(1); }
-.media-icon-row-compact { display: inline-flex; flex-wrap: nowrap; gap: 3px; margin: 0; vertical-align: middle; }
-.media-icon-row-compact .media-icon-link { min-width: 18px; width: 18px; min-height: 18px; height: 18px; padding: 0; border: 0; border-radius: 3px; background: transparent; }
-.media-icon-row-compact .media-icon-link .icon { width: 16px; height: 16px; }
-.post-media-icons { display: inline-flex; align-items: center; flex: none; }
-@media (max-width: 640px) {
-  .post-card .post-content { gap: 3px; }
-  .post-card .post-person { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; row-gap: 3px; }
-  .post-card .post-person .person { grid-column: 1; grid-row: 1; }
-  .post-card .post-media-icons { grid-column: 2; grid-row: 1; margin-left: auto; }
-  .post-card .post-times { grid-column: 1 / -1; grid-row: 2; }
-}
