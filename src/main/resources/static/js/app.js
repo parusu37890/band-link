@@ -1,4 +1,4 @@
-import {api,state,h,icon,showPage,notice} from './ui.js?v=20260916-1';
+import {api,state,h,icon,showPage,notice} from './ui.js?v=20260918-2';
 import {discoveryPage} from './discovery.js?v=20260916-14';
 import {accountPage} from './account.js?v=20260916-7';
 import {communityPage} from './community.js?v=20260916-6';

@@ -1,4 +1,4 @@
-import {api,h,icon,state,main,showPage,notice,button,toast,confirmAction,navigate,frequencies,ages,frequencyLabel,counter,verificationNotice} from './ui.js?v=20260916-1';
+import {api,h,icon,state,main,showPage,notice,button,toast,confirmAction,navigate,frequencies,ages,frequencyLabel,counter,verificationNotice} from './ui.js?v=20260918-2';
 
 const groups = [
   ['prefectureIds','活動エリア','prefectures',3],

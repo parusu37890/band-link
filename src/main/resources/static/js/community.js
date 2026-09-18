@@ -1,5 +1,5 @@
 import { api, h, icon, avatar, state, main, showPage, notice, empty, button, toast,
-  bindForm, confirmAction, time, poll } from './ui.js?v=20260916-1';
+  bindForm, confirmAction, time, poll } from './ui.js?v=20260918-2';
 
 const positiveId = value => /^[1-9]\d*$/.test(String(value ?? '')) ? String(value) : null;
 const personName = user => user?.status === 'WITHDRAWN' ? '退会済みユーザー' : user?.status === 'SUSPENDED' ? '利用停止中ユーザー' : (user?.username || 'ユーザー');
