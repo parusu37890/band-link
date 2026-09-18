@@ -180,7 +180,17 @@ async function messagesPage(path) {
     input.addEventListener('keydown', event => {
       if (event.key !== 'Enter' || event.isComposing) return;
       if (!matchMedia('(min-width: 641px)').matches) return;
-      if (event.ctrlKey || event.metaKey) return;
+      if (event.ctrlKey || event.metaKey) {
+        // A textarea's native Enter handling inserts a newline, but that is not guaranteed to
+        // still happen once a modifier is held - Ctrl/Cmd+Enter is not a combination browsers
+        // promise to pass through as plain text input, so insert it ourselves instead of hoping.
+        event.preventDefault();
+        const { selectionStart, selectionEnd, value } = input;
+        input.value = `${value.slice(0, selectionStart)}\n${value.slice(selectionEnd)}`;
+        input.selectionStart = input.selectionEnd = selectionStart + 1;
+        draftContent = input.value;
+        return;
+      }
       event.preventDefault();
       form.requestSubmit();
     });
