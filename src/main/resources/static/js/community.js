@@ -174,6 +174,16 @@ async function messagesPage(path) {
     const attachment = form.querySelector('[data-attachment]');
     input.value = draftContent;
     input.addEventListener('input', () => { draftContent = input.value; });
+    // Desktop only (a touch keyboard's Enter is its own thing, and this would fight it): plain
+    // Enter sends, Ctrl/Cmd+Enter inserts a line break. isComposing guards the IME confirm
+    // keystroke while converting kana to kanji, which also fires as a plain Enter keydown.
+    input.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' || event.isComposing) return;
+      if (!matchMedia('(min-width: 641px)').matches) return;
+      if (event.ctrlKey || event.metaKey) return;
+      event.preventDefault();
+      form.requestSubmit();
+    });
     function renderAttachment() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = draftImage ? URL.createObjectURL(draftImage) : null;
