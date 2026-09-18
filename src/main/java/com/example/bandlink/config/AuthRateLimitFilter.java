@@ -31,9 +31,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final Set<String> PROTECTED_PATHS = Set.of(
             "/login",
+            "/api/auth/register",
             "/api/auth/login",
             "/api/auth/verify-email",
             "/api/auth/verify-email/resend",
+            "/api/auth/verify-email/resend-request",
             "/api/auth/password-reset/request",
             "/api/auth/password-reset/confirm");
     private static final int MAX_TRACKED_KEYS = 10_000;
