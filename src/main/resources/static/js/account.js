@@ -48,7 +48,9 @@ async function authPage(path){
   const register=path==='/register', verify=path==='/verify-email', reset=path==='/password-reset', confirm=path==='/password-reset/confirm';
   const verificationToken=verify?new URLSearchParams(location.search).get('token'):'';
   const lineError=new URLSearchParams(location.search).get('lineError');
+  const xError=new URLSearchParams(location.search).get('xError');
   const lineEnabled=path==='/login'||register ? await api('/api/auth/line/enabled').then(value=>Boolean(value?.enabled)).catch(()=>false) : false;
+  const xEnabled=path==='/login'||register ? await api('/api/auth/x/enabled').then(value=>Boolean(value?.enabled)).catch(()=>false) : false;
   const registrationMasters=register ? await api('/api/masters').catch(()=>null) : null;
   const registrationField=(key,label,source)=>{
     if(!registrationMasters)return '';
@@ -60,8 +62,13 @@ async function authPage(path){
   const registrationFields=registrationMasters?fields.map(([key,label,source])=>registrationField(key,label,source)).join(''):'';
   let form='';
   const passwordField=(id,autocomplete)=>`<div class="password-field"><input class="input" id="${id}" name="${id==='newPassword'?'newPassword':'password'}" type="password" autocomplete="${autocomplete}" minlength="8" maxlength="128" required><button type="button" class="password-toggle" data-password-toggle="${id}" aria-label="パスワードを表示">${icon('eye')}</button></div>`;
-  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','current-password')}</div><button class="button primary full" type="submit">ログイン</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでログイン</a>`:''}`;
-  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><fieldset class="form-section"><legend>基本情報</legend><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男性" required><span>男性</span></label><label class="chip-select"><input type="radio" name="gender" value="女性"><span>女性</span></label></div></div></fieldset>${registrationFields}<button class="button primary full" type="submit">アカウントを作成</button></form>${lineEnabled?`<div class="auth-divider"><span>または</span></div><a class="button line-login full" href="/api/auth/line/start">LINEでアカウントを作成</a>`:''}`;
+  const externalAuth=(lineLabel,xLabel)=>{
+    const buttons=[lineEnabled?`<a class="button line-login full" href="/api/auth/line/start">${lineLabel}</a>`:'',
+                   xEnabled?`<a class="button x-login full" href="/api/auth/x/start">${xLabel}</a>`:''].filter(Boolean);
+    return buttons.length?`<div class="auth-divider"><span>または</span></div><div class="auth-external">${buttons.join('')}</div>`:'';
+  };
+  if(path==='/login') form=`<form id="auth-form"><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','current-password')}</div><button class="button primary full" type="submit">ログイン</button></form>${externalAuth('LINEでログイン','Xでログイン')}`;
+  if(register) form=`<form id="auth-form"><div class="form-field"><label for="username">表示名</label><input class="input" id="username" name="username" maxlength="80" autocomplete="nickname" required placeholder="活動名やニックネーム"></div><div class="form-field"><label for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" maxlength="320" autocomplete="email" required></div><div class="form-field"><label for="password">パスワード</label>${passwordField('password','new-password')}<span class="hint">8文字以上で設定してください。</span></div><fieldset class="form-section"><legend>基本情報</legend><div class="form-grid"><div class="form-field"><label for="age">年齢 <span class="required">必須</span></label><input class="input" id="age" name="age" type="number" min="0" max="120" required></div><div class="form-field"><label for="experienceYears">経験年数 <span class="required">必須</span></label><input class="input" id="experienceYears" name="experienceYears" type="number" min="0" max="100" required></div></div><div class="form-field"><span class="form-label">性別 <span class="required">必須</span></span><div class="chips gender-choices"><label class="chip-select"><input type="radio" name="gender" value="男性" required><span>男性</span></label><label class="chip-select"><input type="radio" name="gender" value="女性"><span>女性</span></label></div></div></fieldset>${registrationFields}<button class="button primary full" type="submit">アカウントを作成</button></form>${externalAuth('LINEでアカウントを作成','Xでアカウントを作成')}`;
   if(verify) form=verificationToken
     ? `<div class="verify-link-state"><p class="muted">メール内のリンクを確認しています…</p></div>`
     : `<div class="verify-waiting"><p>登録時に送信した確認メールを開き、本文のリンクをタップしてください。</p><p class="hint">メールが見つからない場合は、迷惑メールフォルダも確認してください。</p>${state.user&&!state.user.emailVerified?'<button type="button" class="button secondary full" id="resend-verification">確認メールを再送する</button>':''}</div>`;
@@ -72,7 +79,8 @@ async function authPage(path){
     : register ? `すでに登録済みの方は <a href="/login">ログイン</a>`
     : verify ? ''
     : `<a href="/login">ログインへ戻る</a>`;
-  const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。':'';
+  const initialMessage=lineError==='cancelled'?'LINEログインをキャンセルしました。':lineError==='failed'?'LINEログインに失敗しました。もう一度お試しください。':lineError==='unavailable'?'LINEログインは現在利用できません。'
+    :xError==='cancelled'?'Xログインをキャンセルしました。':xError==='failed'?'Xログインに失敗しました。もう一度お試しください。':xError==='unavailable'?'Xログインは現在利用できません。':'';
   const login=path==='/login';
   const authMark=(login||register)?'':`<a class="auth-mark" href="/" aria-label="Band Link ホーム"><span>Band Link</span></a>`;
   showPage(`<div class="page auth-page${register?' register-page':''}${login?' login-page':''}"><section class="auth-panel">${authMark}<h1>${h(config[0])}</h1><div id="auth-message" aria-live="polite">${initialMessage?notice(initialMessage,'error'):''}</div>${form}${footer?`<div class="auth-footer">${footer}</div>`:''}</section></div>`,config[0]);
@@ -333,7 +341,7 @@ function supportPage(){
 
 // Written from what the code actually stores and does, not a generic template - see each
 // item's counterpart in RegisterRequest/ProfileUpdateRequest, PostService/MessageService,
-// docs/logging.md, application.yaml (auth-rate-limit / google-analytics-id / line.*), and
+// docs/logging.md, application.yaml (auth-rate-limit / google-analytics-id / line.* / x.*), and
 // docs/decisions/0006・0007. Update this alongside any change to what those collect or keep.
 function privacyPage(){
   showPage(`<div class="page help-page">
@@ -354,9 +362,10 @@ function privacyPage(){
     ${helpSection('privacy-thirdparty', '外部サービスの利用', [
       ['Googleアナリティクス', '設定により、アクセス状況の把握を目的としたGoogleアナリティクス（GA4）を利用する場合があります。有効な場合、Googleがcookieを設置し、訪問状況を収集することがあります。', ['Googleのプライバシーポリシー', 'https://policies.google.com/privacy']],
       ['LINEログイン', 'LINEアカウントでログインした場合、LINEのユーザーIDと表示名を保存し、以後のログインに利用します。LINEのアクセストークンは保存しません。', null],
+      ['Xログイン', 'X（旧Twitter）アカウントでログインした場合、Xのユーザーidと表示名を保存し、以後のログインに利用します。Xのアクセストークンは保存しません。', null],
     ])}
     ${helpSection('privacy-retention', 'データの保存期間と削除', [
-      ['退会したとき', '退会すると、プロフィール、募集とその画像、会話とメッセージ、通知、ブロックの記録、検索履歴、ログイン情報、LINEアカウントとの連携を削除します。削除後は、同じメールアドレスやLINEアカウントで新しく登録し直せます。この操作は取り消せません。', ['アカウントの設定を見る', '/settings']],
+      ['退会したとき', '退会すると、プロフィール、募集とその画像、会話とメッセージ、通知、ブロックの記録、検索履歴、ログイン情報、LINE・Xアカウントとの連携を削除します。削除後は、同じメールアドレスやLINE・Xアカウントで新しく登録し直せます。この操作は取り消せません。', ['アカウントの設定を見る', '/settings']],
       ['利用停止になったとき', '運営による利用停止は退会とは異なり、アカウントと既存の会話はそのまま残ります。停止中は募集の掲載とメッセージの送信ができず、プロフィールと募集は非公開になります。解除は運営が行います。', null],
     ])}
     <section class="help-contact" aria-labelledby="privacy-contact-title">

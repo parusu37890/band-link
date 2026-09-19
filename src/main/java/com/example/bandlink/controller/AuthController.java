@@ -8,6 +8,7 @@ import com.example.bandlink.repository.UserRepository;
 import com.example.bandlink.service.AuthService;
 import com.example.bandlink.service.LineLoginService;
 import com.example.bandlink.service.LoginAttemptService;
+import com.example.bandlink.service.XLoginService;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,15 +35,17 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final LineLoginService lineLogin;
+    private final XLoginService xLogin;
     private final LoginAttemptService loginAttempts;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public AuthController(AuthService authService, AuthenticationManager authenticationManager, UserRepository userRepository,
-                          LineLoginService lineLogin, LoginAttemptService loginAttempts) {
+                          LineLoginService lineLogin, XLoginService xLogin, LoginAttemptService loginAttempts) {
         this.authService = authService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.lineLogin = lineLogin;
+        this.xLogin = xLogin;
         this.loginAttempts = loginAttempts;
     }
 
@@ -112,7 +115,8 @@ public class AuthController {
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
     }
 
-    private void startLineSession(User user, HttpServletRequest request, HttpServletResponse response) {
+    /** Shared by both LINE and X callbacks - either one hands off an already-authenticated user. */
+    private void startExternalSession(User user, HttpServletRequest request, HttpServletResponse response) {
         if (request.getSession(false) != null) request.changeSessionId();
         Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
                 user.getEmail(), null,
@@ -173,11 +177,56 @@ public class AuthController {
         }
         try {
             User user = lineLogin.login(code);
-            startLineSession(user, request, response);
+            startExternalSession(user, request, response);
             response.sendRedirect(user.getStatus() == com.example.bandlink.entity.UserStatus.SUSPENDED
                     ? "/support" : user.isEmailVerified() ? (profileComplete(user) ? "/posts" : "/settings/profile") : "/verify-email");
         } catch (LineLoginService.LineLoginException e) {
             response.sendRedirect("/login?lineError=failed");
+        }
+    }
+
+    @GetMapping("/x/enabled")
+    public Map<String, Boolean> xEnabled() { return Map.of("enabled", xLogin.enabled()); }
+
+    @GetMapping("/x/start")
+    public void startXLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (!xLogin.enabled()) {
+            response.sendRedirect("/login?xError=unavailable");
+            return;
+        }
+        String state = UUID.randomUUID().toString();
+        String codeVerifier = xLogin.newCodeVerifier();
+        var session = request.getSession(true);
+        session.setAttribute("BANDLINK_X_STATE", state);
+        session.setAttribute("BANDLINK_X_VERIFIER", codeVerifier);
+        response.sendRedirect(xLogin.authorizationUrl(state, codeVerifier));
+    }
+
+    @GetMapping("/x/callback")
+    public void xCallback(@RequestParam(required = false) String code,
+                          @RequestParam(required = false) String state,
+                          @RequestParam(required = false) String error,
+                          HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var session = request.getSession(false);
+        Object expectedState = session == null ? null : session.getAttribute("BANDLINK_X_STATE");
+        Object codeVerifier = session == null ? null : session.getAttribute("BANDLINK_X_VERIFIER");
+        if (session != null) {
+            session.removeAttribute("BANDLINK_X_STATE");
+            session.removeAttribute("BANDLINK_X_VERIFIER");
+        }
+        if (error != null || code == null || expectedState == null || codeVerifier == null || state == null
+                || !MessageDigest.isEqual(String.valueOf(expectedState).getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                                           state.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+            response.sendRedirect("/login?xError=cancelled");
+            return;
+        }
+        try {
+            User user = xLogin.login(code, String.valueOf(codeVerifier));
+            startExternalSession(user, request, response);
+            response.sendRedirect(user.getStatus() == com.example.bandlink.entity.UserStatus.SUSPENDED
+                    ? "/support" : user.isEmailVerified() ? (profileComplete(user) ? "/posts" : "/settings/profile") : "/verify-email");
+        } catch (XLoginService.XLoginException e) {
+            response.sendRedirect("/login?xError=failed");
         }
     }
 
