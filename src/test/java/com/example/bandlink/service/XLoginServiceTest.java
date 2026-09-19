@@ -50,7 +50,8 @@ class XLoginServiceTest {
         assertTrue(url.contains("client_id=client+id"));
         assertTrue(url.contains("redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fapi%2Fauth%2Fx%2Fcallback"));
         assertTrue(url.contains("state=csrf-state"));
-        assertTrue(url.contains("scope=users.read+tweet.read"));
+        assertTrue(url.contains("scope=users.read"));
+        assertFalse(url.contains("tweet.read"));
         assertTrue(url.contains("code_challenge="));
         assertTrue(url.contains("code_challenge_method=S256"));
     }
