@@ -56,9 +56,6 @@
 .auth-divider::before, .auth-divider::after { content:""; height:1px; flex:1; background:var(--line); }
 .line-login { background:#06c755; border-color:#06c755; color:#fff; }
 .line-login:hover { background:#05b34c; border-color:#05b34c; color:#fff; }
-.auth-external { display:grid; gap:12px; }
-.x-login { background:#000; border-color:#000; color:#fff; }
-.x-login:hover { background:#1a1a1a; border-color:#1a1a1a; color:#fff; }
 
 /* Registration is a quiet, single-flow form: the page rule and browser focus ring do not
    compete with the fields, while the controls keep their existing neutral boundaries. */

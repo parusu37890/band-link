@@ -131,8 +131,3 @@ app:
     channel-id: ${LINE_CHANNEL_ID:}
     channel-secret: ${LINE_CHANNEL_SECRET:}
     redirect-uri: ${LINE_REDIRECT_URI:}
-  x:
-    # X (Twitter) OAuth 2.0 app credentials and callback URL, same pattern as line.* above.
-    client-id: ${X_CLIENT_ID:}
-    client-secret: ${X_CLIENT_SECRET:}
-    redirect-uri: ${X_REDIRECT_URI:}
