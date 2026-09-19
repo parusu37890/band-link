@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/feedback")
+@org.springframework.transaction.annotation.Transactional
 public class AdminFeedbackController {
     private final FeedbackRepository feedback;
     private final ImageStorageService storage;

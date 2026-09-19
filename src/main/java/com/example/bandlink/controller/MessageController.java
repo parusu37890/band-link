@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/messages")
+@org.springframework.transaction.annotation.Transactional
 public class MessageController {
     private final MessageService service; private final UserRepository users; private final MessageRepository messages; private final ImageStorageService storage; private final com.example.bandlink.repository.ReportRepository reports; private final com.example.bandlink.service.MessageEventHub events;
     public MessageController(MessageService service, UserRepository users, MessageRepository messages, ImageStorageService storage, com.example.bandlink.repository.ReportRepository reports, com.example.bandlink.service.MessageEventHub events) { this.service=service; this.users=users; this.messages=messages; this.storage=storage; this.reports=reports; this.events=events; }

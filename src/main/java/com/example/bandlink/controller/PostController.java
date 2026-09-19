@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
+@org.springframework.transaction.annotation.Transactional
 public class PostController {
     private final PostService postService;
     private final UserRepository userRepository;

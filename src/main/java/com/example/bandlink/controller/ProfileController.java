@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController @RequestMapping("/api/users")
+@org.springframework.transaction.annotation.Transactional
 public class ProfileController {
     private final ProfileService service; private final UserRepository users; private final ImageStorageService storage;
     public ProfileController(ProfileService service,UserRepository users,ImageStorageService storage){this.service=service;this.users=users;this.storage=storage;}

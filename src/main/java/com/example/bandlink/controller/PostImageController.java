@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/posts/{postId}/images")
+@org.springframework.transaction.annotation.Transactional
 public class PostImageController {
     private final PostImageService service;
     private final UserRepository users;
