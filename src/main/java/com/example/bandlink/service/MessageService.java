@@ -20,6 +20,18 @@ import com.example.bandlink.dto.MessageRequests; import com.example.bandlink.ent
    if(!c.includes(userId))throw new RuleViolationException("会話を操作できません");
    c.hideFor(userId,now());
  }
+ // Unlike hide() above, this is not one-sided: the row is gone for both participants, with no
+ // time limit and no placeholder left behind (no "retracted" tombstone). Reports keep their own
+ // captured contentSnapshot/imageSnapshot independent of the Message row (Report.targetId is a
+ // plain id, not a foreign key), so a reported message can still be retracted without breaking
+ // moderation history.
+ @Transactional public Long retract(Long userId,Long messageId){
+   Message m=messages.findById(messageId).orElseThrow(()->new RuleViolationException("メッセージが見つかりません"));
+   if(!m.getSender().getId().equals(userId))throw new RuleViolationException("自分が送信したメッセージのみ取り消せます");
+   Long conversationId=m.getConversation().getId();
+   messages.delete(m);
+   return conversationId;
+ }
  @Transactional public void markRead(Long userId,Long conversationId){
    Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));
    if(!c.includes(userId))throw new RuleViolationException("会話を操作できません");

@@ -44,6 +44,10 @@
 .message > .message-text:empty { display: none; }
 .message-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
 .message-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
+.message-retract { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; border: 0; background: none; color: var(--muted); font-size: 11px; }
+.message-retract:hover { color: var(--danger); }
+.message-retract .icon { width: 13px; height: 13px; }
+.message-retract span { text-decoration: underline; text-underline-offset: 2px; }
 .message-image-button { display: block; min-width:44px; min-height:44px; max-width: min(280px,100%); margin-top: 8px; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .message-image-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 .message-image { display: block; max-width: 100%; max-height: 280px; object-fit: contain; }

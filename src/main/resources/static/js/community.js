@@ -334,7 +334,7 @@ async function messagesPage(path) {
       const image = message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl)
         ? `<button type="button" class="message-image-button" data-expand-image="${h(message.imageUrl)}" aria-label="画像を拡大表示"><img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy"></button>`
         : '';
-      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${linkify(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}</div></article>`;
+      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${linkify(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${mine && id ? `<button type="button" class="message-retract" data-retract-message="${id}" aria-label="このメッセージの送信を取り消す">${icon('trash')}<span>送信を取り消す</span></button>` : ''}</div></article>`;
     };
     if (visible.length) reconcileRows(rows, visible, markup);
     else rows.innerHTML = empty('まだメッセージがありません', '下の欄から最初のメッセージを送れます。');
@@ -353,6 +353,18 @@ async function messagesPage(path) {
     const imageButton = event.target.closest('[data-expand-image]');
     if (imageButton) {
       openImageViewer(imageButton.dataset.expandImage);
+      return;
+    }
+    const retractButton = event.target.closest('[data-retract-message]');
+    if (retractButton) {
+      const id = retractButton.dataset.retractMessage;
+      confirmAction('送信を取り消しますか？', 'このメッセージは相手の画面からも削除され、元に戻せません。', async () => {
+        await api(`/api/messages/${id}`, { method: 'DELETE' });
+        messageItems = messageItems.filter(item => String(item.id) !== id);
+        lastMessageState = '';
+        renderMessages(messageItems, false);
+        toast('送信を取り消しました。');
+      });
       return;
     }
     if (event.target.closest('[data-older-messages]')) {

@@ -52,6 +52,14 @@ public class MessageEventHub {
         publish(conversationId, "read", Map.of("conversationId", conversationId));
     }
 
+    // Reuses the "message" event name the client already refreshes on for a new message - a
+    // retraction deletes the row outright (see MessageService.retract), so there is no updated
+    // message to send here; the client's refresh() simply re-fetches the list and the retracted
+    // message is gone from it, on both the retracting user's screen and the other participant's.
+    public void publishRetract(Long conversationId) {
+        publish(conversationId, "message", Map.of("conversationId", conversationId));
+    }
+
     private void publish(Long conversationId, String eventName, Object data) {
         var room = subscribers.get(conversationId);
         if (room == null) return;
