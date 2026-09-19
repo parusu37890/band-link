@@ -81,9 +81,7 @@ public class XLoginService {
                 + "&client_id=" + encode(clientId)
                 + "&redirect_uri=" + encode(redirectUri)
                 + "&state=" + encode(state)
-                // Only the public profile (id/name/username) is ever read - no scope beyond
-                // users.read is requested, so there's nothing here that touches tweet content.
-                + "&scope=" + encode("users.read")
+                + "&scope=" + encode("users.read tweet.read")
                 + "&code_challenge=" + encode(codeChallenge(codeVerifier))
                 + "&code_challenge_method=S256";
     }
