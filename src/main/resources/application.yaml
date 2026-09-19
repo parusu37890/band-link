@@ -15,6 +15,16 @@ spring:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:band_link}}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD}
+    hikari:
+      # The default pool size (10) is sized for short request/response work. It isn't enough
+      # headroom for /api/messages/conversation/{id}/stream: with spring.jpa.open-in-view on,
+      # that SSE request holds its connection for as long as the browser tab stays on the
+      # messages page (bounded to 10 minutes now, see MessageEventHub, but still held the whole
+      # time). Ten people with the page open at once was enough to starve every other request
+      # in the app (HikariPool-1: Connection is not available). The database allows up to 103
+      # connections and normal usage sits well under 20, so raising this to 25 leaves plenty of
+      # room without approaching that ceiling.
+      maximum-pool-size: 25
   jpa:
     hibernate:
       ddl-auto: update
