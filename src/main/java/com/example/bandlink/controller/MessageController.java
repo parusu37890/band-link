@@ -25,6 +25,9 @@ public class MessageController {
     @GetMapping("/conversation/{id}") public List<MessageResponse> list(Authentication a,@PathVariable Long id) { return service.messages(current(a),id).stream().map(MessageResponse::from).toList(); }
     @PatchMapping("/conversation/{id}/read") public void read(Authentication a,@PathVariable Long id) { service.markRead(current(a),id); events.publishRead(id); }
     @GetMapping("/conversations") public List<ConversationResponse> conversations(Authentication a) { Long viewer=current(a); return service.conversations(viewer).stream().map(c->ConversationResponse.from(c,viewer,messages.countByConversationIdAndSenderIdNotAndReadAtIsNull(c.getId(),viewer))).toList(); }
+    // Hides this conversation from the caller's own inbox only - the other participant's copy and
+    // every message are untouched, so nothing about their side of the conversation changes.
+    @DeleteMapping("/conversation/{id}") public void hide(Authentication a,@PathVariable Long id) { service.hide(current(a),id); }
     @GetMapping(value="/conversation/{id}/stream", produces=MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(Authentication a,@PathVariable Long id) { Long viewer=current(a); service.requireParticipant(viewer,id); return events.subscribe(id); }
     @PostMapping(value="/images", produces=MediaType.TEXT_PLAIN_VALUE) public String uploadImage(Authentication a,@RequestParam MultipartFile file) { Long id=current(a); service.requireVerified(id); return storage.storePrivate(file); }
