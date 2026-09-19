@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/blocks")
+@org.springframework.transaction.annotation.Transactional
 public class BlockController {
     private final BlockService service;
     private final UserRepository users;

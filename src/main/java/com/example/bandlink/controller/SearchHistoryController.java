@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @RestController
 @RequestMapping("/api/search-history")
+@org.springframework.transaction.annotation.Transactional
 public class SearchHistoryController {
     private final SearchHistoryService service; private final UserRepository users;
     public SearchHistoryController(SearchHistoryService service, UserRepository users) { this.service = service; this.users = users; }

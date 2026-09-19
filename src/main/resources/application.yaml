@@ -26,6 +26,19 @@ spring:
       # room without approaching that ceiling.
       maximum-pool-size: 25
   jpa:
+    # Off deliberately. With this on (the Spring Boot default), every request that touches JPA -
+    # basically every request - holds a Hikari connection for the request's entire lifetime,
+    # not just the moment it actually queries. Invisible for a normal request (milliseconds), but
+    # for /api/messages/conversation/{id}/stream (an SSE response that stays open for minutes)
+    # it meant one connection reserved per open messages tab regardless of what the request
+    # itself did - confirmed on a local Postgres instance that even a stream() with zero database
+    # access of any kind still exhausted the pool under concurrent load, because it's this
+    # setting eagerly grabbing the connection, not application code. Controllers that build a
+    # response DTO from a lazily-fetched association after their service call returns (outside
+    # that call's own @Transactional boundary) will now throw LazyInitializationException instead
+    # of silently working via the OSIV-held session - see docs/HARNESS.md for the fixes this
+    # required and DESIGN.md for what to check before touching a lazy association again.
+    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: false
