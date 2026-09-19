@@ -13,11 +13,18 @@
 .conversation-list .panel { border: 0; padding: 24px; background: none; }
 .conversation-list .panel h3 { font-size: 16px; margin-bottom: 12px; }
 .conversation-list .panel .button { margin-top: 20px; }
-.conversation-item { display: flex; align-items: center; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.conversation-row { position: relative; }
+.conversation-item { display: flex; align-items: center; gap: 12px; padding: 20px 60px 20px 24px; border-bottom: 1px solid var(--line); font-size: 14px; }
 .conversation-item .stack { gap: 4px; min-width: 0; overflow-wrap: anywhere; } .conversation-item .muted { font-size: 12px; }
 .conversation-item.active { background: var(--raised); box-shadow: inset 3px 0 var(--accent); }
 .conversation-item.is-unread strong { font-weight: 700; }
 .conversation-unread { flex: none; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; background: var(--danger); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
+/* Overlaid on .conversation-item rather than a flex sibling, so the existing row - its
+   background, active/unread states, border - needs no restructuring to make room for it. */
+.conversation-delete { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius); background: none; color: var(--muted); }
+.conversation-delete:hover { background: var(--raised); color: var(--danger); }
+.conversation-delete:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.conversation-delete .icon { width: 18px; height: 18px; }
 .chat-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: var(--bg); }
 .chat-header { display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
 .chat-header h2 { font-size: 16px; } .chat-header a:not(.button) { display:inline-flex; align-items:center; min-height:44px; font-size:12px; color:var(--accent); }
@@ -35,7 +42,12 @@
 .message > .message-text { padding: 14px 18px; background: var(--bubble-bg-incoming); border-radius: 0 4px 4px; }
 .message.mine > .message-text { background: var(--bubble-bg); color: var(--bubble-ink); border-radius: 4px 0 4px 4px; }
 .message > .message-text:empty { display: none; }
+.message-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
 .message-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
+.message-retract { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; border: 0; background: none; color: var(--muted); font-size: 11px; }
+.message-retract:hover { color: var(--danger); }
+.message-retract .icon { width: 13px; height: 13px; }
+.message-retract span { text-decoration: underline; text-underline-offset: 2px; }
 .message-image-button { display: block; min-width:44px; min-height:44px; max-width: min(280px,100%); margin-top: 8px; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .message-image-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 .message-image { display: block; max-width: 100%; max-height: 280px; object-fit: contain; }

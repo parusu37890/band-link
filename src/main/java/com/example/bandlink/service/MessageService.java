@@ -14,7 +14,24 @@ import com.example.bandlink.dto.MessageRequests; import com.example.bandlink.ent
  @Transactional public Message send(Long senderId,Long recipientId,MessageRequests.Send r){User s=verified(senderId),t=active(recipientId); if(senderId.equals(recipientId))throw new RuleViolationException("自分自身には送信できません"); if(blocks.existsByBlockerIdAndBlockedId(senderId,recipientId)||blocks.existsByBlockerIdAndBlockedId(recipientId,senderId))throw new RuleViolationException("ブロック中の相手には送信できません"); if((r.content()==null||r.content().isBlank())&&(r.imageUrl()==null||r.imageUrl().isBlank()))throw new RuleViolationException("本文か画像を入力してください"); if(r.imageUrl()!=null&&!r.imageUrl().isBlank()&&!r.imageUrl().startsWith("/api/messages/images/"))throw new RuleViolationException("メッセージ画像のURLが不正です"); Conversation c=conversation(s,t); Message msg=messages.save(new Message(c,s,r.content()==null?null:r.content().trim(),r.imageUrl(),now())); c.touch(now()); notifications.save(new Notification(t,"NEW_MESSAGE",s.getUsername()+"さんからメッセージが届きました",c.getId(),now())); return msg;}
  @Transactional public List<Message> messages(Long userId,Long conversationId){Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません")); if(!c.includes(userId))throw new RuleViolationException("会話を閲覧できません"); return messages.findByConversationIdOrderByCreatedAtAsc(conversationId);}
  @Transactional(readOnly=true) public void requireParticipant(Long userId,Long conversationId){Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));if(!c.includes(userId))throw new RuleViolationException("会話を閲覧できません");}
- public List<Conversation> conversations(Long userId){return conversations.findByUserAIdOrUserBIdOrderByLastMessageAtDesc(userId,userId);}
+ public List<Conversation> conversations(Long userId){return conversations.findByUserAIdOrUserBIdOrderByLastMessageAtDesc(userId,userId).stream().filter(c->!c.isHiddenFor(userId)).toList();}
+ @Transactional public void hide(Long userId,Long conversationId){
+   Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));
+   if(!c.includes(userId))throw new RuleViolationException("会話を操作できません");
+   c.hideFor(userId,now());
+ }
+ // Unlike hide() above, this is not one-sided: the row is gone for both participants, with no
+ // time limit and no placeholder left behind (no "retracted" tombstone). Reports keep their own
+ // captured contentSnapshot/imageSnapshot independent of the Message row (Report.targetId is a
+ // plain id, not a foreign key), so a reported message can still be retracted without breaking
+ // moderation history.
+ @Transactional public Long retract(Long userId,Long messageId){
+   Message m=messages.findById(messageId).orElseThrow(()->new RuleViolationException("メッセージが見つかりません"));
+   if(!m.getSender().getId().equals(userId))throw new RuleViolationException("自分が送信したメッセージのみ取り消せます");
+   Long conversationId=m.getConversation().getId();
+   messages.delete(m);
+   return conversationId;
+ }
  @Transactional public void markRead(Long userId,Long conversationId){
    Conversation c=conversations.findById(conversationId).orElseThrow(()->new RuleViolationException("会話が見つかりません"));
    if(!c.includes(userId))throw new RuleViolationException("会話を操作できません");

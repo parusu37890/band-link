@@ -1,10 +1,37 @@
 import { api, h, icon, avatar, state, main, showPage, notice, empty, button, toast,
-  bindForm, confirmAction, time, poll } from './ui.js?v=20260919-2';
+  bindForm, confirmAction, time, poll } from './ui.js?v=20260919-3';
 
 const positiveId = value => /^[1-9]\d*$/.test(String(value ?? '')) ? String(value) : null;
 const personName = user => user?.status === 'WITHDRAWN' ? '退会済みユーザー' : user?.status === 'SUSPENDED' ? '利用停止中ユーザー' : (user?.username || 'ユーザー');
 const heading = (title, description = '', action = '') => `<header class="page-heading"><div class="page-heading-copy"><h1>${h(title)}</h1>${description?`<p class="muted">${h(description)}</p>`:''}</div>${action}</header>`;
 const errorText = error => error?.message || '読み込めませんでした。時間をおいて、もう一度お試しください。';
+// Turns a bare URL typed into a message into a real link. Matched against the raw text first
+// (not the h()-escaped version) so the boundary detection sees the real characters, then every
+// piece - URL and plain text alike - is escaped on its own before going into the markup, so a
+// message that merely contains "javascript:" or a stray quote can't do anything except display
+// as that literal text. The character class is a positive list of what a URL can actually
+// contain (RFC 3986 plus %-encoding) rather than "everything but whitespace" - a message like
+// "(https://example.com)って書いてます" has no space before もどうぞ/って書いてます, and matching
+// on exclusion alone swallowed the trailing Japanese straight into the href. Trailing punctuation
+// a sentence would naturally end a URL with (、。！ etc, or ASCII .,!? and brackets) is then
+// peeled off the match and left as plain text.
+const URL_PATTERN = /https?:\/\/[A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+/g;
+function linkify(text) {
+  if (!text) return '';
+  let out = '';
+  let last = 0;
+  for (const match of text.matchAll(URL_PATTERN)) {
+    let url = match[0];
+    const trailing = url.match(/[.,;:!?)\]}'"、。！？」』]+$/)?.[0] || '';
+    if (trailing) url = url.slice(0, -trailing.length);
+    if (!url) continue;
+    out += h(text.slice(last, match.index));
+    out += `<a href="${h(url)}" target="_blank" rel="noopener noreferrer">${h(url)}</a>`;
+    last = match.index + url.length;
+  }
+  out += h(text.slice(last));
+  return out;
+}
 const retryMarkup = message => `${notice(message, 'error')}<button type="button" class="button secondary" data-retry>もう一度読み込む</button>`;
 
 // Keep unchanged rows alive across polling, including keyboard focus and image state.
@@ -129,7 +156,8 @@ async function messagesPage(path) {
       if (!id) return '';
       const other = conversation.otherUser;
       const unread = Number(conversation.unreadCount) || 0;
-      return `<a class="conversation-item${id === conversationId ? ' active' : ''}${unread ? ' is-unread' : ''}" href="/messages/${id}"${id === conversationId ? ' aria-current="page"' : ''}>${avatar(other)}<span class="stack"><strong>${h(personName(other))}</strong><span class="muted">${h(time(conversation.lastMessageAt))}</span></span>${unread ? `<span class="conversation-unread" aria-label="未読${unread}件">${unread > 99 ? '99+' : unread}</span>` : ''}</a>`;
+      const name = h(personName(other));
+      return `<div class="conversation-row"><a class="conversation-item${id === conversationId ? ' active' : ''}${unread ? ' is-unread' : ''}" href="/messages/${id}"${id === conversationId ? ' aria-current="page"' : ''}>${avatar(other)}<span class="stack"><strong>${name}</strong><span class="muted">${h(time(conversation.lastMessageAt))}</span></span>${unread ? `<span class="conversation-unread" aria-label="未読${unread}件">${unread > 99 ? '99+' : unread}</span>` : ''}</a><button type="button" class="conversation-delete" data-delete-conversation="${id}" data-name="${name}" aria-label="${name}さんとの会話を削除">${icon('trash')}</button></div>`;
     };
     shell.classList.toggle('is-empty', matches.length === 0);
     if (visible.length) reconcileRows(list, visible, markup);
@@ -138,6 +166,28 @@ async function messagesPage(path) {
     conversationMore.hidden = visible.length >= matches.length;
     conversationMore.textContent = `続きを${Math.min(15, matches.length - visible.length)}件表示`;
   }
+  // One-sided delete: only removes this conversation from the caller's own inbox (see
+  // MessageService.hide). The other participant's list, and every message in it, are untouched -
+  // if they send something new, isHiddenFor on the backend brings it back on its own.
+  list.addEventListener('click', event => {
+    const deleteButton = event.target.closest('[data-delete-conversation]');
+    if (!deleteButton) return;
+    const id = deleteButton.dataset.deleteConversation;
+    confirmAction('この会話を削除しますか？', `${deleteButton.dataset.name}さんとの会話が一覧から削除されます。相手の画面には影響しません。新しいメッセージが届くと、再び一覧に表示されます。`, async () => {
+      await api(`/api/messages/conversation/${id}`, { method: 'DELETE' });
+      conversations = conversations.filter(conversation => String(conversation.id) !== id);
+      lastListState = '';
+      if (conversationId === id) {
+        conversationId = null;
+        peer = null;
+        closeStream();
+        history.replaceState(null, '', '/messages');
+        renderPeer();
+      }
+      renderList();
+      toast('会話を削除しました。');
+    });
+  });
   conversationMore.addEventListener('click', () => {
     const previous = list.children.length;
     conversationLimit += 15;
@@ -284,7 +334,7 @@ async function messagesPage(path) {
       const image = message.imageUrl && /^\/api\/messages\/images\/[A-Za-z0-9-]+\.(jpg|png|webp)$/.test(message.imageUrl)
         ? `<button type="button" class="message-image-button" data-expand-image="${h(message.imageUrl)}" aria-label="画像を拡大表示"><img class="message-image" src="${h(message.imageUrl)}" alt="メッセージ画像" loading="lazy"></button>`
         : '';
-      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${h(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}</div></article>`;
+      return `<article class="message${mine ? ' mine' : ''}"${id ? ` data-message-id="${id}"` : ''} tabindex="-1" aria-label="${mine ? '自分' : h(personName(peer))}のメッセージ"><p class="message-text">${linkify(message.content || '')}</p>${image}<div class="message-meta"><time datetime="${h(message.createdAt)}">${h(time(message.createdAt))}</time>${mine && message.readAt ? '<span>既読</span>' : ''}${mine && id ? `<button type="button" class="message-retract" data-retract-message="${id}" aria-label="このメッセージの送信を取り消す">${icon('trash')}<span>送信を取り消す</span></button>` : ''}</div></article>`;
     };
     if (visible.length) reconcileRows(rows, visible, markup);
     else rows.innerHTML = empty('まだメッセージがありません', '下の欄から最初のメッセージを送れます。');
@@ -303,6 +353,18 @@ async function messagesPage(path) {
     const imageButton = event.target.closest('[data-expand-image]');
     if (imageButton) {
       openImageViewer(imageButton.dataset.expandImage);
+      return;
+    }
+    const retractButton = event.target.closest('[data-retract-message]');
+    if (retractButton) {
+      const id = retractButton.dataset.retractMessage;
+      confirmAction('送信を取り消しますか？', 'このメッセージは相手の画面からも削除され、元に戻せません。', async () => {
+        await api(`/api/messages/${id}`, { method: 'DELETE' });
+        messageItems = messageItems.filter(item => String(item.id) !== id);
+        lastMessageState = '';
+        renderMessages(messageItems, false);
+        toast('送信を取り消しました。');
+      });
       return;
     }
     if (event.target.closest('[data-older-messages]')) {

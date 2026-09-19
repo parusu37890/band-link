@@ -1,5 +1,5 @@
 import {mediaHref,mediaEmbed,mediaProvider,mediaFields,mediaIconRow} from './media-embed.js?v=20260919-3';
-import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper,loginRelativeTime} from './ui.js?v=20260919-2';
+import {api,h,icon,avatar,state,main,showPage,notice,empty,button,toast,bindForm,confirmAction,report,choices,counter,requireUser,verificationNotice,openImageCropper,loginRelativeTime} from './ui.js?v=20260919-3';
 
 const fields=[['prefectureIds','活動エリア','prefectures'],['partIds','パート','parts'],['genreIds','ジャンル','genres'],['stanceIds','活動スタンス','stances']];
 
