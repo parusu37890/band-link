@@ -207,6 +207,15 @@
 .post-person .person-gender { flex:none; margin-left:8px; font-size:13px; color:var(--muted); white-space:nowrap; }
 .post-person .person .avatar { display:inline-flex; width:28px; height:28px; margin-right:8px; border-radius:50%; font-size:12px; }
 .post-times { position:relative; z-index:1; flex:none; color:var(--muted); font-size:12px; white-space:nowrap; }
+/* PC only: stack the timestamps under the name/age/gender line instead of sharing it, same
+   technique as the phone override below (::before grows the tap target invisibly so the 44px
+   minimum doesn't push .post-times down with a visible gap). Phone is untouched - its own
+   max-width:640px block below already does this and keeps its own smaller sizing. */
+@media(min-width:641px) {
+  .post-person { display:grid; grid-template-columns:minmax(0,1fr); gap:4px; align-items:start; }
+  .post-person .person { min-height:0; align-items:flex-start; }
+  .post-person .person::before { content:''; position:absolute; inset:-14px 0; }
+}
 @media(max-width:640px) {
   .post-card { padding:13px 0; }
   .post-card h2 { font-size:14.5px; }
